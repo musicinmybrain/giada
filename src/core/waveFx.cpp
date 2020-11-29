@@ -106,7 +106,7 @@ int monoToStereo(Wave& w)
 		for (int j=0; j<newData.countChannels(); j++)
 			newData[i][j] = w[i][0];
 
-	w.moveData(newData);
+	w.moveData(std::move(newData));
 
 	return G_RES_OK;
 }
@@ -157,7 +157,7 @@ void cut(ID waveId, int a, int b)
 			}
 		}
 
-		w.moveData(newData);
+		w.moveData(std::move(newData));
 		w.setEdited(true);
 	});
 }
@@ -184,7 +184,7 @@ void trim(ID waveId, int a, int b)
 			for (int j=0; j<newData.countChannels(); j++)
 				newData[i][j] = w[i+a][j];
 
-		w.moveData(newData);
+		w.moveData(std::move(newData));
 		w.setEdited(true);
 	});
 }
@@ -203,13 +203,13 @@ void paste(const Wave& src, ID waveId, int a)
 		newData.alloc(src.getSize() + des.getSize(), des.getChannels());
 
 		/* |---original data---|///paste data///|---original data---|
-				 des[0, a)      src[0, src.size)   des[a, des.size)	*/
+		         des[0, a)      src[0, src.size)   des[a, des.size)	*/
 
 		newData.copyData(des[0], a, 0);
 		newData.copyData(src[0], src.getSize(), a);
 		newData.copyData(des[a], des.getSize() - a, src.getSize() + a);
 
-		des.moveData(newData);
+		des.moveData(std::move(newData));
 		des.setEdited(true);
 	});
 }

@@ -26,7 +26,6 @@
 
 
 #include <cassert>
-#include <cstring>  // memcpy
 #include "utils/fs.h"
 #include "utils/log.h"
 #include "utils/string.h"
@@ -53,22 +52,6 @@ Wave::Wave(ID id)
 float* Wave::operator [](int offset) const
 {
 	return buffer[offset];
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-Wave::Wave(const Wave& other)
-: id        (other.id), 
-  m_rate    (other.m_rate),
-  m_bits    (other.m_bits),	
-  m_logical (false),
-  m_edited  (false),
-  m_path    (other.m_path)
-{
-	buffer.alloc(other.getSize(), other.getChannels());
-	buffer.copyData(other.getFrame(0), other.getSize());
 }
 
 
@@ -168,8 +151,8 @@ void Wave::addData(const AudioBuffer& b)  { buffer.addData(b); }
 /* -------------------------------------------------------------------------- */
 
 
-void Wave::moveData(AudioBuffer& b)
+void Wave::moveData(AudioBuffer&& b)
 {
-	buffer.moveData(b);
+	buffer = std::move(b);
 }
 }} // giada::m::

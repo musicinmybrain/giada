@@ -60,6 +60,9 @@ public:
 	AudioBuffer(Frame size, int channels);
 
 	AudioBuffer(const AudioBuffer& o);
+	AudioBuffer(AudioBuffer&&);
+	AudioBuffer& operator=(const AudioBuffer& o);
+	AudioBuffer& operator=(AudioBuffer&& o);
 	~AudioBuffer();
 
 	/* operator []
@@ -114,12 +117,6 @@ public:
 	to while using it. Set it back to nullptr when done. */
 
 	void setData(float* data, Frame size, int channels);
-
-	/* moveData
-	Moves data held by 'b' into this buffer. Then 'b' becomes an empty buffer.
-	TODO - add move constructor instead! */
-	 
-	void moveData(AudioBuffer& b);
 
 	/* clear
 	Clears the internal data by setting all bytes to 0.0f. Optional parameters

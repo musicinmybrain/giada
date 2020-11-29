@@ -43,7 +43,10 @@ public:
 
 	Wave() = default; // Invalid Wave
 	Wave(ID id);
-	Wave(const Wave& other);
+	Wave(const Wave& o) = default;
+	Wave(Wave&& o) = default;
+	Wave& operator=(const Wave& o) = default;
+	Wave& operator=(Wave&& o) = default;
 
 	float* operator [](int offset) const;
 
@@ -76,7 +79,7 @@ public:
 	/* moveData
 	Moves data held by 'b' into this buffer. Then 'b' becomes an empty buffer. */
 
-	void moveData(AudioBuffer& b); 
+	void moveData(AudioBuffer&& b); 
 	
 	/* copyData
 	Copies 'frames' frames from the new 'data' into m_data, starting from frame 

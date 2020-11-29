@@ -63,6 +63,60 @@ AudioBuffer::AudioBuffer(const AudioBuffer& o)
 /* -------------------------------------------------------------------------- */
 
 
+AudioBuffer::AudioBuffer(AudioBuffer&& o)
+: m_data    (o.m_data)
+, m_size    (o.m_size)
+, m_channels(o.m_channels)
+{
+	o.m_data     = nullptr;
+	o.m_size     = 0;
+	o.m_channels = 0;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+AudioBuffer& AudioBuffer::operator=(AudioBuffer&& o) 
+{  
+  if (this == &o) return *this;
+
+  delete[] m_data;
+
+  m_data     = o.m_data;
+  m_size     = o.m_size;
+  m_channels = o.m_channels;
+
+  o.m_data     = nullptr;
+  o.m_size     = 0;
+  o.m_channels = 0;
+
+  return *this;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+AudioBuffer& AudioBuffer::operator=(const AudioBuffer& o) 
+{  
+  if (this == &o) return *this;
+
+  delete[] m_data;
+
+  m_data     = new float[o.m_size * o.m_channels];
+  m_size     = o.m_size;
+  m_channels = o.m_channels;
+
+  std::copy(o.m_data, o.m_data + (o.m_size * o.m_channels), m_data); 
+
+  return *this;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 AudioBuffer::~AudioBuffer()
 {
 	free();
@@ -149,21 +203,6 @@ void AudioBuffer::setData(float* data, Frame size, int channels)
 	m_data     = data;
 	m_size     = size;
 	m_channels = channels;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void AudioBuffer::moveData(AudioBuffer& b)
-{
-	assert(b.countChannels() <= NUM_CHANS);
-
-	free();
-	m_data     = b[0];
-	m_size     = b.countFrames();
-	m_channels = b.countChannels();
-	b.setData(nullptr, 0, 0);
 }
 
 

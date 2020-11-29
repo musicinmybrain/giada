@@ -43,9 +43,7 @@ public:
 
     WaveReader();
     WaveReader(const WaveReader&);
-    WaveReader(WaveReader&&); // TODO- should be defaulted
-    WaveReader& operator=(const WaveReader&);
-    WaveReader& operator=(WaveReader&&);
+    WaveReader(WaveReader&&);
     ~WaveReader();
 
     Frame fill(AudioBuffer& out, Frame start, Frame offset, float pitch) const;
@@ -61,7 +59,6 @@ private:
 	Frame fillCopy     (AudioBuffer& out, Frame start, Frame offset) const;
 
 	void allocateSrc();
-	void moveSrc(SRC_STATE** o);
 
 	/* srcState
 	Struct from libsamplerate. */
