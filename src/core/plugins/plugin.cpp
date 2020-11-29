@@ -100,6 +100,7 @@ Plugin::Plugin(const Plugin& o)
 , valid         (o.valid)
 , onEditorResize(o.onEditorResize)
 , m_plugin      (std::move(pluginManager::makePlugin(o).m_plugin))
+, m_buffer      (o.m_buffer)
 , m_bypass      (o.m_bypass.load())
 {
 }
@@ -114,6 +115,7 @@ Plugin::Plugin(Plugin&& o)
 , valid         (std::move(o.valid))
 , onEditorResize(std::move(o.onEditorResize))
 , m_plugin      (std::move(o.m_plugin))
+, m_buffer      (std::move(o.m_buffer))
 , m_bypass      (o.m_bypass.load())
 {
 }
@@ -289,7 +291,7 @@ void Plugin::process(juce::AudioBuffer<float>& out, juce::MidiBuffer m)
 	else
 		m_buffer.clear();
 
-	m_plugin->processBlock(m_buffer, m);
+    m_plugin->processBlock(m_buffer, m);
 
 	/* The local buffer is now filled. Let's try to fill the 'out' one as well
 	by taking into account the bus layout - many plug-ins might have mono output

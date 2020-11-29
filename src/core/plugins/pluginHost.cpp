@@ -139,7 +139,7 @@ void processStack(AudioBuffer& outBuf, const std::vector<ID>& pluginIds,
 	sample channels. No need for MIDI events. 
 	If events are not null: MIDI stack (MIDI channels). MIDI channels must not 
 	process the current buffer: give them an empty and clean one. */
-	
+
 	if (events == nullptr) {
 		giadaToJuceTempBuf_(outBuf);
 		juce::MidiBuffer dummyEvents; // empty

@@ -77,7 +77,7 @@ void debug()
 	int i = 0;
 	for (const Channel& c : channels) {
 		printf("\t%d) %p - ID=%d name='%s' type=%d columnID=%d\n",
-		        i++, c, c.state->id, c.state->name.c_str(), (int) c.getType(), c.getColumnId());
+		        i++, (void*) &c, c.state->id, c.state->name.c_str(), (int) c.getType(), c.getColumnId());
 /*
 		if (c->hasData())
 			printf("\t\twave: ID=%d\n", static_cast<const SampleChannel*>(c)->waveId);
@@ -95,7 +95,7 @@ void debug()
 
 	i = 0;
 	for (const Wave& w : waves) 
-		printf("\t%d) %p - ID=%d name='%s'\n", i++, w, w.id, w.getPath().c_str());
+		printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*) &w, w.id, w.getPath().c_str());
 		
 #ifdef WITH_VST
 	puts("model::plugins");
@@ -103,9 +103,9 @@ void debug()
 	i = 0;
 	for (const Plugin& p : plugins) {
 		if (p.valid)
-			printf("\t%d) %p - ID=%d name='%s'\n", i++, p, p.id, p.getName().c_str());
+			printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*) &p, p.id, p.getName().c_str());
 		else
-			printf("\t%d) %p - ID=%d INVALID\n", i++, p, p.id); 
+			printf("\t%d) %p - ID=%d INVALID\n", i++, (void*) &p, p.id); 
 	}
 #endif
 
