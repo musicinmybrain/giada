@@ -36,16 +36,16 @@ namespace giada {
 namespace m {
 namespace model
 {
-RCUList<Clock>    clock(std::make_unique<Clock>());
-RCUList<Mixer>    mixer(std::make_unique<Mixer>());
-RCUList<Kernel>   kernel(std::make_unique<Kernel>());
-RCUList<Recorder> recorder(std::make_unique<Recorder>());
-RCUList<MidiIn>   midiIn(std::make_unique<MidiIn>());
-RCUList<Actions>  actions(std::make_unique<Actions>());
-RCUList<Channel> channels;
-RCUList<Wave>     waves;
+RCUArray<Clock>    clock(std::move(Clock()));
+RCUArray<Mixer>    mixer(std::move(Mixer()));
+RCUArray<Kernel>   kernel(std::move(Kernel()));
+RCUArray<Recorder> recorder(std::move(Recorder()));
+RCUArray<MidiIn>   midiIn(std::move(MidiIn()));
+RCUArray<Actions>  actions(std::move(Actions()));
+RCUArray<Channel, 1024>  channels;
+RCUArray<Wave, 1024>     waves;
 #ifdef WITH_VST
-RCUList<Plugin>   plugins;
+RCUArray<Plugin, 1024>   plugins;
 #endif
 
 
@@ -75,17 +75,17 @@ void debug()
 	puts("model::channels");
 
 	int i = 0;
-	for (const Channel* c : channels) {
+	for (const Channel& c : channels) {
 		printf("\t%d) %p - ID=%d name='%s' type=%d columnID=%d\n",
-		        i++, (void*) c, c->state->id, c->state->name.c_str(), (int) c->getType(), c->getColumnId());
+		        i++, c, c.state->id, c.state->name.c_str(), (int) c.getType(), c.getColumnId());
 /*
 		if (c->hasData())
 			printf("\t\twave: ID=%d\n", static_cast<const SampleChannel*>(c)->waveId);
 */
 #ifdef WITH_VST
-		if (c->pluginIds.size() > 0) {
+		if (c.pluginIds.size() > 0) {
 			puts("\t\tplugins:");
-			for (ID id : c->pluginIds)
+			for (ID id : c.pluginIds)
 				printf("\t\t\tID=%d\n", id);
 		}
 #endif
@@ -94,18 +94,18 @@ void debug()
 	puts("model::waves");
 
 	i = 0;
-	for (const Wave* w : waves) 
-		printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*)w, w->id, w->getPath().c_str());
+	for (const Wave& w : waves) 
+		printf("\t%d) %p - ID=%d name='%s'\n", i++, w, w.id, w.getPath().c_str());
 		
 #ifdef WITH_VST
 	puts("model::plugins");
 
 	i = 0;
-	for (const Plugin* p : plugins) {
-		if (p->valid)
-			printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*)p, p->id, p->getName().c_str());
+	for (const Plugin& p : plugins) {
+		if (p.valid)
+			printf("\t%d) %p - ID=%d name='%s'\n", i++, p, p.id, p.getName().c_str());
 		else
-			printf("\t%d) %p - ID=%d INVALID\n", i++, (void*)p, p->id); 
+			printf("\t%d) %p - ID=%d INVALID\n", i++, p, p.id); 
 	}
 #endif
 

@@ -440,13 +440,13 @@ Frame quantize(Frame f)
 int         getCurrentFrame()   { return currentFrame_.load(); }
 int         getCurrentBeat()    { return currentBeat_.load(); }
 int         getQuantizerStep()  { return quantizerStep_; }
-ClockStatus getStatus()         { model::ClockLock lock(model::clock); return model::clock.get()->status; }
-int         getFramesInLoop()   { model::ClockLock lock(model::clock); return model::clock.get()->framesInLoop; }
-int         getFramesInBar()    { model::ClockLock lock(model::clock); return model::clock.get()->framesInBar; }
-int         getFramesInBeat()   { model::ClockLock lock(model::clock); return model::clock.get()->framesInBeat; }
-int         getFramesInSeq()    { model::ClockLock lock(model::clock); return model::clock.get()->framesInSeq; }
-int         getQuantizerValue() { model::ClockLock lock(model::clock); return model::clock.get()->quantize; }
-float       getBpm()            { model::ClockLock lock(model::clock); return model::clock.get()->bpm; }
-int         getBeats()          { model::ClockLock lock(model::clock); return model::clock.get()->beats; }
-int         getBars()           { model::ClockLock lock(model::clock); return model::clock.get()->bars; }
+ClockStatus getStatus()         { model::ClockLock lock(model::clock); return model::clock.get().status; }
+int         getFramesInLoop()   { model::ClockLock lock(model::clock); return model::clock.get().framesInLoop; }
+int         getFramesInBar()    { model::ClockLock lock(model::clock); return model::clock.get().framesInBar; }
+int         getFramesInBeat()   { model::ClockLock lock(model::clock); return model::clock.get().framesInBeat; }
+int         getFramesInSeq()    { model::ClockLock lock(model::clock); return model::clock.get().framesInSeq; }
+int         getQuantizerValue() { model::ClockLock lock(model::clock); return model::clock.get().quantize; }
+float       getBpm()            { model::ClockLock lock(model::clock); return model::clock.get().bpm; }
+int         getBeats()          { model::ClockLock lock(model::clock); return model::clock.get().beats; }
+int         getBars()           { model::ClockLock lock(model::clock); return model::clock.get().bars; }
 } // giada::m::clock::

@@ -56,18 +56,18 @@ void init();
 /* create (1)
 Creates a new Channel from scratch. */
 
-std::unique_ptr<Channel> create(ChannelType type, ID columnId, const conf::Conf& conf);
+Channel create(ChannelType type, ID columnId, const conf::Conf& conf);
 
 /* create (2)
 Creates a new Channel given an existing one (i.e. clone). */
 
-std::unique_ptr<Channel> create(const Channel& ch);
+Channel create(const Channel& ch);
 
 /* (de)serializeWave
 Creates a new Channel given the patch raw data and vice versa. */
 
-std::unique_ptr<Channel> deserializeChannel(const patch::Channel& c, int bufferSize);
-const patch::Channel     serializeChannel(const Channel& c);
+Channel deserializeChannel(const patch::Channel& c, int bufferSize);
+const patch::Channel serializeChannel(const Channel& c);
 }}} // giada::m::channelManager
 
 

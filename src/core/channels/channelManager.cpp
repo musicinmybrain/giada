@@ -68,24 +68,21 @@ void init()
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Channel> create(ChannelType type, ID columnId, const conf::Conf& conf)
+Channel create(ChannelType type, ID columnId, const conf::Conf& conf)
 {
-	std::unique_ptr<Channel> ch = std::make_unique<Channel>(type, 
-		channelId_.get(), columnId, kernelAudio::getRealBufSize(), conf);
-	
-	return ch;
+	return Channel(type, channelId_.get(), columnId, kernelAudio::getRealBufSize(), conf);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Channel> create(const Channel& o)
+Channel create(const Channel& o)
 {
-	std::unique_ptr<Channel> ch = std::make_unique<Channel>(o);
+	Channel ch(o);
 	ID id = channelId_.get();
-	ch->id        = id;
-	ch->state->id = id;
+	ch.id        = id;
+	ch.state->id = id;
 	return ch;
 }
 
@@ -93,10 +90,10 @@ std::unique_ptr<Channel> create(const Channel& o)
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Channel> deserializeChannel(const patch::Channel& pch, int bufferSize)
+Channel deserializeChannel(const patch::Channel& pch, int bufferSize)
 {
 	channelId_.set(pch.id);
-	return std::make_unique<Channel>(pch, bufferSize);
+	return Channel(pch, bufferSize);
 }
 
 

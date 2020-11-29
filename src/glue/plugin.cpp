@@ -181,8 +181,8 @@ void addPlugin(int pluginListIndex, ID channelId)
 {
 	if (pluginListIndex >= m::pluginManager::countAvailablePlugins())
 		return;
-	std::unique_ptr<m::Plugin> p = m::pluginManager::makePlugin(pluginListIndex);
-	if (p != nullptr)
+	m::Plugin p = m::pluginManager::makePlugin(pluginListIndex);
+	if (p.id != 0) // If valid
 		m::pluginHost::addPlugin(std::move(p), channelId);
 }
 

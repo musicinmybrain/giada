@@ -45,6 +45,7 @@ class MidiActionRecorder
 public:
 
     MidiActionRecorder(ChannelState*);
+    MidiActionRecorder(MidiActionRecorder&&) = default;
     MidiActionRecorder(const MidiActionRecorder&, ChannelState* c=nullptr);
 
     void parse(const mixer::Event& e) const;

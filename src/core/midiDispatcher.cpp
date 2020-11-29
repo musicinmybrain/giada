@@ -118,65 +118,65 @@ void processChannels_(const MidiEvent& midiEvent)
 
 	model::ChannelsLock lock(model::channels);
 
-	for (const Channel* c : model::channels) {
+	for (const Channel& c : model::channels) {
 
 		/* Do nothing on this channel if MIDI in is disabled or filtered out for
 		the current MIDI channel. */
 
-		if (!c->midiLearner.state->isAllowed(midiEvent.getChannel()))
+		if (!c.midiLearner.state->isAllowed(midiEvent.getChannel()))
 			continue;
 
-		if (pure == c->midiLearner.state->keyPress.getValue()) {
-			u::log::print("  >>> keyPress, ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::pressChannel(c->id, midiEvent.getVelocity(), Thread::MIDI);
+		if (pure == c.midiLearner.state->keyPress.getValue()) {
+			u::log::print("  >>> keyPress, ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::pressChannel(c.id, midiEvent.getVelocity(), Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->keyRelease.getValue()) {
-			u::log::print("  >>> keyRel ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::releaseChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->keyRelease.getValue()) {
+			u::log::print("  >>> keyRel ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::releaseChannel(c.id, Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->mute.getValue()) {
-			u::log::print("  >>> mute ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::toggleMuteChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->mute.getValue()) {
+			u::log::print("  >>> mute ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::toggleMuteChannel(c.id, Thread::MIDI);
 		}		
-		else if (pure == c->midiLearner.state->kill.getValue()) {
-			u::log::print("  >>> kill ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::killChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->kill.getValue()) {
+			u::log::print("  >>> kill ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::killChannel(c.id, Thread::MIDI);
 		}		
-		else if (pure == c->midiLearner.state->arm.getValue()) {
-			u::log::print("  >>> arm ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::toggleArmChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->arm.getValue()) {
+			u::log::print("  >>> arm ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::toggleArmChannel(c.id, Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->solo.getValue()) {
-			u::log::print("  >>> solo ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::toggleSoloChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->solo.getValue()) {
+			u::log::print("  >>> solo ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::toggleSoloChannel(c.id, Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->volume.getValue()) {
+		else if (pure == c.midiLearner.state->volume.getValue()) {
 			float vf = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, G_MAX_VOLUME); 
 			u::log::print("  >>> volume ch=%d (pure=0x%X, value=%d, float=%f)\n", 
-				c->id, pure, midiEvent.getVelocity(), vf);
-			c::events::setChannelVolume(c->id, vf, Thread::MIDI);
+				c.id, pure, midiEvent.getVelocity(), vf);
+			c::events::setChannelVolume(c.id, vf, Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->pitch.getValue()) {
+		else if (pure == c.midiLearner.state->pitch.getValue()) {
 			float vf = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, G_MAX_PITCH); 
 			u::log::print("  >>> pitch ch=%d (pure=0x%X, value=%d, float=%f)\n",
-				c->id, pure, midiEvent.getVelocity(), vf);
-			c::events::setChannelPitch(c->id, vf, Thread::MIDI);
+				c.id, pure, midiEvent.getVelocity(), vf);
+			c::events::setChannelPitch(c.id, vf, Thread::MIDI);
 		}
-		else if (pure == c->midiLearner.state->readActions.getValue()) {
-			u::log::print("  >>> toggle read actions ch=%d (pure=0x%X)\n", c->id, pure);
-			c::events::toggleReadActionsChannel(c->id, Thread::MIDI);
+		else if (pure == c.midiLearner.state->readActions.getValue()) {
+			u::log::print("  >>> toggle read actions ch=%d (pure=0x%X)\n", c.id, pure);
+			c::events::toggleReadActionsChannel(c.id, Thread::MIDI);
 		}
 
 #ifdef WITH_VST
 		/* Process learned plugins parameters. */
-		processPlugins_(c->pluginIds, midiEvent); 
+		processPlugins_(c.pluginIds, midiEvent); 
 #endif
 
 		/* Redirect raw MIDI message (pure + velocity) to plug-ins in armed
 		channels. */
 
-		if (c->state->armed.load() == true)
-			c::events::sendMidiToChannel(c->id, midiEvent, Thread::MIDI);
+		if (c.state->armed.load() == true)
+			c::events::sendMidiToChannel(c.id, midiEvent, Thread::MIDI);
 	}
 }
 

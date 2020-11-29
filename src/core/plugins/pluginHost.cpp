@@ -93,9 +93,9 @@ ID clonePlugin_(ID pluginId)
 {
 	model::PluginsLock l(model::plugins);
 
-	const Plugin&           original = model::get(model::plugins, pluginId);
-	std::unique_ptr<Plugin> clone    = pluginManager::makePlugin(original);
-	ID                      newId    = clone->id;
+	const Plugin&  original = model::get(model::plugins, pluginId);
+	Plugin         clone    = pluginManager::makePlugin(original);
+	ID             newId    = clone.id;
 
 	model::plugins.push(std::move(clone));
 
@@ -156,9 +156,9 @@ void processStack(AudioBuffer& outBuf, const std::vector<ID>& pluginIds,
 /* -------------------------------------------------------------------------- */
 
 
-void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
+void addPlugin(Plugin&& p, ID channelId)
 {
-	ID pluginId = p->id;
+	ID pluginId = p.id;
 	
 	model::plugins.push(std::move(p));
 

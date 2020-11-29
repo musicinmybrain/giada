@@ -49,6 +49,7 @@ class MidiLighter
 public:
 
     MidiLighter(ChannelState*);
+    MidiLighter(MidiLighter&&) = default;
     MidiLighter(const patch::Channel&, ChannelState*);
     MidiLighter(const MidiLighter&, ChannelState* c=nullptr);
 

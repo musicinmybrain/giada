@@ -178,9 +178,9 @@ std::vector<Data> getChannels()
 	mm::ChannelsLock cl(mm::channels);
 
 	std::vector<Data> out;
-	for (const m::Channel* ch : mm::channels)
-		if (!ch->isInternal()) 
-			out.push_back(Data(*ch));
+	for (const m::Channel& ch : mm::channels)
+		if (!ch.isInternal()) 
+			out.push_back(Data(ch));
 	
 	return out;
 }

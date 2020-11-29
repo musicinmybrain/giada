@@ -38,14 +38,14 @@ namespace updater
 {
 void update(void* /*p*/)
 {
-	if (m::model::waves.changed.load()    == true ||
-		m::model::actions.changed.load()  == true ||
-		m::model::channels.changed.load()  == true)
+	if (m::model::waves.hasChanged() ||
+		m::model::actions.hasChanged() ||
+		m::model::channels.hasChanged())
 	{
 		u::gui::rebuild();
-		m::model::waves.changed.store(false);
-		m::model::actions.changed.store(false);
-		m::model::channels.changed.store(false);
+		m::model::waves.resetChanged();
+		m::model::actions.resetChanged();
+		m::model::channels.resetChanged();
 	}
 	else
 		u::gui::refresh();

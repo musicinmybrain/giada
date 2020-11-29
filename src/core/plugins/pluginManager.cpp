@@ -72,11 +72,11 @@ If some plugins from any stack are missing. */
 bool missingPlugins_;
 
 
-std::unique_ptr<Plugin> makeInvalidPlugin_(const std::string& pid, ID id)
+Plugin makeInvalidPlugin_(const std::string& pid, ID id)
 {
 	missingPlugins_ = true;
 	unknownPluginList_.push_back(pid);
-	return std::make_unique<Plugin>(pluginId_.get(id), pid); // Invalid plug-in	
+	return Plugin(pluginId_.get(id), pid); // Invalid plug-in	
 }
 } // {anonymous}
 
@@ -162,7 +162,7 @@ bool loadList(const std::string& filepath)
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id)
+Plugin makePlugin(const std::string& pid, ID id)
 {
 	/* Plug-in ID generator is updated anyway, as we store Plugin objects also
 	if they are in an invalid state. */
@@ -185,14 +185,14 @@ std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id)
 
 	u::log::print("[pluginManager::makePlugin] plugin instance with pid=%s created\n", pid);
 
-	return std::make_unique<Plugin>(pluginId_.get(id), std::move(pi), samplerate_, buffersize_);
+	return Plugin(pluginId_.get(id), std::move(pi), samplerate_, buffersize_);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Plugin> makePlugin(int index)
+Plugin makePlugin(int index)
 {
 	juce::PluginDescription pd = knownPluginList_.getTypes()[index];
 	
@@ -210,12 +210,12 @@ std::unique_ptr<Plugin> makePlugin(int index)
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Plugin> makePlugin(const Plugin& src)
+Plugin makePlugin(const Plugin& src)
 {
-	std::unique_ptr<Plugin> p = makePlugin(src.getUniqueId());
+	Plugin p = makePlugin(src.getUniqueId());
 	
 	for (int i=0; i<src.getNumParameters(); i++)
-		p->setParameter(i, src.getParameter(i));	
+		p.setParameter(i, src.getParameter(i));	
 
 	return p;
 }
@@ -242,30 +242,30 @@ const patch::Plugin serializePlugin(const Plugin& p)
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Plugin> deserializePlugin(const patch::Plugin& p, patch::Version version)
+Plugin deserializePlugin(const patch::Plugin& p, patch::Version version)
 {
-	std::unique_ptr<Plugin> plugin = makePlugin(p.path, p.id);
-	if (!plugin->valid)
+	Plugin plugin = makePlugin(p.path, p.id);
+	if (!plugin.valid)
 		return plugin; // Return invalid version
 	
 	/* Fill plug-in parameters. */
-	plugin->setBypass(p.bypass);
+	plugin.setBypass(p.bypass);
 	
 	if (version < patch::Version{0, 17, 0}) // TODO - to be removed in 0.18.0
 		for (unsigned j=0; j<p.params.size(); j++)
-			plugin->setParameter(j, p.params.at(j));
+			plugin.setParameter(j, p.params.at(j));
 	else
-		plugin->setState(PluginState(p.state));
+		plugin.setState(PluginState(p.state));
 
 	/* Fill plug-in MidiIn parameters. Don't fill Plugin::midiInParam if 
 	Patch::midiInParams are zero: it would wipe out the current default 0x0
 	values. */
 	
 	if (!p.midiInParams.empty()) {
-		plugin->midiInParams.clear();
+		plugin.midiInParams.clear();
 		std::size_t paramIndex = 0;
 		for (uint32_t midiInParam : p.midiInParams)
-			plugin->midiInParams.emplace_back(midiInParam, paramIndex++);
+			plugin.midiInParams.emplace_back(midiInParam, paramIndex++);
 	}
 
 	return plugin;

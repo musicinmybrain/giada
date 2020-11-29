@@ -85,15 +85,15 @@ Returns how many plug-ins are in a unknown/not-found state. */
 
 int countUnknownPlugins();
 
-std::unique_ptr<Plugin> makePlugin(const std::string& pid, ID id=0);
-std::unique_ptr<Plugin> makePlugin(int index);
-std::unique_ptr<Plugin> makePlugin(const Plugin& other);
+Plugin makePlugin(const std::string& pid, ID id=0);
+Plugin makePlugin(int index);
+Plugin makePlugin(const Plugin& other);
 
 /* (de)serializePlugin
 Transforms patch data into a Plugin object and vice versa. */
 
-const patch::Plugin     serializePlugin(const Plugin& p);
-std::unique_ptr<Plugin> deserializePlugin(const patch::Plugin& p, patch::Version version);
+Plugin deserializePlugin(const patch::Plugin& p, patch::Version version);
+const patch::Plugin serializePlugin(const Plugin& p);
 
 /* getAvailablePluginInfo
 Returns the available plugin information (name, type, ...) given a plug-in

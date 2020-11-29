@@ -170,12 +170,12 @@ void deleteAction(ID currId, ID nextId)
 
 void updateKeyFrames(std::function<Frame(Frame old)> f)
 {
-	std::unique_ptr<model::Actions> ma = model::actions.clone();
+	model::Actions ma = model::actions.clone();
 	
 	/* Remove all existing actions: let's start from scratch. 
 	TODO - so why cloning it?! */
 
-	ma->map.clear();
+	ma.map.clear();
 
 	/* Copy all existing actions in local data by cloning them, with just a
 	difference: they have a new frame value. */
@@ -188,13 +188,13 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 			for (const Action& a : actions) {
 				Action copy = a;
 				copy.frame = newFrame;
-				ma->map[newFrame].push_back(copy);
+				ma.map[newFrame].push_back(copy);
 			}
 G_DEBUG(oldFrame << " -> " << newFrame);
 		}
 	}
 
-	updateMapPointers(ma->map);
+	updateMapPointers(ma.map);
 
 	model::actions.swap(std::move(ma));
 }

@@ -41,6 +41,7 @@ class MidiLearner
 public:
 
     MidiLearner();
+    MidiLearner(MidiLearner&&) = default;
     MidiLearner(const patch::Channel&);
     MidiLearner(const MidiLearner&);
 

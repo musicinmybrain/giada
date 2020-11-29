@@ -65,7 +65,7 @@ namespace
 /* waveBuffer
 A Wave used during cut/copy/paste operations. */
 
-std::unique_ptr<m::Wave> waveBuffer_;
+m::Wave waveBuffer_;
 
 Frame previewTracker_ = 0;
 
@@ -251,12 +251,12 @@ void paste(ID channelId, ID waveId, int a)
 		return;
 	}
 
-	m::wfx::paste(*waveBuffer_, waveId, a);
+	m::wfx::paste(waveBuffer_, waveId, a);
 	updateWavePtr_(channelId, waveId);
 
 	/* Shift begin/end points to keep the previous position. */
 
-	int   delta = waveBuffer_->getSize();
+	int   delta = waveBuffer_.getSize();
 	Frame begin;
 	Frame end;
 
@@ -405,7 +405,7 @@ void toNewChannel(ID channelId, ID waveId, int a, int b)
 
 bool isWaveBufferFull()
 {
-	return waveBuffer_ != nullptr;
+	return waveBuffer_.id != 0; // Id == 0 -> invalid
 }
 
 

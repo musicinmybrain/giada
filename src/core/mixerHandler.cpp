@@ -63,13 +63,13 @@ namespace mh
 {
 namespace
 {
-std::unique_ptr<Channel> createChannel_(ChannelType type, ID columnId, ID channelId=0)
+Channel createChannel_(ChannelType type, ID columnId, ID channelId=0)
 {
-	std::unique_ptr<Channel> ch = channelManager::create(type, columnId, conf::conf);
+	Channel ch = channelManager::create(type, columnId, conf::conf);
 
 	if (type == ChannelType::MASTER) {
 		assert(channelId != 0);
-		ch->id = channelId;
+		ch.id = channelId;
 	}
 	
 	return ch;
@@ -89,7 +89,7 @@ waveManager::Result createWave_(const std::string& fname)
 /* -------------------------------------------------------------------------- */
 
 
-bool anyChannel_(std::function<bool(const Channel*)> f)
+bool anyChannel_(std::function<bool(const Channel&)> f)
 {
 	model::ChannelsLock lock(model::channels);
 	return std::any_of(model::channels.begin(), model::channels.end(), f);
@@ -105,8 +105,8 @@ std::vector<ID> getChannelsIf_(F f)
 	model::ChannelsLock l(model::channels);
 
 	std::vector<ID> ids;
-	for (const Channel* c : model::channels)
-		if (f(c)) ids.push_back(c->id);
+	for (const Channel& c : model::channels)
+		if (f(c)) ids.push_back(c.id);
 	
 	return ids;	
 }
@@ -114,22 +114,22 @@ std::vector<ID> getChannelsIf_(F f)
 
 std::vector<ID> getChannelsWithWave_()
 {
-	return getChannelsIf_([] (const Channel* c)
+	return getChannelsIf_([] (const Channel& c)
 	{
-		return c->samplePlayer && c->samplePlayer->hasWave();
+		return c.samplePlayer && c.samplePlayer->hasWave();
 	});
 }
 
 
 std::vector<ID> getRecordableChannels_()
 {
-	return getChannelsIf_([] (const Channel* c) { return c->canInputRec() && !c->hasWave(); });
+	return getChannelsIf_([] (const Channel& c) { return c.canInputRec() && !c.hasWave(); });
 }
 
 
 std::vector<ID> getOverdubbableChannels_()
 {
-	return getChannelsIf_([] (const Channel* c) { return c->canInputRec() && c->hasWave(); });
+	return getChannelsIf_([] (const Channel& c) { return c.canInputRec() && c.hasWave(); });
 }
 
 
@@ -139,7 +139,7 @@ std::vector<ID> getOverdubbableChannels_()
 Pushes a new wave into Channel 'ch' and into the corresponding Wave list.
 Use this when modifying a local model, before swapping it. */
 
-void pushWave_(Channel& ch, std::unique_ptr<Wave>&& w)
+void pushWave_(Channel& ch, Wave&& w)
 {
 	assert(ch.getType() == ChannelType::SAMPLE);
 
@@ -176,10 +176,10 @@ void recordChannel_(ID channelId)
 
 	std::string filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
 
-	std::unique_ptr<Wave> wave = waveManager::createEmpty(clock::getFramesInLoop(), 
+	Wave wave = waveManager::createEmpty(clock::getFramesInLoop(), 
 		G_MAX_IO_CHANS, conf::conf.samplerate, filename);
 
-	wave->copyData(mixer::getRecBuffer());
+	wave.copyData(mixer::getRecBuffer());
 
 	/* Update Channel with the new Wave. The function pushWave_ will take
 	care of pushing it into the Wave stack first. */
@@ -300,11 +300,11 @@ int addAndLoadChannel(ID columnId, const std::string& fname)
 }
 
 
-void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
+void addAndLoadChannel(ID columnId, Wave&& w)
 {
-	std::unique_ptr<Channel> ch = createChannel_(ChannelType::SAMPLE, columnId);
+	Channel ch = createChannel_(ChannelType::SAMPLE, columnId);
 
-	pushWave_(*ch.get(), std::move(w));
+	pushWave_(ch, std::move(w));
 
 	/* Then add new channel to Channel list. */
 
@@ -320,20 +320,20 @@ void cloneChannel(ID channelId)
 	model::ChannelsLock cl(model::channels);
 	model::WavesLock    wl(model::waves);
 
-	const Channel&           oldChannel = model::get(model::channels, channelId);
-	std::unique_ptr<Channel> newChannel = channelManager::create(oldChannel);
+	const Channel& oldChannel = model::get(model::channels, channelId);
+	Channel        newChannel = channelManager::create(oldChannel);
 
 	/* Clone plugins, actions and wave first in their own lists. */
 	
 #ifdef WITH_VST
-	newChannel->pluginIds = pluginHost::clonePlugins(oldChannel.pluginIds);
+	newChannel.pluginIds = pluginHost::clonePlugins(oldChannel.pluginIds);
 #endif
-	recorderHandler::cloneActions(channelId, newChannel->id);
+	recorderHandler::cloneActions(channelId, newChannel.id);
 	
-	if (newChannel->samplePlayer && newChannel->samplePlayer->hasWave()) 
+	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave()) 
 	{
-		Wave& wave = model::get(model::waves, newChannel->samplePlayer->getWaveId());
-		pushWave_(*newChannel, waveManager::createFromWave(wave, 0, wave.getSize()));
+		Wave& wave = model::get(model::waves, newChannel.samplePlayer->getWaveId());
+		pushWave_(newChannel, waveManager::createFromWave(wave, 0, wave.getSize()));
 	}
 
 	/* Then push the new channel in the channels list. */
@@ -428,8 +428,9 @@ void updateSoloCount()
 {
 	model::onSwap(model::mixer, [](model::Mixer& m)
 	{
-		m.hasSolos = anyChannel_([](const Channel* ch) {
-		    return !ch->isInternal() && ch->state->solo.load() == true;
+		m.hasSolos = anyChannel_([](const Channel& ch) 
+		{
+		    return !ch.isInternal() && ch.state->solo.load() == true;
 		});
 	});
 }
@@ -492,45 +493,45 @@ void finalizeInputRec()
 
 bool hasInputRecordableChannels()
 {
-	return anyChannel_([](const Channel* ch) { return ch->canInputRec(); });
+	return anyChannel_([](const Channel& ch) { return ch.canInputRec(); });
 }
 
 
 bool hasActionRecordableChannels()
 {
-	return anyChannel_([](const Channel* ch) { return ch->canActionRec(); });
+	return anyChannel_([](const Channel& ch) { return ch.canActionRec(); });
 }
 
 
 bool hasLogicalSamples()
 {
-	return anyChannel_([](const Channel* ch) 
+	return anyChannel_([](const Channel& ch) 
 	{ 
-		return ch->samplePlayer && ch->samplePlayer->hasLogicalWave(); }
+		return ch.samplePlayer && ch.samplePlayer->hasLogicalWave(); }
 	);
 }
 
 
 bool hasEditedSamples()
 {
-	return anyChannel_([](const Channel* ch) 
+	return anyChannel_([](const Channel& ch) 
 	{ 
-		return ch->samplePlayer && ch->samplePlayer->hasEditedWave(); 
+		return ch.samplePlayer && ch.samplePlayer->hasEditedWave(); 
 	});
 }
 
 
 bool hasActions()
 {
-	return anyChannel_([](const Channel* ch) { return ch->state->hasActions; });
+	return anyChannel_([](const Channel& ch) { return ch.state->hasActions; });
 }
 
 
 bool hasAudioData()
 {
-	return anyChannel_([](const Channel* ch)
+	return anyChannel_([](const Channel& ch)
 	{ 
-		return ch->samplePlayer && ch->samplePlayer->hasWave(); 
+		return ch.samplePlayer && ch.samplePlayer->hasWave(); 
 	});
 }
 }}} // giada::m::mh::

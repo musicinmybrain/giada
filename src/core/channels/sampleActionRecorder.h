@@ -50,6 +50,7 @@ class SampleActionRecorder
 public:
 
     SampleActionRecorder(ChannelState*, SamplePlayerState*);
+    SampleActionRecorder(SampleActionRecorder&&) = default;
     SampleActionRecorder(const SampleActionRecorder&, ChannelState* c=nullptr, 
         SamplePlayerState* sc=nullptr);
 

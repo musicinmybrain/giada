@@ -41,6 +41,7 @@ class Wave
 {
 public:
 
+	Wave() = default; // Invalid Wave
 	Wave(ID id);
 	Wave(const Wave& other);
 

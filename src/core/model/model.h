@@ -36,7 +36,7 @@
 #include "core/const.h"
 #include "core/wave.h"
 #include "core/plugins/plugin.h"
-#include "core/rcuList.h"
+#include "core/rcuArray.h"
 #include "core/recorder.h"
 
 
@@ -53,9 +53,9 @@ template<typename L>
 auto getIter_(L& list, ID id)
 {
 	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	auto it = std::find_if(list.begin(), list.end(), [&](auto* t)
+	auto it = std::find_if(list.begin(), list.end(), [&](auto& t)
 	{
-		return t->id == id;
+		return t.id == id;
 	});
 	assert(it != list.end());
 	return it;
@@ -70,8 +70,8 @@ Swaps i-th element from list with a new one and applies a function f to it. */
 template<typename L>
 void onSwapByIndex_(L& list, std::size_t i, std::function<void(typename L::value_type&)> f)
 {
-	std::unique_ptr<typename L::value_type> o = list.clone(i);
-	f(*o.get());
+	typename L::value_type o = list.clone(i);
+	f(o);
 	list.swap(std::move(o), i);
 }
 } // {anonymous}
@@ -141,28 +141,28 @@ struct Actions
 };
 
 
-using ClockLock    = RCUList<Clock>::Lock;
-using MixerLock    = RCUList<Mixer>::Lock;
-using KernelLock   = RCUList<Kernel>::Lock;
-using RecorderLock = RCUList<Recorder>::Lock;
-using MidiInLock   = RCUList<MidiIn>::Lock;
-using ActionsLock  = RCUList<Actions>::Lock;
-using ChannelsLock = RCUList<Channel>::Lock;
-using WavesLock    = RCUList<Wave>::Lock;
+using ClockLock    = RCUArray<Clock>::Lock;
+using MixerLock    = RCUArray<Mixer>::Lock;
+using KernelLock   = RCUArray<Kernel>::Lock;
+using RecorderLock = RCUArray<Recorder>::Lock;
+using MidiInLock   = RCUArray<MidiIn>::Lock;
+using ActionsLock  = RCUArray<Actions>::Lock;
+using ChannelsLock = RCUArray<Channel, 1024>::Lock;
+using WavesLock    = RCUArray<Wave, 1024>::Lock;
 #ifdef WITH_VST
-using PluginsLock  = RCUList<Plugin>::Lock;
+using PluginsLock  = RCUArray<Plugin, 1024>::Lock;
 #endif
 
-extern RCUList<Clock>    clock;
-extern RCUList<Mixer>    mixer;
-extern RCUList<Kernel>   kernel;
-extern RCUList<Recorder> recorder;
-extern RCUList<MidiIn>   midiIn;
-extern RCUList<Actions>  actions;
-extern RCUList<Channel>  channels;
-extern RCUList<Wave>     waves;
+extern RCUArray<Clock>    clock;
+extern RCUArray<Mixer>    mixer;
+extern RCUArray<Kernel>   kernel;
+extern RCUArray<Recorder> recorder;
+extern RCUArray<MidiIn>   midiIn;
+extern RCUArray<Actions>  actions;
+extern RCUArray<Channel, 1024>  channels;
+extern RCUArray<Wave, 1024>     waves;
 #ifdef WITH_VST
-extern RCUList<Plugin>   plugins;
+extern RCUArray<Plugin, 1024>   plugins;
 #endif
 
 
@@ -174,9 +174,9 @@ bool exists(L& list, ID id)
 {
 	static_assert(has_id<typename L::value_type>(), "This type has no ID");	
 	typename L::Lock l(list);
-	auto it = std::find_if(list.begin(), list.end(), [&](auto* t)
+	auto it = std::find_if(list.begin(), list.end(), [&](auto& t)
 	{
-		return t->id == id;
+		return t.id == id;
 	});
 	return it != list.end();
 }
@@ -219,7 +219,7 @@ template<typename L>
 typename L::value_type& get(L& list, ID id)
 {
 	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	return **getIter_(list, id);
+	return *getIter_(list, id);
 }
 
 
@@ -234,9 +234,9 @@ void onGet(L& list, ID id, std::function<void(typename L::value_type&)> f, bool 
 {
 	static_assert(has_id<typename L::value_type>(), "This type has no ID");
 	typename L::Lock l(list);
-	f(**getIter_(list, id));
+	f(*getIter_(list, id));
 	if (rebuild)
-		list.changed.store(true);
+		list.resetChanged(true);
 }
 
 

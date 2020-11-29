@@ -60,17 +60,17 @@ void store(patch::Patch& patch)
 	patch.samplerate = conf::conf.samplerate;
 
 #ifdef WITH_VST
-	for (const Plugin* p : plugins) 
-		patch.plugins.push_back(pluginManager::serializePlugin(*p));
+	for (const Plugin& p : plugins) 
+		patch.plugins.push_back(pluginManager::serializePlugin(p));
 #endif
 
 	patch.actions = recorderHandler::serializeActions(actions.get()->map); 
 
-	for (const Wave* w : waves)
-		patch.waves.push_back(waveManager::serializeWave(*w));
+	for (const Wave& w : waves)
+		patch.waves.push_back(waveManager::serializeWave(w));
 
-	for (const Channel* c : channels)
-		patch.channels.push_back(channelManager::serializeChannel(*c));
+	for (const Channel& c : channels)
+		patch.channels.push_back(channelManager::serializeChannel(c));
 }
 
 
@@ -120,9 +120,8 @@ void load(const patch::Patch& patch)
 #endif
     
 	for (const patch::Wave& pwave : patch.waves) {
-		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, conf::conf.samplerate,
-			conf::conf.rsmpQuality);
-		if (w != nullptr)
+		Wave w = waveManager::deserializeWave(pwave, conf::conf.samplerate, conf::conf.rsmpQuality);
+		if (w.id != 0) // If valid
 			waves.push(std::move(w));	
 	}
 
@@ -137,13 +136,13 @@ void load(const patch::Patch& patch)
 
 	float samplerateRatio = conf::conf.samplerate / static_cast<float>(patch::patch.samplerate);
 	
-	for (Channel* c : channels) {
-		if (!c->samplePlayer)
+	for (Channel& c : channels) {
+		if (!c.samplePlayer)
 			continue;
-		if (exists(waves, c->samplePlayer->getWaveId()))
-			c->samplePlayer->setWave(get(waves, c->samplePlayer->getWaveId()), samplerateRatio);
+		if (model::exists(waves, c.samplePlayer->getWaveId()))
+			c.samplePlayer->setWave(get(waves, c.samplePlayer->getWaveId()), samplerateRatio);
 		else
-			c->samplePlayer->setInvalidWave();
+			c.samplePlayer->setInvalidWave();
 	}
 }
 

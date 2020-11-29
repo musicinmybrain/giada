@@ -52,7 +52,7 @@ void close();
 /* addPlugin
 Adds a new plugin to channel 'channelId'. */
 
-void addPlugin(std::unique_ptr<Plugin> p, ID channelId);
+void addPlugin(Plugin&& p, ID channelId);
 
 /* processStack
 Applies the fx list to the buffer. */

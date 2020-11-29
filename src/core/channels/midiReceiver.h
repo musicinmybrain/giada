@@ -53,6 +53,7 @@ class MidiReceiver
 public:
 
     MidiReceiver(ChannelState*);
+    MidiReceiver(MidiReceiver&&) = default;
     MidiReceiver(const patch::Channel&, ChannelState*);
     MidiReceiver(const MidiReceiver&, ChannelState* c=nullptr);
 

@@ -43,7 +43,7 @@ public:
 
     WaveReader();
     WaveReader(const WaveReader&);
-    WaveReader(WaveReader&&);
+    WaveReader(WaveReader&&); // TODO- should be defaulted
     WaveReader& operator=(const WaveReader&);
     WaveReader& operator=(WaveReader&&);
     ~WaveReader();

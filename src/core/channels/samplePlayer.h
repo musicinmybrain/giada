@@ -47,6 +47,7 @@ class SamplePlayer
 public:
 
     SamplePlayer(ChannelState*);
+    SamplePlayer(SamplePlayer&&) = default;
     SamplePlayer(const patch::Channel& p, ChannelState*);
     SamplePlayer(const SamplePlayer&, ChannelState* c=nullptr);
 

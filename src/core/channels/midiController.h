@@ -44,6 +44,7 @@ class MidiController
 public:
 
     MidiController(ChannelState*);
+    MidiController(MidiController&&) = default;
     MidiController(const MidiController&, ChannelState* c=nullptr);
 
     void parse(const mixer::Event& e) const;

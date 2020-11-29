@@ -72,7 +72,7 @@ int addAndLoadChannel(ID columnId, const std::string& fname);
 /* addAndLoadChannel (2)
 Same as (1), but Wave is already provided. */
 
-void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w); 
+void addAndLoadChannel(ID columnId, Wave&& w); 
 
 /* freeChannel
 Unloads existing Wave from a Sample Channel. */

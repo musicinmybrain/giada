@@ -55,6 +55,7 @@ class AudioReceiver
 public:
 
     AudioReceiver(ChannelState*, const conf::Conf&);
+    AudioReceiver(AudioReceiver&&) = default;
     AudioReceiver(const patch::Channel&, ChannelState*);
     AudioReceiver(const AudioReceiver&, ChannelState* c=nullptr);
 

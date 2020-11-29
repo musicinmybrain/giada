@@ -45,6 +45,7 @@ class SampleController
 public:
 
     SampleController(ChannelState*, SamplePlayerState*);
+    SampleController(SampleController&&) = default;
     SampleController(const SampleController&, ChannelState* c=nullptr, SamplePlayerState* s=nullptr);
 
     void parse(const mixer::Event& e) const;

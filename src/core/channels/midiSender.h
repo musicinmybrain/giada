@@ -43,6 +43,7 @@ class MidiSender
 public:
 
     MidiSender(ChannelState*);
+    MidiSender(MidiSender&&) = default;
     MidiSender(const patch::Channel&, ChannelState*);
     MidiSender(const MidiSender&, ChannelState* c=nullptr);
 

@@ -60,10 +60,7 @@ public:
     Channel(ChannelType t, ID id, ID columnId, Frame bufferSize, const conf::Conf& c);
     Channel(const Channel&);
     Channel(const patch::Channel& p, Frame bufferSize);
-    Channel(Channel&&)                 = default;
-    Channel& operator=(const Channel&) = delete;
-    Channel& operator=(Channel&&)      = delete;
-    ~Channel()                         = default;
+    Channel(Channel&&) = default;
 
     /* parse
     Parses live events. */

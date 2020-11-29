@@ -46,9 +46,11 @@ class Plugin : private juce::ComponentListener
 {
 public:
 
+	Plugin() = default; // Invalid Plugin
 	Plugin(ID id, const std::string& UID);
 	Plugin(ID id, std::unique_ptr<juce::AudioPluginInstance> p, double samplerate, int buffersize);
 	Plugin(const Plugin& o);
+	Plugin(Plugin&& o);
 	~Plugin();
 
 	/* getUniqueId

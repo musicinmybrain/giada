@@ -91,12 +91,29 @@ Plugin::Plugin(ID id, std::unique_ptr<juce::AudioPluginInstance> plugin, double 
 /* -------------------------------------------------------------------------- */
 
 
+/* The juce::AudioPluginInstance member (m_plugin) is copied by pluginManager 
+and then moved into this instance. */
+
 Plugin::Plugin(const Plugin& o)
 : id            (o.id)
 , midiInParams  (o.midiInParams)
 , valid         (o.valid)
 , onEditorResize(o.onEditorResize)
-, m_plugin      (std::move(pluginManager::makePlugin(o)->m_plugin))
+, m_plugin      (std::move(pluginManager::makePlugin(o).m_plugin))
+, m_bypass      (o.m_bypass.load())
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+Plugin::Plugin(Plugin&& o)
+: id            (std::move(o.id))
+, midiInParams  (std::move(o.midiInParams))
+, valid         (std::move(o.valid))
+, onEditorResize(std::move(o.onEditorResize))
+, m_plugin      (std::move(o.m_plugin))
 , m_bypass      (o.m_bypass.load())
 {
 }
@@ -107,7 +124,7 @@ Plugin::Plugin(const Plugin& o)
 
 Plugin::~Plugin()
 {
-	if (!valid)
+	if (!valid || m_plugin == nullptr) // m_plugin is null when Plugin is moved
 		return;
 
 	juce::AudioProcessorEditor* e = m_plugin->getActiveEditor();

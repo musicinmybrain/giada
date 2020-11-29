@@ -110,25 +110,25 @@ Result createFromFile(const std::string& path, ID id, int samplerate, int qualit
 
 	waveId_.set(id);
 
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.get(id));
-	wave->alloc(header.frames, header.channels, header.samplerate, getBits_(header), path);
+	Wave wave(waveId_.get(id));
+	wave.alloc(header.frames, header.channels, header.samplerate, getBits_(header), path);
 
-	if (sf_readf_float(fileIn, wave->getFrame(0), header.frames) != header.frames)
+	if (sf_readf_float(fileIn, wave.getFrame(0), header.frames) != header.frames)
 		u::log::print("[waveManager::create] warning: incomplete read!\n");
 
 	sf_close(fileIn);
 
-	if (header.channels == 1 && !wfx::monoToStereo(*wave))
+	if (header.channels == 1 && !wfx::monoToStereo(wave))
 		return { G_RES_ERR_PROCESSING };
 	
-	if (wave->getRate() != samplerate) {
+	if (wave.getRate() != samplerate) {
 		u::log::print("[waveManager::create] input rate (%d) != required rate (%d), conversion needed\n",
-			wave->getRate(), samplerate);
-		if (resample(*wave.get(), quality, samplerate) != G_RES_OK)
+			wave.getRate(), samplerate);
+		if (resample(wave, quality, samplerate) != G_RES_OK)
 			return  { G_RES_ERR_PROCESSING };
 	}
 
-	u::log::print("[waveManager::create] new Wave created, %d frames\n", wave->getSize());
+	u::log::print("[waveManager::create] new Wave created, %d frames\n", wave.getSize());
 
 	return { G_RES_OK, std::move(wave) };
 }
@@ -136,15 +136,14 @@ Result createFromFile(const std::string& path, ID id, int samplerate, int qualit
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Wave> createEmpty(int frames, int channels, int samplerate, 
-	const std::string& name)
+Wave createEmpty(int frames, int channels, int samplerate, const std::string& name)
 {
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.get());
-	wave->alloc(frames, channels, samplerate, G_DEFAULT_BIT_DEPTH, name);
-	wave->setLogical(true);
+	Wave wave(waveId_.get());
+	wave.alloc(frames, channels, samplerate, G_DEFAULT_BIT_DEPTH, name);
+	wave.setLogical(true);
 
 	u::log::print("[waveManager::createEmpty] new empty Wave created, %d frames\n", 
-		wave->getSize());
+		wave.getSize());
 
 	return wave;
 }
@@ -153,15 +152,15 @@ std::unique_ptr<Wave> createEmpty(int frames, int channels, int samplerate,
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Wave> createFromWave(const Wave& src, int a, int b)
+Wave createFromWave(const Wave& src, int a, int b)
 {
 	int channels = src.getChannels();
 	int frames   = b - a;
 
-	std::unique_ptr<Wave> wave = std::make_unique<Wave>(waveId_.get());
-	wave->alloc(frames, channels, src.getRate(), src.getBits(), src.getPath());
-	wave->copyData(src.getFrame(a), frames, channels);
-	wave->setLogical(true);
+	Wave wave(waveId_.get());
+	wave.alloc(frames, channels, src.getRate(), src.getBits(), src.getPath());
+	wave.copyData(src.getFrame(a), frames, channels);
+	wave.setLogical(true);
 
 	u::log::print("[waveManager::createFromWave] new Wave created, %d frames\n", frames);
 
@@ -172,7 +171,7 @@ std::unique_ptr<Wave> createFromWave(const Wave& src, int a, int b)
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Wave> deserializeWave(const patch::Wave& w, int samplerate, int quality)
+Wave deserializeWave(const patch::Wave& w, int samplerate, int quality)
 {
 	return createFromFile(w.path, w.id, samplerate, quality).wave;
 }

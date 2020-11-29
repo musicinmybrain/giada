@@ -29,21 +29,27 @@
 #include <cassert>
 #include <atomic>
 #include <iterator>
+#include <thread>
+#include <type_traits>
 
 
 /* RCUArray
 Thread-safe array of T protected by a Read-Copy-Update (RCU) mechanism. */
 
-template<typename T, size_t S>
+template<typename T, size_t S=1>
 class RCUArray
 {
 public:
 
+	// TODO - useless here?
+	static_assert(std::is_move_constructible_v<T>, "T must be move constructible!");
+	static_assert(std::is_copy_constructible_v<T>, "T must be copy constructible!");
+
 	/* value_type
 	A variable that holds the type of data contained in the list. Used for
-	metaprogramming stuff. */
+	metaprogramming stuff outside this class. */
 
-	using value_type = std::array<std::atomic<T*>, S>;
+	using value_type = T;
 
 	/* ---------------------------------------------------------------------- */
 
@@ -105,6 +111,11 @@ public:
 	{
 		m_readers[0].store(0);
 		m_readers[1].store(0);
+	}
+
+	RCUArray(T&& data) : RCUArray()
+	{
+		push(std::move(data));
 	}
 
 	RCUArray(const RCUArray&)            = delete;
@@ -176,7 +187,8 @@ public:
 	T* back() const	
 	{ 
 		assert(m_readers[t_grace].load() > 0 && "Forgot lock before reading"); 
-		return m_data.back().load();  // TODO memory order
+		std::size_t head = m_head.load() - 1; // TODO memory order
+		return m_data[head].load();  // TODO memory order
 	}
 
 
@@ -192,6 +204,37 @@ public:
 		TODO is this necessary? If so, should this be protected with the spinlock? */
 		assert(m_writing.load() == false);
 		return *m_data[i];
+	}
+
+
+	/* ---------------------------------------------------------------------- */
+
+	/* size
+	Returns the number of valid items in the array. Note that size() != S. */
+
+	std::size_t size() const
+	{
+		return m_head.load();  // TODO memory order
+	}
+
+
+	/* ---------------------------------------------------------------------- */
+
+
+	/* hasChanged
+	Tells if someone has modified the array. */
+
+	bool hasChanged() const
+	{
+		return m_changed.load(std::memory_order_relaxed);	
+	}
+
+	/* resetChanged
+	Resets the 'changed' flag to the original value. */
+
+	void resetChanged(bool v=false)
+	{
+		m_changed.store(v, std::memory_order_relaxed);
 	}
 
 
@@ -233,8 +276,9 @@ public:
 
 	/* push
 	Moves a new element into the list. Returns true if the operation is 
-	successful, i.e. there's enough space in the array for the insertion and
-	the write is allowed. */
+	successful, that is there's enough space in the array for the insertion and
+	the write is allowed. Note: objects are added by moving them into this array
+	(note the && rvalue ref), so they become invalid afterwards. */
 
 	bool push(T&& data)
 	{
@@ -360,17 +404,6 @@ public:
 		endWrite();
 		return true;
 	}
-
-
-	/* ---------------------------------------------------------------------- */
-
-	/* size
-	Returns the number of valid items in the array. Note that size() != S. */
-
-	std::size_t size() const
-	{
-		return m_head.load();  // TODO memory order
-	}
 	
 private:
 
@@ -429,7 +462,7 @@ private:
 	/* m_data
 	Underlying container. */
 
-	value_type m_data;
+	std::array<std::atomic<T*>, S> m_data;
 
 	/* m_readers
 	An array of 2 elements, where element 0 contains the number of readers in

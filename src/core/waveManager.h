@@ -47,7 +47,7 @@ namespace waveManager
 struct Result
 {
     int status;
-    std::unique_ptr<Wave> wave = nullptr;
+    Wave wave {};
 };
 /* init
 Initializes internal data. */
@@ -64,19 +64,18 @@ Result createFromFile(const std::string& path, ID id, int samplerate, int qualit
 /* createEmpty
 Creates a new silent Wave object. */
 
-std::unique_ptr<Wave> createEmpty(int frames, int channels, int samplerate, 
-    const std::string& name);
+Wave createEmpty(int frames, int channels, int samplerate, const std::string& name);
 
 /* createFromWave
 Creates a new Wave from an existing one, copying the data in range a - b. */
 
-std::unique_ptr<Wave> createFromWave(const Wave& src, int a, int b);
+Wave createFromWave(const Wave& src, int a, int b);
 
 /* (de)serializeWave
 Creates a new Wave given the patch raw data and vice versa. */
 
-std::unique_ptr<Wave> deserializeWave(const patch::Wave& w, int samplerate, int quality);
-const patch::Wave     serializeWave(const Wave& w);
+Wave deserializeWave(const patch::Wave& w, int samplerate, int quality);
+const patch::Wave serializeWave(const Wave& w);
 
 /* resample
 Change sample rate of 'w' to the desider value. The 'quality' parameter sets the
