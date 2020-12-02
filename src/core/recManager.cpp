@@ -107,14 +107,14 @@ bool isRecording()
 bool isRecordingAction()
 { 
 	model::RecorderLock lock(model::recorder); 
-	return model::recorder.get()->isRecordingAction;
+	return model::recorder.get().isRecordingAction;
 }
 
 
 bool isRecordingInput()
 { 
 	model::RecorderLock lock(model::recorder); 
-	return model::recorder.get()->isRecordingInput; 
+	return model::recorder.get().isRecordingInput; 
 }
 
 

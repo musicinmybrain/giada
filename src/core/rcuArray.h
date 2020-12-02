@@ -161,13 +161,13 @@ public:
 	/* ---------------------------------------------------------------------- */
 
 	/* get
-	Returns a reference to the data held by node 'i'. */
+	Returns a reference to the data held at position 'i'. */
 
-	T* get(std::size_t i=0) const
+	T& get(std::size_t i=0) const
 	{
 		assert(i < m_head.load() && "Index overflow");
 		assert(m_readers[t_grace].load() > 0 && "Forgot lock before reading");
-		return m_data[i];
+		return *m_data[i].load(); // TODO memory order
 	}
 
 
@@ -176,7 +176,7 @@ public:
 	/* Subscript operator []
 	Same as above, for the [] syntax. */
 
-	T* operator[] (std::size_t i) const	{ return get(i); }
+	T& operator[] (std::size_t i) const { return get(i); }
 
 
 	/* ---------------------------------------------------------------------- */

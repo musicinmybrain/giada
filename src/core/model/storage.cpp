@@ -52,10 +52,10 @@ void store(patch::Patch& patch)
 	ClockLock    cl (clock);
 	ChannelsLock chl(channels);
 
-	patch.bars       = clock.get()->bars;
-	patch.beats      = clock.get()->beats;
-	patch.bpm        = clock.get()->bpm;
-	patch.quantize   = clock.get()->quantize;
+	patch.bars       = clock.get().bars;
+	patch.beats      = clock.get().beats;
+	patch.bpm        = clock.get().bpm;
+	patch.quantize   = clock.get().quantize;
 	patch.metronome  = sequencer::isMetronomeOn();
 	patch.samplerate = conf::conf.samplerate;
 
@@ -64,7 +64,7 @@ void store(patch::Patch& patch)
 		patch.plugins.push_back(pluginManager::serializePlugin(p));
 #endif
 
-	patch.actions = recorderHandler::serializeActions(actions.get()->map); 
+	patch.actions = recorderHandler::serializeActions(actions.get().map); 
 
 	for (const Wave& w : waves)
 		patch.waves.push_back(waveManager::serializeWave(w));
@@ -81,17 +81,17 @@ void store(conf::Conf& conf)
 {
 	MidiInLock l(midiIn);
 
-	conf.midiInEnabled    = midiIn.get()->enabled;
-	conf.midiInFilter     = midiIn.get()->filter;
-	conf.midiInRewind     = midiIn.get()->rewind;
-	conf.midiInStartStop  = midiIn.get()->startStop;
-	conf.midiInActionRec  = midiIn.get()->actionRec;
-	conf.midiInInputRec   = midiIn.get()->inputRec;
-	conf.midiInMetronome  = midiIn.get()->metronome;
-	conf.midiInVolumeIn   = midiIn.get()->volumeIn;
-	conf.midiInVolumeOut  = midiIn.get()->volumeOut;
-	conf.midiInBeatDouble = midiIn.get()->beatDouble;
-	conf.midiInBeatHalf   = midiIn.get()->beatHalf;
+	conf.midiInEnabled    = midiIn.get().enabled;
+	conf.midiInFilter     = midiIn.get().filter;
+	conf.midiInRewind     = midiIn.get().rewind;
+	conf.midiInStartStop  = midiIn.get().startStop;
+	conf.midiInActionRec  = midiIn.get().actionRec;
+	conf.midiInInputRec   = midiIn.get().inputRec;
+	conf.midiInMetronome  = midiIn.get().metronome;
+	conf.midiInVolumeIn   = midiIn.get().volumeIn;
+	conf.midiInVolumeOut  = midiIn.get().volumeOut;
+	conf.midiInBeatDouble = midiIn.get().beatDouble;
+	conf.midiInBeatHalf   = midiIn.get().beatHalf;
 }
 
 
@@ -155,7 +155,7 @@ void load(const conf::Conf& c)
 	onSwap(midiIn, [&](MidiIn& m)
 	{
 		m.enabled    = c.midiInEnabled;
-		m.filter      = c.midiInFilter;
+		m.filter     = c.midiInFilter;
 		m.rewind     = c.midiInRewind;
 		m.startStop  = c.midiInStartStop;
 		m.actionRec  = c.midiInActionRec;

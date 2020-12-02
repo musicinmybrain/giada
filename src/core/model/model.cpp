@@ -111,15 +111,15 @@ void debug()
 
 	puts("model::clock");
 
-	printf("\tclock.status   = %d\n", static_cast<int>(clock.get()->status));
-	printf("\tclock.bars     = %d\n", clock.get()->bars);
-	printf("\tclock.beats    = %d\n", clock.get()->beats);
-	printf("\tclock.bpm      = %f\n", clock.get()->bpm);
-	printf("\tclock.quantize = %d\n", clock.get()->quantize);
+	printf("\tclock.status   = %d\n", static_cast<int>(clock.get().status));
+	printf("\tclock.bars     = %d\n", clock.get().bars);
+	printf("\tclock.beats    = %d\n", clock.get().beats);
+	printf("\tclock.bpm      = %f\n", clock.get().bpm);
+	printf("\tclock.quantize = %d\n", clock.get().quantize);
 
 	puts("model::actions");
 
-	for (auto& kv : actions.get()->map) {
+	for (auto& kv : actions.get().map) {
 		printf("\tframe: %d\n", kv.first);
 		for (const Action& a : kv.second)
 			printf("\t\t(%p) - ID=%d, frame=%d, channel=%d, value=0x%X, prevId=%d, prev=%p, nextId=%d, next=%p\n", 

@@ -190,7 +190,7 @@ Master_InputData master_getInputData()
 	namespace mm = m::model;
 
 	mm::MidiInLock l(mm::midiIn);
-	return Master_InputData(*mm::midiIn.get());
+	return Master_InputData(mm::midiIn.get());
 }
 
 

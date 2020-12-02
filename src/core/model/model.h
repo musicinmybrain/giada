@@ -208,7 +208,7 @@ ID getId(L& list, std::size_t i)
 {
 	static_assert(has_id<typename L::value_type>(), "This type has no ID");
 	typename L::Lock l(list);
-	return list.get(i)->id;
+	return list.get(i).id;
 }
 
 

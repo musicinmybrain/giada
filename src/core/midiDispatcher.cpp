@@ -62,8 +62,8 @@ std::function<void(MidiEvent)> learnCb_  = nullptr;
 bool isMasterMidiInAllowed_(int c)
 {
 	model::MidiInLock l(model::midiIn);
-	int filter   = model::midiIn.get()->filter;
-	bool enabled = model::midiIn.get()->enabled;
+	int filter   = model::midiIn.get().filter;
+	bool enabled = model::midiIn.get().enabled;
 	return enabled && (filter == -1 || filter == c);
 }
 
@@ -189,45 +189,45 @@ void processMaster_(const MidiEvent& midiEvent)
 	m::model::MidiInLock l(m::model::midiIn);
 
 	const uint32_t       pure   = midiEvent.getRawNoVelocity();
-	const model::MidiIn* midiIn = model::midiIn.get();
+	const model::MidiIn& midiIn = model::midiIn.get();
 
-	if      (pure == midiIn->rewind) {
+	if      (pure == midiIn.rewind) {
 		c::events::rewindSequencer(Thread::MIDI);
 		u::log::print("  >>> rewind (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->startStop) {
+	else if (pure == midiIn.startStop) {
 		c::events::toggleSequencer(Thread::MIDI);
 		u::log::print("  >>> startStop (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->actionRec) {
+	else if (pure == midiIn.actionRec) {
 		c::events::toggleActionRecording();
 		u::log::print("  >>> actionRec (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->inputRec) {
+	else if (pure == midiIn.inputRec) {
 		c::events::toggleInputRecording();
 		u::log::print("  >>> inputRec (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->metronome) {
+	else if (pure == midiIn.metronome) {
 		c::events::toggleMetronome();
 		u::log::print("  >>> metronome (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->volumeIn) {
+	else if (pure == midiIn.volumeIn) {
 		float vf = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, G_MAX_VOLUME); 
 		c::events::setMasterInVolume(vf, Thread::MIDI);
 		u::log::print("  >>> input volume (master) (pure=0x%X, value=%d, float=%f)\n",
 			pure, midiEvent.getVelocity(), vf);
 	}
-	else if (pure == midiIn->volumeOut) {
+	else if (pure == midiIn.volumeOut) {
 		float vf = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, G_MAX_VOLUME); 
 		c::events::setMasterOutVolume(vf, Thread::MIDI);
 		u::log::print("  >>> output volume (master) (pure=0x%X, value=%d, float=%f)\n",
 			pure, midiEvent.getVelocity(), vf);
 	}
-	else if (pure == midiIn->beatDouble) {
+	else if (pure == midiIn.beatDouble) {
 		c::events::multiplyBeats();
 		u::log::print("  >>> sequencer x2 (master) (pure=0x%X)\n", pure);
 	}
-	else if (pure == midiIn->beatHalf) {
+	else if (pure == midiIn.beatHalf) {
 		c::events::divideBeats();
 		u::log::print("  >>> sequencer /2 (master) (pure=0x%X)\n", pure);
 	}

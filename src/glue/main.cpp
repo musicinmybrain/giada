@@ -151,7 +151,7 @@ Timer getTimer()
 	namespace mm = m::model;
 	
 	mm::ClockLock c(mm::clock);
-	return Timer(*mm::clock.get());
+	return Timer(mm::clock.get());
 }
 
 
@@ -167,7 +167,7 @@ IO getIO()
 
 	return IO(mm::get(mm::channels, m::mixer::MASTER_OUT_CHANNEL_ID), 
 	          mm::get(mm::channels, m::mixer::MASTER_IN_CHANNEL_ID),
-			  *mm::mixer.get());
+			  mm::mixer.get());
 }
 
 

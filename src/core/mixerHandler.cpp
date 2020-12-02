@@ -467,7 +467,7 @@ float getOutVol()
 
 bool getInToOut()
 {
-	model::MixerLock lock(model::mixer); return model::mixer.get()->inToOut;
+	model::MixerLock lock(model::mixer); return model::mixer.get().inToOut;
 }
 
 

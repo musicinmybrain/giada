@@ -100,7 +100,7 @@ bool exists_(ID channelId, Frame frame, const MidiEvent& event, const ActionMap&
 bool exists_(ID channelId, Frame frame, const MidiEvent& event)
 {
 	model::ActionsLock lock(model::actions);
-	return exists_(channelId, frame, event, model::actions.get()->map);
+	return exists_(channelId, frame, event, model::actions.get().map);
 }
 } // {anonymous}
 
@@ -183,7 +183,7 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 	{
 		model::ActionsLock lock(model::actions);
 
-		for (const auto& [oldFrame, actions] : model::actions.get()->map) {
+		for (const auto& [oldFrame, actions] : model::actions.get().map) {
 			Frame newFrame = f(oldFrame);
 			for (const Action& a : actions) {
 				Action copy = a;
@@ -247,7 +247,7 @@ bool hasActions(ID channelId, int type)
 {
 	model::ActionsLock lock(model::actions);
 	
-	for (const auto& [frame, actions] : model::actions.get()->map)
+	for (const auto& [frame, actions] : model::actions.get().map)
 		for (const Action& a : actions)
 			if (a.channelId == channelId && (type == 0 || type == a.event.getStatus()))
 				return true;
@@ -344,9 +344,9 @@ const std::vector<Action>* getActionsOnFrame(Frame frame)
 {
 	model::ActionsLock lock(model::actions);
 	
-	if (model::actions.get()->map.count(frame) == 0)
+	if (model::actions.get().map.count(frame) == 0)
 		return nullptr;
-	return &model::actions.get()->map.at(frame);
+	return &model::actions.get().map.at(frame);
 }
 
 
@@ -405,7 +405,7 @@ void forEachAction(std::function<void(const Action&)> f)
 {
 	model::ActionsLock lock(model::actions);
 	
-	for (auto& [_, actions] : model::actions.get()->map)
+	for (auto& [_, actions] : model::actions.get().map)
 		for (const Action& action : actions)
 			f(action);
 }

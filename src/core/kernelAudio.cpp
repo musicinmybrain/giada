@@ -82,7 +82,7 @@ bool JackState::operator!=(const JackState& o) const
 bool isReady()
 {
 	model::KernelLock lock(model::kernel);
-	return model::kernel.get()->audioReady;
+	return model::kernel.get().audioReady;
 }
 
 

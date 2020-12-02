@@ -91,7 +91,7 @@ bool isChannelAudible_(const Channel& c)
     if (c.state->mute.load() == true)
         return false;
     model::MixerLock ml(model::mixer);
-    bool hasSolos = model::mixer.get()->hasSolos;
+    bool hasSolos = model::mixer.get().hasSolos;
     return !hasSolos || (hasSolos && c.state->solo.load() == true);
 }
 
