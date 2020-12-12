@@ -44,9 +44,9 @@ namespace giada::m::clock
 {
 namespace
 {
-std::atomic<int> currentFrameWait_(0);
-std::atomic<int> currentFrame_(0);
-std::atomic<int> currentBeat_(0);
+std::atomic<int> currentFrameWait_(0);   // TODO - move to model::clock
+std::atomic<int> currentFrame_(0);       // TODO - move to model::clock
+std::atomic<int> currentBeat_(0);        // TODO - move to model::clock
 
 /* quantizerStep_
 Tells how many frames to wait to perform a quantized action. */
