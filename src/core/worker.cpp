@@ -4,7 +4,7 @@
  *
  * -----------------------------------------------------------------------------
  *
- * Copyright (C) 2010-2021 Giovanni A. Zuliani | Monocasual
+ * Copyright (C) 2010-2020 Giovanni A. Zuliani | Monocasual
  *
  * This file is part of Giada - Your Hardcore Loopmachine.
  *
@@ -25,34 +25,40 @@
  * -------------------------------------------------------------------------- */
 
 
-#ifndef G_MIDI_LEARN_PARAM_H
-#define G_MIDI_LEARN_PARAM_H
+#include "utils/time.h"
+#include "worker.h"
 
 
-#include <atomic>
-#include "core/weakAtomic.h"
-
-
-namespace giada::m
+namespace giada
 {
-class MidiLearnParam
+Worker::Worker() : m_running(false)
 {
-public:
-
-	MidiLearnParam() = default;
-	MidiLearnParam(uint32_t v, std::size_t index=0);
-	MidiLearnParam(const MidiLearnParam& o) = default;
-
-    uint32_t getValue() const;
-    std::size_t getIndex() const;
-    void setValue(uint32_t v);
-
-private:
-
-    WeakAtomic<uint32_t> m_param;
-    std::size_t          m_index;
-};
-} // giada::m::
+}
 
 
-#endif
+Worker::~Worker()
+{
+    stop();
+}
+
+
+void Worker::start(std::function<void()> f, int sleep)
+{
+    m_running.store(true);
+    m_thread = std::thread([this, f, sleep]()
+    {
+        while (m_running.load() == true)
+        {
+            f();
+            u::time::sleep(sleep);
+        }
+    });
+}
+
+
+void Worker::stop()
+{
+    m_running.store(false);
+    m_thread.join();
+}
+} // giada::

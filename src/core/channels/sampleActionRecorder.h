@@ -32,8 +32,7 @@
 #include "core/types.h"
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 namespace mixer
 {
@@ -71,7 +70,67 @@ private:
     ChannelState*      m_channelState;
     SamplePlayerState* m_samplePlayerState;
 };
-}} // giada::m::
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class SamplePlayer_NEW;
+class SampleActionRecorder_NEW
+{
+public:
+
+    SampleActionRecorder_NEW(Channel_NEW&, SamplePlayer_NEW&);
+
+    void react(const eventDispatcher::Event& e);
+
+private:
+    void record(int note);
+    void onKeyPress();
+    void onKeyRelease();
+    //void onFirstBeat() const;
+
+    void toggleReadActions();
+    void startReadActions();
+    void stopReadActions(ChannelStatus curRecStatus);
+    void killReadActions();
+
+    bool canRecord() const;
+    void pumpRecStatus(ChannelStatus s) const;
+
+    Channel_NEW&      m_channel;
+    SamplePlayer_NEW& m_samplePlayer;
+};
+} // giada::m::
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::sampleActionRecorder
+{
+struct Data
+{
+};
+
+void react(channel::Data& ch, const eventDispatcher::Event& e);
+}
 
 #endif

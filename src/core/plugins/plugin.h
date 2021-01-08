@@ -50,6 +50,7 @@ public:
 	Plugin(ID id, std::unique_ptr<juce::AudioPluginInstance> p, double samplerate, int buffersize);
 	Plugin(const Plugin& o);
 	~Plugin();
+	/* TODO - mark is as non-copiable/movable*/
 
 	/* getUniqueId
 	Returns a string-based UID. */

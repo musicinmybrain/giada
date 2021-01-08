@@ -48,19 +48,13 @@ namespace
 {
 void setRecordingAction_(bool v)
 {
-	model::onSwap(model::recorder, [&](model::Recorder& r)
-	{
-		r.isRecordingAction = v;
-	});
+    model::swap([v](model::Layout& l) { l.recorder.isRecordingAction = v; }, model::SwapType::NONE);
 }
 
 
 void setRecordingInput_(bool v)
 {
-	model::onSwap(model::recorder, [&](model::Recorder& r)
-	{
-		r.isRecordingInput = v;
-	});
+    model::swap([v](model::Layout& l) { l.recorder.isRecordingInput = v; }, model::SwapType::NONE);
 }
 
 

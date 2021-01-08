@@ -33,6 +33,8 @@ project(giada LANGUAGES CXX)
 
 list(APPEND SOURCES
 	src/main.cpp
+	src/core/worker.cpp
+	src/core/eventDispatcher.cpp
 	src/core/midiDispatcher.cpp
 	src/core/midiMapConf.cpp
 	src/core/midiEvent.cpp
@@ -65,6 +67,8 @@ list(APPEND SOURCES
 	src/core/channels/waveReader.cpp
 	src/core/channels/midiController.cpp
 	src/core/channels/sampleController.cpp
+	src/core/channels/sampleReactor.cpp
+	src/core/channels/sampleAdvancer.cpp
 	src/core/channels/samplePlayer.cpp
 	src/core/channels/audioReceiver.cpp
 	src/core/channels/midiLighter.cpp

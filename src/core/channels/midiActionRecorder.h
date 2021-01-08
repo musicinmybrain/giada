@@ -32,8 +32,7 @@
 #include "core/types.h"
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 namespace mixer
 {
@@ -56,7 +55,46 @@ private:
 
     ChannelState* m_channelState;
 };
-}} // giada::m::
 
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class MidiActionRecorder_NEW
+{
+public:
+
+    MidiActionRecorder_NEW(ID channelId);
+
+    void react(const eventDispatcher::Event& e);
+
+private:
+
+    bool canRecord() const;
+    void record(const MidiEvent& e);
+
+    ID m_channelId;
+};
+} // giada::m::
+
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::midiActionRecorder
+{
+struct Data
+{
+};
+
+void react(channel::Data& ch, const eventDispatcher::Event& e);
+}
 
 #endif

@@ -29,11 +29,11 @@
 #define G_CHANNEL_SAMPLE_CONTROLLER_H
 
 
+#include "core/eventDispatcher.h"
 #include "core/types.h"
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 namespace mixer
 {
@@ -70,7 +70,52 @@ private:
     ChannelState*      m_channelState;
     SamplePlayerState* m_samplePlayerState;
 };
-}} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class SamplePlayer_NEW;
+class SampleController_NEW
+{
+public:
+
+    SampleController_NEW(Channel_NEW&, SamplePlayer_NEW&);
+
+    void onLastFrame() const;
+    void advance(const sequencer::Event& e) const;
+    void react(const eventDispatcher::Event& e);
+
+private:
+
+    void press(Frame localFrame, int velocity, bool manual) const;
+    void release(Frame localFrame) const;
+    void kill(Frame localFrame) const;
+    void rewind(Frame localFrame) const;
+
+    ChannelStatus pressWhileOff(Frame localFrame, int velocity, bool isLoop, bool manual) const;
+    ChannelStatus pressWhilePlay(Frame localFrame, SamplePlayerMode mode, bool isLoop, bool manual) const;
+    void toggleReadActions() const;
+
+    void onBar(Frame localFrame) const;
+    void onFirstBeat(Frame localFrame) const;
+    void onStopBySeq() const;
+    void parseActions(const std::vector<Action>& as, Frame localFrame) const;
+    
+    Channel_NEW*      m_channel;
+    SamplePlayer_NEW* m_samplePlayer;
+};
+} // giada::m::
 
 
 #endif

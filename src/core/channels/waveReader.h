@@ -33,8 +33,7 @@
 #include "core/types.h"
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 class Wave;
 class WaveReader final
@@ -68,7 +67,52 @@ private:
 
 	SRC_STATE* m_srcState;
 };
-}} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class WaveReader_NEW final
+{
+public:
+
+    WaveReader_NEW();
+    WaveReader_NEW(const WaveReader_NEW& o);
+    ~WaveReader_NEW();
+
+    Frame fill(AudioBuffer& out, Frame start, Frame offset, float pitch) const;
+
+	/* wave
+	Wave object. Might be null if the channel has no sample. */
+
+	const Wave* wave;
+
+private:
+
+	Frame fillResampled(AudioBuffer& out, Frame start, Frame offset, float pitch) const;
+	Frame fillCopy     (AudioBuffer& out, Frame start, Frame offset) const;
+
+	void allocateSrc();
+
+	/* srcState
+	Struct from libsamplerate. */
+
+	SRC_STATE* m_srcState;
+};
+} // giada::m::
 
 
 #endif

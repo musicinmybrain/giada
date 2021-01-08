@@ -38,11 +38,11 @@
 #include "core/plugins/plugin.h"
 #include "core/rcuList.h"
 #include "core/recorder.h"
+#include "core/swapper.h"
+#include "utils/vector.h"
 
 
-namespace giada {
-namespace m {
-namespace model
+namespace giada::m::model
 {
 namespace
 {
@@ -143,7 +143,6 @@ struct Actions
 
 using ClockLock    = RCUList<Clock>::Lock;
 using MixerLock    = RCUList<Mixer>::Lock;
-using KernelLock   = RCUList<Kernel>::Lock;
 using RecorderLock = RCUList<Recorder>::Lock;
 using MidiInLock   = RCUList<MidiIn>::Lock;
 using ActionsLock  = RCUList<Actions>::Lock;
@@ -155,7 +154,6 @@ using PluginsLock  = RCUList<Plugin>::Lock;
 
 extern RCUList<Clock>    clock;
 extern RCUList<Mixer>    mixer;
-extern RCUList<Kernel>   kernel;
 extern RCUList<Recorder> recorder;
 extern RCUList<MidiIn>   midiIn;
 extern RCUList<Actions>  actions;
@@ -252,41 +250,189 @@ void onGet(L& list, std::function<void(typename L::value_type&)> f)
 }
 
 
-/* ---------------------------------------------------------------------------*/ 
-
-
-/* onSwap (1) (thread safe)
-Utility function for swapping ID-based things in a RCUList. */
-
-template<typename L>
-void onSwap(L& list, ID id, std::function<void(typename L::value_type&)> f)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	onSwapByIndex_(list, getIndex(list, id), f); 
-}
-
-
-/* onSwap (2) (thread safe)
-Utility function for swapping things in a RCUList when the list contains only
-a single element (and so with no ID). */
-
-template<typename L>
-void onSwap(L& list, std::function<void(typename L::value_type&)> f)
-{
-	static_assert(!has_id<typename L::value_type>(), "This type has ID");
-	onSwapByIndex_(list, 0, f); 
-}
-
-
 /* ---------------------------------------------------------------------------*/
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct Clock_NEW
+{	
+	struct State
+	{
+		std::atomic<int> currentFrameWait{0};// TODO - weakatomic
+		std::atomic<int> currentFrame{0};// TODO - weakatomic
+		std::atomic<int> currentBeat{0};// TODO - weakatomic
+	};
+
+	State*      state        = nullptr;
+	ClockStatus status       = ClockStatus::STOPPED;
+	int         framesInLoop = 0;
+	int         framesInBar  = 0;
+	int         framesInBeat = 0;
+	int         framesInSeq  = 0;
+	int         bars         = G_DEFAULT_BARS;
+	int         beats        = G_DEFAULT_BEATS;
+	float       bpm          = G_DEFAULT_BPM;
+	int         quantize     = G_DEFAULT_QUANTIZE;
+
+};
+
+struct Mixer_NEW
+{
+	struct State
+	{
+		std::atomic<bool>  processing{false};
+		std::atomic<bool>  active{false};
+		std::atomic<float> peakOut{0.0f}; // TODO - weakatomic
+		std::atomic<float> peakIn{0.0f}; // TODO - weakatomic
+	};
+
+	State* state    = nullptr;
+	bool   hasSolos = false;    
+	bool   inToOut  = false;
+};
+
+struct Layout
+{
+	channel::Data&       getChannel(ID id); 
+	const channel::Data& getChannel(ID id) const;
+
+	Clock_NEW clock;
+	Mixer_NEW mixer;
+	Kernel   kernel;
+	Recorder recorder;
+	MidiIn   midiIn;
+
+	std::vector<channel::Data> channels;
+	recorder::ActionMap        actions;
+};
+
+/* Lock
+Alias for a REALTIME scoped lock provided by the Swapper class. Use this in the
+real-time thread to lock the Layout. */
+
+using Lock = Swapper<Layout>::RtLock;
+
+/* SwapType
+Type of Layout change. 
+	Hard: the structure has changed (e.g. add a new channel);
+	Soft: a property has changed (e.g. change volume);
+	None: something has changed but we don't care. 
+Used by model listeners to determine the type of change that occured in the 
+layout. */
+
+enum class SwapType { HARD, SOFT, NONE };
+
+
+/* -------------------------------------------------------------------------- */
+
+
+class ChannelDataLock
+{
+public:
+
+	ChannelDataLock(const channel::Data& ch);
+	ChannelDataLock(ID channelId);
+	~ChannelDataLock();
+
+private:
+
+	const channel::Data& m_channel;
+	const Wave*          m_wave;
+	std::vector<Plugin*> m_plugins;
+};
+
+
+/* -------------------------------------------------------------------------- */
+
+
+/* init
+Initializes the internal layout. */
+
+void init();
+
+/* get
+Returns a reference to the NON-REALTIME layout structure. */
+
+Layout& get();
+
+/* get_RT
+Returns a Lock object for REALTIME processing. Access layout by calling 
+Lock::get() method (returns ready-only Layout). */
+
+Lock get_RT();
+
+/* swap
+Applies the function 'f' to the current layout. */
+
+void swap(std::function<void(Layout&)> f, SwapType t);
+
+/* onSwap
+Registers an optional callback fired when the layout has been swapped. Useful 
+for listening to model changes. */
+
+void onSwap(std::function<void(SwapType)> f);
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Model utilities */
+
+// TODO - are ID-based objects still necessary?
+
+template <typename T> 
+std::vector<std::unique_ptr<T>>& getAll();
+
+template <typename T> 
+T* getPtr(ID id);
+
+template <typename T> 
+std::size_t getIndex(ID id);
+
+template <typename T> 
+T& add(std::unique_ptr<T>);
+
+template <typename T> 
+void remove(const T&);
+
+template <typename T> 
+void clear();
+
 #ifdef G_DEBUG_MODE
-
 void debug();
-
 #endif
-}}} // giada::m::model::
+} // giada::m::model::
 
 
 #endif

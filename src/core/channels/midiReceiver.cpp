@@ -29,13 +29,14 @@
 
 
 #include "core/mixer.h"
+#include "core/eventDispatcher.h"
 #include "core/plugins/pluginHost.h"
 #include "core/channels/state.h"
+#include "core/channels/channel.h"
 #include "midiReceiver.h"
 
 
-namespace giada {
-namespace m 
+namespace giada::m 
 {
 MidiReceiver::MidiReceiver(ChannelState* c)
 : state           (std::make_unique<MidiReceiverState>())
@@ -91,12 +92,12 @@ void MidiReceiver::parse(const mixer::Event& e) const
 
 /* -------------------------------------------------------------------------- */
 
-
+/*
 void MidiReceiver::render(const std::vector<ID>& pluginIds) const
 {
 	pluginHost::processStack(m_channelState->buffer, pluginIds, &state->midiBuffer);
 	state->midiBuffer.clear();
-}
+}*/
 
 
 /* -------------------------------------------------------------------------- */
@@ -125,7 +126,190 @@ void MidiReceiver::sendToPlugins(const MidiEvent& e, Frame localFrame) const
 		e.getVelocity());
 	state->midiBuffer.addEvent(message, localFrame);
 }
-}} // giada::m::
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiReceiver_NEW::MidiReceiver_NEW(Channel_NEW& c)
+: m_channel(c)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiReceiver_NEW::react(const eventDispatcher::Event& e) const
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::MIDI:
+			parseMidi(std::get<Action>(e.data).event); break;
+
+		case eventDispatcher::EventType::KEY_KILL:
+		case eventDispatcher::EventType::SEQUENCER_STOP:
+		case eventDispatcher::EventType::SEQUENCER_REWIND:
+			sendToPlugins(MidiEvent(G_MIDI_ALL_NOTES_OFF), 0); break;
+		
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiReceiver_NEW::advance(const sequencer::Event& e) const
+{
+	if (e.type == sequencer::EventType::ACTIONS && m_channel.isPlaying())
+		for (const Action& action : *e.actions)
+			sendToPlugins(action.event, e.delta);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiReceiver_NEW::render(const std::vector<Plugin*>& plugins) const
+{
+	pluginHost::processStack(m_channel.data->audioBuffer, plugins, &m_channel.data->midiBuffer);
+	m_channel.data->midiBuffer.clear();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiReceiver_NEW::parseMidi(const MidiEvent& e) const
+{
+	/* Now all messages are turned into Channel-0 messages. Giada doesn't care 
+	about holding MIDI channel information. Moreover, having all internal 
+	messages on channel 0 is way easier. Then send it to plug-ins. */
+
+	MidiEvent flat(e);
+	flat.setChannel(0);
+	sendToPlugins(flat, /*delta=*/0); 
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiReceiver_NEW::sendToPlugins(const MidiEvent& e, Frame localFrame) const
+{
+	juce::MidiMessage message = juce::MidiMessage(
+		e.getStatus(), 
+		e.getNote(), 
+		e.getVelocity());
+	m_channel.data->midiBuffer.addEvent(message, localFrame);
+}
+} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::midiReceiver
+{
+namespace
+{
+void sendToPlugins_(const channel::Data& ch, const MidiEvent& e, Frame localFrame)
+{
+    juce::MidiMessage message = juce::MidiMessage(
+        e.getStatus(),
+        e.getNote(),
+        e.getVelocity());
+    ch.buffer->midiBuffer.addEvent(message, localFrame);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void parseMidi_(const channel::Data& ch, const MidiEvent& e)
+{
+	/* Now all messages are turned into Channel-0 messages. Giada doesn't care 
+	about holding MIDI channel information. Moreover, having all internal 
+	messages on channel 0 is way easier. Then send it to plug-ins. */
+
+	MidiEvent flat(e);
+	flat.setChannel(0);
+	sendToPlugins_(ch, flat, /*delta=*/0);
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+void react(const channel::Data& ch, const eventDispatcher::Event& e)
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::MIDI:
+			parseMidi_(ch, std::get<Action>(e.data).event); break;
+
+		case eventDispatcher::EventType::KEY_KILL:
+		case eventDispatcher::EventType::SEQUENCER_STOP:
+		case eventDispatcher::EventType::SEQUENCER_REWIND:
+			sendToPlugins_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF), 0); break;
+		
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void advance(const channel::Data& ch, const sequencer::Event& e)
+{
+	if (e.type == sequencer::EventType::ACTIONS && ch.isPlaying())
+		for (const Action& action : *e.actions)
+			sendToPlugins_(ch, action.event, e.delta);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void render(const channel::Data& ch, const std::vector<Plugin*>& plugins)
+{
+	// TODO - pluginHost::processStack(m_channelState->buffer, pluginIds, &state->midiBuffer);
+	// TODO - state->midiBuffer.clear();
+}
+}
 
 #endif // WITH_VST

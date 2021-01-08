@@ -30,23 +30,9 @@
 
 namespace giada::m
 {
-MidiLearnParam::MidiLearnParam()
-: m_param(0x0)
-, m_index(0) 
-{
-}
-
-
 MidiLearnParam::MidiLearnParam(uint32_t v, std::size_t index)
 : m_param(v)
 , m_index(index) 
-{
-}
-
-
-MidiLearnParam::MidiLearnParam(const MidiLearnParam& o)
-: m_param(o.m_param.load(std::memory_order_relaxed))
-, m_index(o.m_index) 
 {
 }
 
@@ -56,13 +42,13 @@ MidiLearnParam::MidiLearnParam(const MidiLearnParam& o)
 
 uint32_t MidiLearnParam::getValue() const
 {
-    return m_param.load(std::memory_order_relaxed);
+    return m_param.load();
 }
 
 
 void MidiLearnParam::setValue(uint32_t v)
 {
-    m_param.store(v, std::memory_order_relaxed);
+    m_param.store(v);
 }
 
 

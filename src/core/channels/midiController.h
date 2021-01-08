@@ -33,8 +33,7 @@
 #include "core/mixer.h"  // TODO - forward declare
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 /* MidiController
 Manages events for a MIDI Channel. */
@@ -56,7 +55,53 @@ private:
     
     ChannelState* m_channelState;
 };
-}} // giada::m::
+
+
+
+
+
+
+
+class Channel_NEW;
+class MidiController_NEW
+{
+public:
+
+    MidiController_NEW(Channel_NEW&);
+
+    void react(const eventDispatcher::Event& e);
+    void advance(const sequencer::Event& e) const;
+
+private:
+
+    ChannelStatus onFirstBeat() const;
+    void press();
+    void kill();
+    
+    Channel_NEW& m_channel;
+};
+} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::midiController
+{
+struct Data
+{
+};
+
+void react  (channel::Data& ch, const eventDispatcher::Event& e);
+void advance(const channel::Data& ch, const sequencer::Event& e);
+}
 
 
 #endif

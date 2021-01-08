@@ -27,12 +27,12 @@
 
 #include <cassert>
 #include "core/conf.h"
+#include "core/channels/channel.h"
 #include "core/channels/state.h"
 #include "midiController.h"
 
 
-namespace giada {
-namespace m 
+namespace giada::m 
 {
 MidiController::MidiController(ChannelState* c)
 : m_channelState(c)
@@ -123,4 +123,215 @@ void MidiController::onFirstBeat() const
 	
 	m_channelState->playStatus.store(playStatus);
 }
-}} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiController_NEW::MidiController_NEW(Channel_NEW& c)
+: m_channel(c)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiController_NEW::react(const eventDispatcher::Event& e)
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::KEY_PRESS:
+			press(); break;
+
+		case eventDispatcher::EventType::KEY_KILL:
+		case eventDispatcher::EventType::SEQUENCER_STOP:
+			kill();	break;
+
+		case eventDispatcher::EventType::SEQUENCER_REWIND:
+			m_channel.playStatus = onFirstBeat();
+
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiController_NEW::advance(const sequencer::Event& e) const
+{
+	if (e.type == sequencer::EventType::FIRST_BEAT)
+		pumpChannelFunction(m_channel.id, [status = onFirstBeat()](Channel_NEW& c)
+		{
+			c.playStatus = status;
+		});
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiController_NEW::press()
+{
+    ChannelStatus playStatus = m_channel.playStatus;
+
+	switch (playStatus) {
+		case ChannelStatus::PLAY:
+			playStatus = ChannelStatus::ENDING; break;
+
+		case ChannelStatus::ENDING:
+		case ChannelStatus::WAIT:
+			playStatus = ChannelStatus::OFF; break;
+
+		case ChannelStatus::OFF:
+			playStatus = ChannelStatus::WAIT; break;
+
+		default: break;
+	}
+
+	m_channel.playStatus = playStatus;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiController_NEW::kill()
+{
+	m_channel.playStatus = ChannelStatus::OFF;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+ChannelStatus MidiController_NEW::onFirstBeat() const
+{
+	ChannelStatus playStatus = m_channel.playStatus;
+
+	if (playStatus == ChannelStatus::ENDING)
+		playStatus = ChannelStatus::OFF;
+	else
+	if (playStatus == ChannelStatus::WAIT)
+		playStatus = ChannelStatus::PLAY;
+
+	return playStatus;
+}
+} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::midiController
+{
+namespace
+{
+ChannelStatus onFirstBeat_(const channel::Data& ch)
+{
+	ChannelStatus playStatus = ch.playStatus;
+
+	if (playStatus == ChannelStatus::ENDING)
+		playStatus = ChannelStatus::OFF;
+	else
+	if (playStatus == ChannelStatus::WAIT)
+		playStatus = ChannelStatus::PLAY;
+
+	return playStatus;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+ChannelStatus press_(const channel::Data& ch)
+{
+    ChannelStatus playStatus = ch.playStatus;
+
+	switch (playStatus) {
+		case ChannelStatus::PLAY:
+			playStatus = ChannelStatus::ENDING; break;
+
+		case ChannelStatus::ENDING:
+		case ChannelStatus::WAIT:
+			playStatus = ChannelStatus::OFF; break;
+
+		case ChannelStatus::OFF:
+			playStatus = ChannelStatus::WAIT; break;
+
+		default: break;
+	}
+
+	return playStatus;	
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+void react(channel::Data& ch, const eventDispatcher::Event& e)
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::KEY_PRESS:
+			ch.playStatus = press_(ch); break;
+
+		case eventDispatcher::EventType::KEY_KILL:
+		case eventDispatcher::EventType::SEQUENCER_STOP:
+			ch.playStatus = ChannelStatus::OFF; break;
+
+		case eventDispatcher::EventType::SEQUENCER_REWIND:
+			ch.playStatus = onFirstBeat_(ch);
+
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void advance(const channel::Data& ch, const sequencer::Event& e)
+{
+	if (e.type != sequencer::EventType::FIRST_BEAT)
+		return;
+	assert(false);
+	/*
+	pumpChannelFunction(ch.id, [status = onFirstBeat_(ch)](channel::Data& ch)
+	{
+		ch.playStatus = status;
+	});*/
+}
+}

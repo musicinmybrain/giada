@@ -4,7 +4,7 @@
  *
  * -----------------------------------------------------------------------------
  *
- * Copyright (C) 2010-2021 Giovanni A. Zuliani | Monocasual
+ * Copyright (C) 2010-2020 Giovanni A. Zuliani | Monocasual
  *
  * This file is part of Giada - Your Hardcore Loopmachine.
  *
@@ -25,34 +25,60 @@
  * -------------------------------------------------------------------------- */
 
 
-#ifndef G_MIDI_LEARN_PARAM_H
-#define G_MIDI_LEARN_PARAM_H
+#ifndef G_WEAK_ATOMIC_H
+#define G_WEAK_ATOMIC_H
 
 
 #include <atomic>
-#include "core/weakAtomic.h"
 
 
-namespace giada::m
+namespace giada
 {
-class MidiLearnParam
+template <typename T>
+class WeakAtomic
 {
 public:
 
-	MidiLearnParam() = default;
-	MidiLearnParam(uint32_t v, std::size_t index=0);
-	MidiLearnParam(const MidiLearnParam& o) = default;
+    WeakAtomic() = default;
 
-    uint32_t getValue() const;
-    std::size_t getIndex() const;
-    void setValue(uint32_t v);
+    WeakAtomic(T t) : m_value(t)
+    {
+    }
+
+    WeakAtomic(const WeakAtomic& o) 
+    : m_value(o.m_value.load(std::memory_order_relaxed))
+    {
+    }
+
+    WeakAtomic(WeakAtomic&& o) 
+    : m_value(o.m_value.load(std::memory_order_relaxed), std::memory_order_relaxed)
+    {
+    }
+
+    WeakAtomic& operator=(const WeakAtomic& o)
+    {
+        if(this == &o) return *this;
+        m_value.store(o.m_value.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        return *this;
+    }
+
+    WeakAtomic& operator=(WeakAtomic&& o) = delete;
+
+    T load() const
+    {
+        return m_value.load(std::memory_order_relaxed);
+    }
+
+    void store(T t)
+    {
+        return m_value.store(t, std::memory_order_relaxed);
+    }
 
 private:
 
-    WeakAtomic<uint32_t> m_param;
-    std::size_t          m_index;
+    std::atomic<T> m_value;
 };
-} // giada::m::
+} // giada::
 
 
 #endif

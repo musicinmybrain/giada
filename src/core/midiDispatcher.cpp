@@ -83,7 +83,7 @@ bool isChannelMidiInAllowed_(ID channelId, int c)
 
 #ifdef WITH_VST
 
-void processPlugins_(const std::vector<ID>& ids, const MidiEvent& midiEvent)
+void processPlugins_(const std::vector<ID>& ids, ID channelId, const MidiEvent& midiEvent)
 {
 	uint32_t pure = midiEvent.getRawNoVelocity();
 	float    vf   = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, 1.0f);
@@ -99,7 +99,7 @@ void processPlugins_(const std::vector<ID>& ids, const MidiEvent& midiEvent)
 		for (const MidiLearnParam& param : p.midiInParams) {
 			if (pure != param.getValue())
 				continue;
-			c::events::setPluginParameter(id, param.getIndex(), vf, /*gui=*/false);
+			c::events::setPluginParameter(id, channelId, param.getIndex(), vf, /*gui=*/false);
 			u::log::print("  >>> [pluginId=%d paramIndex=%d] (pure=0x%X, value=%d, float=%f)\n",
 				p.id, param.getIndex(), pure, midiEvent.getVelocity(), vf);
 		}
@@ -169,7 +169,7 @@ void processChannels_(const MidiEvent& midiEvent)
 
 #ifdef WITH_VST
 		/* Process learned plugins parameters. */
-		processPlugins_(c->pluginIds, midiEvent); 
+		processPlugins_(c->pluginIds, c->id, midiEvent);
 #endif
 
 		/* Redirect raw MIDI message (pure + velocity) to plug-ins in armed
@@ -274,20 +274,20 @@ void learnMaster_(MidiEvent e, int param, std::function<void()> doneCb)
 
 	uint32_t raw = e.getRawNoVelocity();
 
-	model::onSwap(model::midiIn, [param, raw](model::MidiIn& m)
+	model::swap([param, raw](model::Layout& l)
 	{
 		switch (param) {
-			case G_MIDI_IN_REWIND:      m.rewind     = raw; break;
-			case G_MIDI_IN_START_STOP:  m.startStop  = raw; break;
-			case G_MIDI_IN_ACTION_REC:  m.actionRec  = raw; break;
-			case G_MIDI_IN_INPUT_REC:   m.inputRec   = raw; break;
-			case G_MIDI_IN_METRONOME:   m.metronome  = raw; break;
-			case G_MIDI_IN_VOLUME_IN:   m.volumeIn   = raw; break;
-			case G_MIDI_IN_VOLUME_OUT:  m.volumeOut  = raw; break;
-			case G_MIDI_IN_BEAT_DOUBLE: m.beatDouble = raw; break;
-			case G_MIDI_IN_BEAT_HALF:   m.beatHalf   = raw; break;
+			case G_MIDI_IN_REWIND:      l.midiIn.rewind     = raw; break;
+			case G_MIDI_IN_START_STOP:  l.midiIn.startStop  = raw; break;
+			case G_MIDI_IN_ACTION_REC:  l.midiIn.actionRec  = raw; break;
+			case G_MIDI_IN_INPUT_REC:   l.midiIn.inputRec   = raw; break;
+			case G_MIDI_IN_METRONOME:   l.midiIn.metronome  = raw; break;
+			case G_MIDI_IN_VOLUME_IN:   l.midiIn.volumeIn   = raw; break;
+			case G_MIDI_IN_VOLUME_OUT:  l.midiIn.volumeOut  = raw; break;
+			case G_MIDI_IN_BEAT_DOUBLE: l.midiIn.beatDouble = raw; break;
+			case G_MIDI_IN_BEAT_HALF:   l.midiIn.beatHalf   = raw; break;
 		}
-	});
+	}, model::SwapType::SOFT);
 
 	stopLearn();
 	doneCb();

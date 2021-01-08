@@ -50,17 +50,16 @@
 extern giada::v::gdMainWindow* G_MainWin;
 
 
-namespace giada {
-namespace c {
-namespace plugin 
+namespace giada::c::plugin 
 {
-Param::Param(const m::Plugin& p, int index)
-: index   (index)
-, pluginId(p.id)
-, name    (p.getParameterName(index))
-, text    (p.getParameterText(index))
-, label   (p.getParameterLabel(index))
-, value   (p.getParameter(index))
+Param::Param(const m::Plugin& p, int index, ID channelId)
+: index    (index)
+, pluginId (p.id)
+, channelId(channelId)
+, name     (p.getParameterName(index))
+, text     (p.getParameterText(index))
+, label    (p.getParameterLabel(index))
+, value    (p.getParameter(index))
 {
 }
 
@@ -93,9 +92,14 @@ Plugin::Plugin(m::Plugin& p, ID channelId)
 
 juce::AudioProcessorEditor* Plugin::createEditor() const
 {
-	m::model::PluginsLock l(m::model::plugins);
 	return m_plugin.createEditor();
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+
+const m::Plugin& Plugin::getPluginRef() const { return m_plugin; }
 
 
 /* -------------------------------------------------------------------------- */
@@ -112,9 +116,9 @@ void Plugin::setResizeCallback(std::function<void(int, int)> f)
 /* -------------------------------------------------------------------------- */
 
 
-Plugins::Plugins(const m::Channel& c)
+Plugins::Plugins(const m::Channel_NEW& c)
 : channelId(c.id)
-, pluginIds(c.pluginIds) 
+, plugins  (c.plugins) 
 {
 }
 
@@ -126,24 +130,20 @@ Plugins::Plugins(const m::Channel& c)
 
 Plugins getPlugins(ID channelId)
 {
-	namespace mm = m::model;
-
-	mm::ChannelsLock cl(mm::channels);
-	return Plugins(mm::get(mm::channels, channelId));
+    assert(false);
+	//return Plugins(m::model::get().getChannel(channelId));
 }
 
 
-Plugin getPlugin(ID pluginId, ID channelId)
+Plugin getPlugin(m::Plugin& plugin, ID channelId)
 {
-	m::model::PluginsLock l(m::model::plugins);
-	return Plugin(m::model::get(m::model::plugins, pluginId), channelId);
+	return Plugin(plugin, channelId);
 }
 
 
-Param getParam (int index, ID pluginId)
+Param getParam (int index, const m::Plugin& plugin)
 {
-	m::model::PluginsLock l(m::model::plugins);
-	return Param(m::model::get(m::model::plugins, pluginId), index);
+	return Param(plugin, index, plugin.id);
 }
 
 
@@ -190,27 +190,27 @@ void addPlugin(int pluginListIndex, ID channelId)
 /* -------------------------------------------------------------------------- */
 
 
-void swapPlugins(ID pluginId1, ID pluginId2, ID channelId)
+void swapPlugins(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-	m::pluginHost::swapPlugin(pluginId1, pluginId2, channelId);
+	m::pluginHost::swapPlugin(p1, p2, channelId);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void freePlugin(ID pluginId, ID channelId)
+void freePlugin(const m::Plugin& plugin, ID channelId)
 {
-	m::pluginHost::freePlugin(pluginId, channelId);
+	m::pluginHost::freePlugin(plugin, channelId);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void setProgram(ID pluginId, int programIndex)
+void setProgram(ID pluginId, ID channelId, int programIndex)
 {
-	m::pluginHost::setPluginProgram(pluginId, programIndex); 
+	m::pluginHost::setPluginProgram(pluginId, channelId, programIndex);
 	updateWindow(pluginId, /*gui=*/true); 
 }
 
@@ -218,9 +218,9 @@ void setProgram(ID pluginId, int programIndex)
 /* -------------------------------------------------------------------------- */
 
 
-void toggleBypass(ID pluginId)
+void toggleBypass(ID pluginId, ID channelId)
 {
-	m::pluginHost::toggleBypass(pluginId);
+	m::pluginHost::toggleBypass(pluginId, channelId);
 }
 
 
@@ -245,8 +245,7 @@ void setPluginPathCb(void* data)
 	v::gdConfig* configWin = static_cast<v::gdConfig*>(u::gui::getSubwindow(G_MainWin, WID_CONFIG));
 	configWin->refreshVstPath();
 }
-
-}}} // giada::c::plugin::
+} // giada::c::plugin::
 
 
 #endif

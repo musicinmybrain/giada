@@ -27,6 +27,7 @@
 
 #include "core/mixer.h"
 #include "core/kernelMidi.h"
+#include "core/channels/channel.h"
 #include "core/channels/state.h"
 #include "midiSender.h"
 
@@ -89,4 +90,127 @@ void MidiSender::send(MidiEvent e) const
 	e.setChannel(state->filter.load());
 	kernelMidi::send(e.getRaw());
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiSender_NEW::MidiSender_NEW(Channel_NEW& c)
+: m_channel(c)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+MidiSender_NEW::MidiSender_NEW(const patch::Channel& p, Channel_NEW& c)
+: enabled  (p.midiOut)
+, filter   (p.midiOutChan)
+, m_channel(c)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+MidiSender_NEW::MidiSender_NEW(const MidiSender_NEW& o, Channel_NEW* c)
+: enabled  (o.enabled)
+, filter   (o.filter)
+, m_channel(*c)
+{
+	assert(c != nullptr);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiSender_NEW::react(const eventDispatcher::Event& e) const
+{
+	if (!m_channel.isPlaying() || !enabled)
+		return;
+
+	if (e.type == eventDispatcher::EventType::KEY_KILL || 
+	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
+		send(MidiEvent(G_MIDI_ALL_NOTES_OFF));
+	//else
+	//if (e.type == eventDispatcher::EventType::ACTION)
+	//	send(e.action.event);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiSender_NEW::send(MidiEvent e) const
+{
+	e.setChannel(filter);
+	kernelMidi::send(e.getRaw());
+}
 }} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::midiSender
+{
+namespace
+{
+void send_(const channel::Data& ch, MidiEvent e)
+{
+	e.setChannel(ch.midiSender->filter);
+	kernelMidi::send(e.getRaw());	
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+Data::Data(const patch::Channel& p)
+: enabled  (p.midiOut)
+, filter   (p.midiOutChan)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void react(const channel::Data& ch, const eventDispatcher::Event& e)
+{
+	if (!ch.isPlaying() || !ch.midiSender->enabled)
+		return;
+
+	if (e.type == eventDispatcher::EventType::KEY_KILL || 
+	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
+		send_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF));
+	//else
+	//if (e.type == eventDispatcher::EventType::ACTION)
+	//	send(e.action.event);
+}
+}

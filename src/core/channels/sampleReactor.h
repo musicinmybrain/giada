@@ -4,7 +4,7 @@
  *
  * -----------------------------------------------------------------------------
  *
- * Copyright (C) 2010-2021 Giovanni A. Zuliani | Monocasual
+ * Copyright (C) 2010-2020 Giovanni A. Zuliani | Monocasual
  *
  * This file is part of Giada - Your Hardcore Loopmachine.
  *
@@ -25,34 +25,59 @@
  * -------------------------------------------------------------------------- */
 
 
-#ifndef G_MIDI_LEARN_PARAM_H
-#define G_MIDI_LEARN_PARAM_H
+#ifndef G_CHANNEL_SAMPLE_REACTOR_H
+#define G_CHANNEL_SAMPLE_REACTOR_H
 
 
-#include <atomic>
-#include "core/weakAtomic.h"
+#include "core/eventDispatcher.h"
+#include "core/quantizer.h"
 
 
 namespace giada::m
 {
-class MidiLearnParam
+class Channel_NEW;
+class SamplePlayer_NEW;
+class SampleReactor
 {
 public:
 
-	MidiLearnParam() = default;
-	MidiLearnParam(uint32_t v, std::size_t index=0);
-	MidiLearnParam(const MidiLearnParam& o) = default;
+    SampleReactor(Channel_NEW&, SamplePlayer_NEW&);
 
-    uint32_t getValue() const;
-    std::size_t getIndex() const;
-    void setValue(uint32_t v);
+    void react(const eventDispatcher::Event& e);
 
 private:
 
-    WeakAtomic<uint32_t> m_param;
-    std::size_t          m_index;
+    void press(int velocity);
+    void release();
+    void kill();
+    void onStopBySeq();
+    void toggleReadActions();
+
+    ChannelStatus pressWhileOff(int velocity, bool isLoop);
+    ChannelStatus pressWhilePlay(SamplePlayerMode mode, bool isLoop);
+    void rewind(Frame localFrame=0);
+
+    Channel_NEW&      m_channel;
+    SamplePlayer_NEW& m_samplePlayer;
+    Quantizer         m_quantizer;
 };
 } // giada::m::
 
+
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::sampleReactor
+{
+struct Data
+{
+    Quantizer quantizer;
+};
+
+void react(channel::Data& c, const eventDispatcher::Event& e);
+}
 
 #endif

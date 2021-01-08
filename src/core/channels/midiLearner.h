@@ -49,7 +49,83 @@ public:
 
     std::unique_ptr<MidiLearnerState> state;
 };
+
+
+
+
+
+
+
+
+
+
+class MidiLearner_NEW
+{
+public:
+
+    MidiLearner_NEW() = default;
+    MidiLearner_NEW(const MidiLearner_NEW&) = default;
+    MidiLearner_NEW(const patch::Channel&);
+
+    /* enabled
+    Tells whether MIDI learning is enabled for the current channel. */
+    
+	bool enabled;
+
+    /* filter
+    Which MIDI channel should be filtered out when receiving MIDI messages. 
+    If -1 means 'all'. */
+    
+    int filter;
+
+    /* MIDI learning fields. */
+
+	MidiLearnParam keyPress;
+	MidiLearnParam keyRelease;
+	MidiLearnParam kill;
+	MidiLearnParam arm;
+	MidiLearnParam volume;
+	MidiLearnParam mute;
+	MidiLearnParam solo;
+	MidiLearnParam readActions; // Sample Channels only
+	MidiLearnParam pitch;       // Sample Channels only
+};
 }} // giada::m::
+
+
+
+namespace giada::m::midiLearner
+{
+struct Data
+{
+    Data() = default;
+    Data(const patch::Channel&);
+    Data(const Data&) = default;
+
+    /* enabled
+    Tells whether MIDI learning is enabled for the current channel. */
+    
+	bool enabled;
+
+    /* filter
+    Which MIDI channel should be filtered out when receiving MIDI messages. 
+    If -1 means 'all'. */
+    
+    int filter;
+
+    /* MIDI learning fields. */
+
+	MidiLearnParam keyPress;
+	MidiLearnParam keyRelease;
+	MidiLearnParam kill;
+	MidiLearnParam arm;
+	MidiLearnParam volume;
+	MidiLearnParam mute;
+	MidiLearnParam solo;
+	MidiLearnParam readActions; // Sample Channels only
+	MidiLearnParam pitch;       // Sample Channels only
+};
+}
 
 
 #endif

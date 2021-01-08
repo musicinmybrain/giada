@@ -36,13 +36,17 @@
 #include "sequencer.h"
 
 
-namespace giada {
-namespace m {
-namespace sequencer
+namespace giada::m::sequencer
 {
 namespace
 {
 constexpr int Q_ACTION_REWIND = 0;
+
+/* eventBuffer_
+Buffer of events found in each block sent to channels for event parsing. This is 
+filled during react().*/
+
+EventBuffer eventBuffer_;
 
 
 /* -------------------------------------------------------------------------- */
@@ -80,7 +84,7 @@ struct Metronome
 	void render(AudioBuffer& outBuf, bool& process, float* data, Frame f)
 	{
 		process = true;
-		for (int i=0; i<outBuf.countChannels(); i++)
+		for (int i = 0; i < outBuf.countChannels(); i++)
 			outBuf[f][i] += data[tracker];
 		if (++tracker > Metronome::CLICK_SIZE) {
 			process = false;
@@ -112,7 +116,7 @@ void renderMetronome_(AudioBuffer& outBuf, Frame f)
 void rewindQ_(Frame delta)
 {
 	clock::rewind();
-	mixer::pumpEvent({ mixer::EventType::SEQUENCER_REWIND, delta, {} });	
+	eventBuffer_.push_back({ EventType::REWIND, 0, delta });
 }
 
 
@@ -180,8 +184,29 @@ void init()
 /* -------------------------------------------------------------------------- */
 
 
-void run(Frame bufferSize)
+void react(const eventDispatcher::EventBuffer& events)
 {
+	for (const eventDispatcher::Event& e : events) {
+		if (e.type == eventDispatcher::EventType::SEQUENCER_START) {
+			start_(); break;
+		}
+		if (e.type == eventDispatcher::EventType::SEQUENCER_STOP) {
+			stop_(); break;
+		}
+		if (e.type == eventDispatcher::EventType::SEQUENCER_REWIND) {
+			rewind_(); break;
+		}
+	}	
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+const EventBuffer& advance(Frame bufferSize)
+{
+	eventBuffer_.clear();
+
 	Frame start = clock::getCurrentFrame();
 	Frame end   = start + bufferSize;
 	Frame total = clock::getFramesInLoop();
@@ -192,50 +217,20 @@ void run(Frame bufferSize)
 		Frame global = i % total; // wraps around 'total'
 
 		if (global == 0)
-			mixer::pumpEvent({ mixer::EventType::SEQUENCER_FIRST_BEAT, local, { 0, 0, global, {} } });
+			eventBuffer_.push_back({ EventType::FIRST_BEAT, global, local });
 		else
 		if (global % bar == 0)
-			mixer::pumpEvent({ mixer::EventType::SEQUENCER_BAR, local, { 0, 0, global, {} } });
+			eventBuffer_.push_back({ EventType::BAR, global, local });
 
 		const std::vector<Action>* as = recorder::getActionsOnFrame(global);
 		if (as != nullptr)
-			for (const Action& a : *as)
-				mixer::pumpEvent({ mixer::EventType::ACTION, local, a });
+		    eventBuffer_.push_back({ EventType::ACTIONS, global, local, as });
 	}
 
-	quantizer_.advance(Range<Frame>(start, end), clock::getQuantizerStep());
-}
+	/* Advance clock of 'bufferSize' frames after the event parsing. */
+	clock::incrCurrentFrame(bufferSize);
 
-
-/* -------------------------------------------------------------------------- */
-
-
-void parse(const mixer::EventBuffer& events)
-{
-	for (const mixer::Event& e : events) {
-		if (e.type == mixer::EventType::SEQUENCER_START) {
-			start_(); break;
-		}
-		if (e.type == mixer::EventType::SEQUENCER_STOP) {
-			stop_(); break;
-		}
-		if (e.type == mixer::EventType::SEQUENCER_REWIND_REQ) {
-			rewind_(); break;
-		}
-	}
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void advance(AudioBuffer& outBuf)
-{
-	for (Frame i = 0; i < outBuf.countFrames(); i++) {
-		clock::sendMIDIsync(); 
-		clock::incrCurrentFrame();
-		renderMetronome_(outBuf, i);
-	}
+	return eventBuffer_;
 }
 
 
@@ -294,6 +289,4 @@ void rewind()
 bool isMetronomeOn()      { return metronome_.running; }
 void toggleMetronome()    { metronome_.running = !metronome_.running; }
 void setMetronome(bool v) { metronome_.running = v; }
-}}} // giada::m::sequencer::
-
-
+} // giada::m::sequencer::

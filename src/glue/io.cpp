@@ -343,10 +343,10 @@ void plugin_clearMidiLearn (int param, ID pluginId)
 
 void master_enableMidiLearn(bool v)
 {
-	m::model::onSwap(m::model::midiIn, [&](m::model::MidiIn& m)
+	m::model::swap([v](m::model::Layout& l)
 	{
-		m.enabled = v;
-	});	
+		l.midiIn.enabled = v;
+	}, m::model::SwapType::NONE);
 	rebuildMidiWindows_();
 }
 
@@ -356,9 +356,9 @@ void master_enableMidiLearn(bool v)
 
 void master_setMidiFilter(int c)
 {
-	m::model::onSwap(m::model::midiIn, [&](m::model::MidiIn& m)
-	{
-		m.filter = c;
-	});
+    m::model::swap([c](m::model::Layout& l)
+    {
+        l.midiIn.filter = c;
+    }, m::model::SwapType::NONE);
 }
 }}} // giada::c::io::

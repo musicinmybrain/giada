@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 
 	giada::m::init::startup(argc, argv);
 
+	Fl::lock();  // Enable multithreading in FLTK
 	int ret = Fl::run();
 
 	giada::m::init::shutdown();

@@ -43,9 +43,7 @@
 #include "recorder.h"
 
 
-namespace giada {
-namespace c {
-namespace recorder 
+namespace giada::c::recorder 
 {
 void clearAllActions(ID channelId)
 {
@@ -87,13 +85,13 @@ void clearStartStopActions(ID channelId)
 
 void updateChannel(ID channelId, bool updateActionEditor)
 {
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
+	/* TODO - move somewhere else in the core area */
+	m::model::swap([channelId](m::model::Layout& l)
 	{
-		c.state->hasActions = m::recorder::hasActions(channelId);
-	});
+		l.getChannel(channelId).hasActions = m::recorder::hasActions(channelId);
+	}, m::model::SwapType::HARD);
 				
 	if (updateActionEditor)
 		u::gui::refreshActionEditor();
 }
-
-}}} // giada::c::recorder::
+} // giada::c::recorder::

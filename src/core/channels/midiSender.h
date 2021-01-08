@@ -59,7 +59,68 @@ private:
 
     ChannelState* m_channelState;
 };
+
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class MidiSender_NEW
+{
+public:
+
+    MidiSender_NEW(Channel_NEW&);
+    MidiSender_NEW(const patch::Channel&, Channel_NEW&);
+    MidiSender_NEW(const MidiSender_NEW& o, Channel_NEW* c=nullptr);
+
+    void react(const eventDispatcher::Event& e) const;
+
+    /* enabled
+    Tells whether MIDI output is enabled or not. */
+    
+	bool enabled;
+
+    /* filter
+    Which MIDI channel data should be sent to. */
+    
+    int filter;
+
+private:
+
+    void send(MidiEvent e) const;
+
+    Channel_NEW& m_channel;
+};
 }} // giada::m::
 
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::midiSender
+{
+struct Data
+{
+    Data() = default;
+    Data(const patch::Channel& p);
+    Data(const Data& o) = default;
+
+    /* enabled
+    Tells whether MIDI output is enabled or not. */
+    
+	bool enabled;
+
+    /* filter
+    Which MIDI channel data should be sent to. */
+    
+    int filter;
+};
+
+void react(const channel::Data& ch, const eventDispatcher::Event& e);
+}
 
 #endif

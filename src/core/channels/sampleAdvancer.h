@@ -4,7 +4,7 @@
  *
  * -----------------------------------------------------------------------------
  *
- * Copyright (C) 2010-2021 Giovanni A. Zuliani | Monocasual
+ * Copyright (C) 2010-2020 Giovanni A. Zuliani | Monocasual
  *
  * This file is part of Giada - Your Hardcore Loopmachine.
  *
@@ -25,34 +25,49 @@
  * -------------------------------------------------------------------------- */
 
 
-#ifndef G_MIDI_LEARN_PARAM_H
-#define G_MIDI_LEARN_PARAM_H
+#ifndef G_CHANNEL_SAMPLE_ADVANCER_H
+#define G_CHANNEL_SAMPLE_ADVANCER_H
 
 
-#include <atomic>
-#include "core/weakAtomic.h"
+#include "core/sequencer.h"
 
 
 namespace giada::m
 {
-class MidiLearnParam
+class Channel_NEW;
+class SamplePlayer_NEW;
+class SampleAdvancer
 {
 public:
 
-	MidiLearnParam() = default;
-	MidiLearnParam(uint32_t v, std::size_t index=0);
-	MidiLearnParam(const MidiLearnParam& o) = default;
+    SampleAdvancer(Channel_NEW&, SamplePlayer_NEW&);
 
-    uint32_t getValue() const;
-    std::size_t getIndex() const;
-    void setValue(uint32_t v);
+    void onLastFrame() const;
+    void advance(const sequencer::Event& e) const;
 
 private:
 
-    WeakAtomic<uint32_t> m_param;
-    std::size_t          m_index;
+    void onFirstBeat(Frame localFrame) const;
+    void onBar(Frame localFrame) const;
+    void parseActions(const std::vector<Action>& as, Frame localFrame) const;
+    void rewind(Frame localFrame) const;
+    void stop(Frame localFrame) const;
+    
+    const Channel_NEW&      m_channel;
+    const SamplePlayer_NEW& m_samplePlayer;
 };
 } // giada::m::
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::sampleAdvancer
+{
+void onLastFrame();
+void advance(const channel::Data& ch, const sequencer::Event& e);
+}
 
 
 #endif

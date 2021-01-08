@@ -26,18 +26,19 @@
 
 
 #include <cassert>
+#include "core/eventDispatcher.h"
 #include "core/action.h"
 #include "core/clock.h"
 #include "core/conf.h"
 #include "core/mixer.h"
 #include "core/recorderHandler.h"
 #include "core/recManager.h"
+#include "core/channels/channel.h"
 #include "core/channels/state.h"
 #include "midiActionRecorder.h"
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 MidiActionRecorder::MidiActionRecorder(ChannelState* c)
 : m_channelState(c)
@@ -87,5 +88,135 @@ bool MidiActionRecorder::canRecord() const
 	       clock::isRunning()              && 
 	       !recManager::isRecordingInput();
 }
-}} // giada::m::
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiActionRecorder_NEW::MidiActionRecorder_NEW(ID channelId)
+: m_channelId(channelId)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiActionRecorder_NEW::react(const eventDispatcher::Event& e)
+{
+	if (e.type == eventDispatcher::EventType::MIDI && canRecord()) 
+		record(std::get<Action>(e.data).event);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiActionRecorder_NEW::record(const MidiEvent& e)
+{
+	MidiEvent flat(e);
+	flat.setChannel(0);
+	recorderHandler::liveRec(m_channelId, flat, clock::quantize(clock::getCurrentFrame()));
+	pumpChannelFunction(m_channelId, [] (Channel_NEW& c)
+	{
+		c.hasActions = true;
+	});
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+bool MidiActionRecorder_NEW::canRecord() const
+{
+	return recManager::isRecordingAction() && 
+	       clock::isRunning()              && 
+	       !recManager::isRecordingInput();
+}
+} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::midiActionRecorder
+{
+namespace
+{
+void record_(channel::Data& ch, const MidiEvent& e)
+{
+	MidiEvent flat(e);
+	flat.setChannel(0);
+	recorderHandler::liveRec(ch.id, flat, clock::quantize(clock::getCurrentFrame()));
+	ch.hasActions = true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+bool canRecord_()
+{
+	return recManager::isRecordingAction() && 
+	       clock::isRunning()              && 
+	       !recManager::isRecordingInput();
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+void react(channel::Data& ch, const eventDispatcher::Event& e)
+{
+	if (e.type == eventDispatcher::EventType::MIDI && canRecord_())
+		record_(ch, std::get<Action>(e.data).event);
+}
+}

@@ -31,6 +31,8 @@
 #include "core/action.h"
 #include "core/mixer.h"
 #include "core/channels/state.h"
+#include "core/channels/channel.h"
+#include "core/channels/samplePlayer.h"
 #include "utils/math.h"
 #include "sampleController.h"
 

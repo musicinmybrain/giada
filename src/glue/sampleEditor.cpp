@@ -56,12 +56,62 @@
 extern giada::v::gdMainWindow* G_MainWin;
 
 
-namespace giada {
-namespace c {
-namespace sampleEditor
+namespace giada::c::sampleEditor
 {
 namespace
 {
+/* TODO - move these utils to m::model*/
+m::Channel_NEW& getChannel_(ID channelId)
+{
+	//return m::model::get().getChannel(channelId);
+}
+
+
+m::SamplePlayer_NEW& getSamplePlayer_(ID channelId)
+{
+    assert(false);
+	//return getChannel_(channelId).samplePlayer.value();
+}
+
+
+m::Wave& getWave_(ID channelId)
+{
+	return *const_cast<m::Wave*>(getSamplePlayer_(channelId).getWave());
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO use model:: version (ChannelDataLock)
+class WaveLock
+{
+public:
+
+	WaveLock(ID channelId) : wave(getWave_(channelId)), m_channelId(channelId)
+	{
+		m::model::swap([this](m::model::Layout& l)
+		{
+            assert(false);
+			//m::samplePlayer::setWave(l.getChannel(m_channelId), nullptr, 0);
+		}, m::model::SwapType::NONE);
+	}
+
+	~WaveLock()
+	{
+		m::model::swap([this](m::model::Layout& l)
+		{
+            assert(false);
+            //m::samplePlayer::setWave(l.getChannel(m_channelId), &wave, 1.0f);
+		}, m::model::SwapType::HARD);
+	}
+
+	m::Wave& wave;
+
+private:
+
+	ID m_channelId;
+};
+
 /* waveBuffer
 A Wave used during cut/copy/paste operations. */
 
@@ -73,36 +123,13 @@ Frame previewTracker_ = 0;
 /* -------------------------------------------------------------------------- */
 
 /* resetBeginEnd_
-Resets begin/end points when model has changed and a new Channel pointer is
-needed for the operation. */
+Resets begin/end points to 0/max. */
 
 void resetBeginEnd_(ID channelId)
 {
-	m::model::onGet(m::model::channels, channelId, [&](const m::Channel& c)
-	{
-		Frame begin = c.samplePlayer->state->begin.load();
-		Frame end   = c.samplePlayer->state->end.load();
-		setBeginEnd(channelId, begin, end);
-	});
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-/* updateWavePtr_
-Updates the Wave pointer in Channel::WaveReader. */
-
-void updateWavePtr_(ID channelId, ID waveId)
-{
-	namespace mm = m::model;
-
-	mm::WavesLock wl(mm::waves);
-	const m::Wave& wave = mm::get(mm::waves, waveId);
-
-	mm::onSwap(mm::channels, channelId, [&](m::Channel& c)
-	{
-		c.samplePlayer->loadWave(&wave);
-	});
+	Frame begin = getSamplePlayer_(channelId).begin;
+	Frame end   = getSamplePlayer_(channelId).getWaveSize();
+	setBeginEnd(channelId, begin, end);
 }
 } // {anonymous}
 
@@ -112,41 +139,41 @@ void updateWavePtr_(ID channelId, ID waveId)
 /* -------------------------------------------------------------------------- */
 
 
-Data::Data(const m::Channel& c, const m::Wave& w)
+Data::Data(const m::Channel_NEW& c)
 : channelId   (c.id)
-, waveId      (w.id)
-, name        (c.state->name)
-, volume      (c.state->volume.load())
-, pan         (c.state->pan.load())
-, pitch       (c.samplePlayer->state->pitch.load())
-, begin       (c.samplePlayer->state->begin.load())
-, end         (c.samplePlayer->state->end.load())
-, shift       (c.samplePlayer->state->shift.load())
-, waveSize    (w.getSize())
-, waveBits    (w.getBits())
-, waveDuration(w.getDuration())
-, waveRate    (w.getRate())
-, wavePath    (w.getPath())
-, isLogical   (w.isLogical())
+, name        (c.name)
+, volume      (c.volume)
+, pan         (c.pan)
+, pitch       (c.samplePlayer->pitch)
+, begin       (c.samplePlayer->begin)
+, end         (c.samplePlayer->end)
+, shift       (c.samplePlayer->shift)
+, waveSize    (c.samplePlayer->getWave()->getSize())
+, waveBits    (c.samplePlayer->getWave()->getBits())
+, waveDuration(c.samplePlayer->getWave()->getDuration())
+, waveRate    (c.samplePlayer->getWave()->getRate())
+, wavePath    (c.samplePlayer->getWave()->getPath())
+, isLogical   (c.samplePlayer->getWave()->isLogical())
+, m_channel   (&c)
 {
 }
 
-/* TODO - use c::channel::a_get() */
+
 ChannelStatus Data::a_getPreviewStatus() const
 {
-	namespace mm = m::model;
-
-	mm::ChannelsLock l(mm::channels);
-	return mm::get(mm::channels, m::mixer::PREVIEW_CHANNEL_ID).state->playStatus.load();
+	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).playStatus;
 }
 
-/* TODO - use c::channel::a_get() */
+
 Frame Data::a_getPreviewTracker() const
 {
-	namespace mm = m::model;
+	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.load();
+}
 
-	mm::ChannelsLock l(mm::channels);
-	return mm::get(mm::channels, m::mixer::PREVIEW_CHANNEL_ID).samplePlayer->state->tracker.load();
+
+const m::Wave& Data::getWaveRef() const
+{
+	return *m_channel->samplePlayer->getWave();
 }
 
 
@@ -157,20 +184,15 @@ Frame Data::a_getPreviewTracker() const
 
 Data getData(ID channelId)
 {
-	namespace mm = m::model;
+	/* Prepare the preview channel first, then return Data object. */
 
-	mm::ChannelsLock cl(mm::channels);
-	mm::WavesLock        wl(mm::waves);
+    m::model::swap([channelId](m::model::Layout& l)
+    {
+        assert(false);
+		//m::samplePlayer::loadWave(l.getChannel(m::mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
+    }, m::model::SwapType::SOFT);
 
-	const m::Channel& channel = mm::get(mm::channels, channelId);
-	const m::Wave&        wave    = mm::get(mm::waves, channel.samplePlayer->getWaveId());
-
-	/* Prepare the preview channel. */
-
-	m::Channel& preview = mm::get(mm::channels, m::mixer::PREVIEW_CHANNEL_ID);
-	preview.samplePlayer->loadWave(&wave);
-
-	return Data(channel, wave);
+	return Data(getChannel_(channelId));
 }
 
 
@@ -199,20 +221,25 @@ v::gdSampleEditor* getSampleEditorWindow()
 /* -------------------------------------------------------------------------- */
 
 
-void setBeginEnd(ID channelId, int b, int e)
+void setBeginEnd(ID channelId, Frame b, Frame e)
 {
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		b = std::clamp(b, 0, c.samplePlayer->getWaveSize() - 1);
-		e = std::clamp(e, 1, c.samplePlayer->getWaveSize() - 1);
-		if      (b >= e) b = e - 1;
-		else if (e < b)  e = b + 1;
+	m::Channel_NEW& c = getChannel_(channelId);
+	
+	b = std::clamp(b, 0, c.samplePlayer->getWaveSize() - 1);
+	e = std::clamp(e, 1, c.samplePlayer->getWaveSize() - 1);
+	if      (b >= e) b = e - 1;
+	else if (e < b)  e = b + 1;
 
-		c.samplePlayer->state->begin.store(b);
-		c.samplePlayer->state->end.store(e);
-		if (c.samplePlayer->state->tracker.load() < b)
-			c.samplePlayer->state->tracker.store(b);
-	});
+	if (c.state->tracker.load() < b)
+		c.state->tracker.store(b);
+
+    m::model::swap([channelId, &b, &e](m::model::Layout& l)
+    {
+        /*
+		m::Channel_NEW& c = l.getChannel(channelId);
+		c.samplePlayer->begin = b;
+		c.samplePlayer->end   = e;*/
+    }, m::model::SwapType::SOFT);
 
 	/* TODO waveform widget is dumb and wants a rebuild. Refactoring needed! */
 	getSampleEditorWindow()->rebuild();
@@ -222,11 +249,10 @@ void setBeginEnd(ID channelId, int b, int e)
 /* -------------------------------------------------------------------------- */
 
 
-void cut(ID channelId, ID waveId, int a, int b)
+void cut(ID channelId, Frame a, Frame b)
 {
-	copy(waveId, a, b);
-	m::wfx::cut(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+	copy(channelId, a, b);
+	m::wfx::cut(WaveLock(channelId).wave, a, b);
 	resetBeginEnd_(channelId);
 }
 
@@ -234,37 +260,45 @@ void cut(ID channelId, ID waveId, int a, int b)
 /* -------------------------------------------------------------------------- */
 
 
-void copy(ID waveId, int a, int b)
+void copy(ID channelId, Frame a, Frame b)
 {
-	m::model::WavesLock lock(m::model::waves);
-	waveBuffer_ = m::waveManager::createFromWave(m::model::get(m::model::waves, waveId), a, b);
+	waveBuffer_ = m::waveManager::createFromWave(getWave_(channelId), a, b);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void paste(ID channelId, ID waveId, int a)
+void paste(ID channelId, Frame a)
 {
 	if (!isWaveBufferFull()) {
 		u::log::print("[sampleEditor::paste] Buffer is empty, nothing to paste\n");
 		return;
 	}
 
-	m::wfx::paste(*waveBuffer_, waveId, a);
-	updateWavePtr_(channelId, waveId);
+	/* Get the existing wave in channel. */
 
-	/* Shift begin/end points to keep the previous position. */
+	m::Wave& wave = getWave_(channelId);
+
+	/* Temporary disable wave reading in channel. From now on, the audio thread
+	won't be reading any wave, so editing it is safe.  */
+
+	WaveLock lock(channelId); 
+
+	/* Paste copied data to destination wave. */
+
+	m::wfx::paste(*waveBuffer_, wave, a);
+
+	/* Pass the old wave to lock, so that when it goes out of scope it assigns
+	to channel that specific wave (which contains the pasted data). */
+
+	lock.wave = wave; 
+
+	/* In the meantime, shift begin/end points to keep the previous position. */
 
 	int   delta = waveBuffer_->getSize();
-	Frame begin;
-	Frame end;
-
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		begin = c.samplePlayer->state->begin.load();
-		end   = c.samplePlayer->state->end.load();
-	});
+	Frame begin = getSamplePlayer_(channelId).begin;
+	Frame end   = getSamplePlayer_(channelId).end;
 
 	if (a < begin && a < end)
 		setBeginEnd(channelId, begin + delta, end + delta);
@@ -279,60 +313,54 @@ void paste(ID channelId, ID waveId, int a)
 /* -------------------------------------------------------------------------- */
 
 
-void silence(ID channelId, ID waveId, int a, int b)
+void silence(ID channelId, int a, int b)
 {
-	m::wfx::silence(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+	m::wfx::silence(WaveLock(channelId).wave, a, b);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void fade(ID channelId, ID waveId, int a, int b, m::wfx::Fade type)
+void fade(ID channelId, int a, int b, m::wfx::Fade type)
 {
-	m::wfx::fade(waveId, a, b, type);
-	updateWavePtr_(channelId, waveId);
+	m::wfx::fade(WaveLock(channelId).wave, a, b, type);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void smoothEdges(ID channelId, ID waveId, int a, int b)
+void smoothEdges(ID channelId, int a, int b)
 {
-	m::wfx::smooth(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+	m::wfx::smooth(WaveLock(channelId).wave, a, b);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void reverse(ID channelId, ID waveId, int a, int b)
+void reverse(ID channelId, Frame a, Frame b)
 {
-	m::wfx::reverse(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+	m::wfx::reverse(WaveLock(channelId).wave, a, b);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void normalize(ID channelId, ID waveId, int a, int b)
+void normalize(ID channelId, int a, int b)
 {
-	m::wfx::normalize(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+    m::wfx::normalize(WaveLock(channelId).wave, a, b);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void trim(ID channelId, ID waveId, int a, int b)
+void trim(ID channelId, int a, int b)
 {
-	m::wfx::trim(waveId, a, b);
-	updateWavePtr_(channelId, waveId);
+	m::wfx::trim(WaveLock(channelId).wave, a, b);
 	resetBeginEnd_(channelId);
 }
 
@@ -366,10 +394,10 @@ void setPreviewTracker(Frame f)
 {
 	namespace mm = m::model;
 
-	mm::onGet(mm::channels, m::mixer::PREVIEW_CHANNEL_ID, [&](m::Channel& c)
-	{
-		c.samplePlayer->state->tracker.store(f);
-	});
+    mm::swap([f](mm::Layout& l)
+    {
+		l.getChannel(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
+    }, mm::SwapType::SOFT);
 
 	previewTracker_ = f;
 
@@ -381,22 +409,28 @@ void cleanupPreview()
 {
 	namespace mm = m::model;
 
-	mm::ChannelsLock cl(mm::channels);
-	mm::get(mm::channels, m::mixer::PREVIEW_CHANNEL_ID).samplePlayer->loadWave(nullptr);
+    mm::swap([](mm::Layout& l)
+    {
+        assert(false);
+        //m::samplePlayer::loadWave(l.getChannel(m::mixer::PREVIEW_CHANNEL_ID), nullptr);
+    }, mm::SwapType::SOFT);
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void toNewChannel(ID channelId, ID waveId, int a, int b)
+void toNewChannel(ID channelId, Frame a, Frame b)
 {
+    // TODO
+	assert(false);
+	/*
 	ID columnId = G_MainWin->keyboard->getChannel(channelId)->getColumnId();
 
 	m::model::onGet(m::model::waves, waveId, [&](m::Wave& w)
 	{
 		m::mh::addAndLoadChannel(columnId, m::waveManager::createFromWave(w, a, b));
-	});
+	});*/
 }
 
 
@@ -412,18 +446,12 @@ bool isWaveBufferFull()
 /* -------------------------------------------------------------------------- */
 
 
-void reload(ID channelId, ID waveId)
+void reload(ID channelId)
 {
 	if (!v::gdConfirmWin("Warning", "Reload sample: are you sure?"))
 		return;
 
-	std::string wavePath;
-	m::model::onGet(m::model::waves, waveId, [&](const m::Wave& w)
-	{
-		wavePath = w.getPath();
-	});
-
-	if (channel::loadChannel(channelId, wavePath) != G_RES_OK) {
+	if (channel::loadChannel(channelId, getWave_(channelId).getPath()) != G_RES_OK) {
 		v::gdAlert("Unable to reload sample!");
 		return;
 	}
@@ -435,22 +463,18 @@ void reload(ID channelId, ID waveId)
 /* -------------------------------------------------------------------------- */
 
 
-void shift(ID channelId, ID waveId, int offset)
+void shift(ID channelId, Frame offset)
 {
-	Frame shift;
-	m::model::onGet(m::model::channels, channelId, [&](const m::Channel& c)
-	{
-		shift = c.samplePlayer->state->shift.load();
-	});
-	
-	m::wfx::shift(waveId, offset - shift);
-	updateWavePtr_(channelId, waveId);
+	namespace mm = m::model;
 
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.samplePlayer->state->shift.store(offset);
-	});
+	Frame shift = getSamplePlayer_(channelId).shift;
+	m::wfx::shift(WaveLock(channelId).wave, offset - shift);
+
+    mm::swap([channelId, offset](mm::Layout& l)
+    {
+        l.getChannel(channelId).samplePlayer->shift = offset;
+    }, mm::SwapType::SOFT);
 
 	getSampleEditorWindow()->shiftTool->update(offset);
 }
-}}} // giada::c::sampleEditor::
+} // giada::c::sampleEditor::

@@ -33,20 +33,16 @@
 #include "core/types.h"
 
 
-namespace giada {
-namespace m 
+namespace giada::m::channel  { struct Data; }
+namespace giada::m::conf  { struct Conf; }
+namespace giada::m::patch { struct Channel; }
+namespace giada::m
 {
-namespace conf
-{
-struct Conf;
-}
-namespace patch
-{
-struct Channel;
-}
 class  Channel;
+class  Channel_NEW;
 struct ChannelState;
-namespace channelManager
+}
+namespace giada::m::channelManager
 {
 /* init
 Initializes internal data. */
@@ -56,7 +52,16 @@ void init();
 /* create (1)
 Creates a new Channel from scratch. */
 
+struct ChannelInfo
+{
+    ID               id;
+    channel::State&  state;
+    channel::Buffer& buffer;
+};
+
 std::unique_ptr<Channel> create(ChannelType type, ID columnId, const conf::Conf& conf);
+channel::Data create(ChannelType type, ID columnId, ChannelInfo info);
+ChannelInfo createInfo(ID channelId=0);
 
 /* create (2)
 Creates a new Channel given an existing one (i.e. clone). */
@@ -66,9 +71,9 @@ std::unique_ptr<Channel> create(const Channel& ch);
 /* (de)serializeWave
 Creates a new Channel given the patch raw data and vice versa. */
 
-std::unique_ptr<Channel> deserializeChannel(const patch::Channel& c, int bufferSize);
-const patch::Channel     serializeChannel(const Channel& c);
-}}} // giada::m::channelManager
+Channel_NEW deserializeChannel(const patch::Channel& c, ChannelInfo info, float samplerateRatio);
+const patch::Channel     serializeChannel(const Channel_NEW& c);
+} // giada::m::channelManager::
 
 
 #endif

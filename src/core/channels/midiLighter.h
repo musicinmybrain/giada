@@ -32,8 +32,7 @@
 #include <memory>
 
 
-namespace giada {
-namespace m
+namespace giada::m
 {
 namespace mixer
 {
@@ -67,7 +66,72 @@ private:
 
     ChannelState* m_channelState;
 };
-}} // giada::m::
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class MidiLighter_NEW
+{
+public:
+
+    MidiLighter_NEW(const Channel_NEW&);
+    MidiLighter_NEW(const MidiLighter_NEW&, const Channel_NEW* c=nullptr);
+
+    void react(const eventDispatcher::Event& e, bool audible) const;
+
+    /* enabled
+    Tells whether MIDI ligthing is enabled or not. */
+    
+	bool enabled;
+
+    /* MIDI learning fields for MIDI ligthing. */
+
+	MidiLearnParam playing;
+	MidiLearnParam mute;
+	MidiLearnParam solo;
+
+private:
+
+    void sendMute(uint32_t l_mute) const;
+    void sendSolo(uint32_t l_solo) const;
+    void sendStatus(uint32_t l_playing, bool audible) const;
+
+    const Channel_NEW* m_channel;
+};
+} // giada::m::
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::midiLighter
+{
+struct Data
+{
+    Data() = default;
+    Data(const patch::Channel& p);
+    Data(const Data& o) = default;
+
+    /* enabled
+    Tells whether MIDI ligthing is enabled or not. */
+    
+	bool enabled;
+
+    /* MIDI learning fields for MIDI ligthing. */
+
+	MidiLearnParam playing;
+	MidiLearnParam mute;
+	MidiLearnParam solo;
+};
+
+
+void react(channel::Data& ch, const eventDispatcher::Event& e, bool audible);
+}
 
 
 #endif

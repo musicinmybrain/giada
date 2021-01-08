@@ -28,12 +28,12 @@
 #include <cassert>
 #include "core/channels/state.h"
 #include "core/mixerHandler.h"
+#include "core/plugins/pluginManager.h"
 #include "core/plugins/pluginHost.h"
 #include "channel.h"
 
 
-namespace giada {
-namespace m 
+namespace giada::m 
 {
 Channel::Channel(ChannelType type, ID id, ID columnId, Frame bufferSize, const conf::Conf& conf)
 : id         (id)
@@ -237,8 +237,8 @@ void Channel::renderMasterOut(AudioBuffer& out) const
 {
 	state->buffer.copyData(out);
 #ifdef WITH_VST
-	if (pluginIds.size() > 0)
-		pluginHost::processStack(state->buffer, pluginIds, nullptr);
+	/*if (pluginIds.size() > 0)
+		pluginHost::processStack(state->buffer, pluginIds, nullptr);*/
 #endif
 	out.copyData(state->buffer, state->volume.load());
 }
@@ -250,8 +250,8 @@ void Channel::renderMasterOut(AudioBuffer& out) const
 void Channel::renderMasterIn(AudioBuffer& in) const
 {
 #ifdef WITH_VST
-	if (pluginIds.size() > 0)
-		pluginHost::processStack(in, pluginIds, nullptr);
+	/*if (pluginIds.size() > 0)
+		pluginHost::processStack(in, pluginIds, nullptr);*/
 #endif
 }
 
@@ -271,11 +271,11 @@ void Channel::renderChannel(AudioBuffer& out, AudioBuffer& in, bool audible) con
 	plug-in stack internally with no MIDI events. */
 
 #ifdef WITH_VST
-	if (midiReceiver)  
-		midiReceiver->render(pluginIds); 
-	else 
+	/*if (midiReceiver)
+		midiReceiver->render(pluginIds); */
+	/*else
 	if (pluginIds.size() > 0)
-		pluginHost::processStack(state->buffer, pluginIds, nullptr);
+		pluginHost::processStack(state->buffer, pluginIds, nullptr);*/
 #endif
 
 	if (audible)
@@ -347,4 +347,735 @@ bool Channel::hasWave() const
 {
 	return m_type == ChannelType::SAMPLE && samplePlayer->hasWave();
 }
-}} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Channel_NEW::Data::Data(Frame bufferSize) 
+: audioBuffer(bufferSize, G_MAX_IO_CHANS)
+{
+}
+
+Channel_NEW::Channel_NEW(ChannelType type, ID id, ID columnId, 
+	Channel_NEW::State& state, Channel_NEW::Data& data)
+: state      (&state)
+, data       (&data)
+, id         (id)
+, type       (type)
+, columnId   (columnId)
+, volume     (G_DEFAULT_VOL)
+, volume_i   (G_DEFAULT_VOL)
+, pan        (G_DEFAULT_PAN)
+, mute       (false)
+, solo       (false)
+, armed      (false)
+, key        (0)
+, readActions(true)
+, hasActions (false)
+, height     (G_GUI_UNIT)
+{
+	switch (type) {
+
+		case ChannelType::SAMPLE:
+			samplePlayer.emplace();
+			audioReceiver.emplace();
+			sampleActionRecorder.emplace();
+			break;
+		
+		case ChannelType::PREVIEW:
+			samplePlayer.emplace();
+			break;
+		case ChannelType::MIDI:
+			midiController.emplace();
+#ifdef WITH_VST
+			midiReceiver.emplace();
+#endif
+			midiSender.emplace();
+			midiActionRecorder.emplace();		
+			break;	
+		
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+Channel_NEW::Channel_NEW(const patch::Channel& p, Channel_NEW::State& state, 
+	Channel_NEW::Data& data, float samplerateRatio)
+: state         (&state)
+, data          (&data)
+, id            (p.id)
+, type          (p.type)
+, columnId      (p.columnId)
+, volume        (p.volume)
+, volume_i      (0.0f)
+, pan           (p.pan)
+, mute          (p.mute)
+, solo          (p.solo)
+, armed         (p.armed)
+, key           (p.key)
+, readActions   (p.readActions)
+, hasActions    (p.hasActions)
+, name          (p.name)
+, height        (p.height)
+#ifdef WITH_VST
+, plugins       (pluginManager::hydratePlugins(p.pluginIds))
+#endif
+, midiLearner   (p)
+{
+	switch (type) {
+
+		case ChannelType::SAMPLE:
+			samplePlayer.emplace(p, samplerateRatio);
+			audioReceiver.emplace(p);
+			sampleActionRecorder.emplace();
+			break;
+		
+		case ChannelType::PREVIEW:
+			samplePlayer.emplace(p, samplerateRatio);
+			break;
+
+		case ChannelType::MIDI:
+			midiController.emplace();
+#ifdef WITH_VST
+			midiReceiver.emplace();
+#endif
+			midiSender.emplace(p);
+			midiActionRecorder.emplace();	
+			break;	
+		
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+Channel_NEW::Channel_NEW(const Channel_NEW& o)
+: state         (o.state)
+, data          (o.data)
+, id            (o.id)
+, type          (o.type)
+, columnId      (o.columnId)
+, volume        (o.volume)
+, volume_i      (0.0f)
+, pan           (o.pan)
+, mute          (o.mute)
+, solo          (o.solo)
+, armed         (o.armed)
+, key           (o.key)
+, readActions   (o.readActions)
+, hasActions    (o.hasActions)
+, name          (o.name)
+, height        (o.height)
+#ifdef WITH_VST
+, plugins       (o.plugins)
+#endif
+, midiLearner   (o.midiLearner)
+, midiLighter   (o.midiLighter)
+{
+
+	if (o.samplePlayer)         samplePlayer.emplace(o.samplePlayer.value());
+	if (o.audioReceiver)        audioReceiver.emplace(o.audioReceiver.value());
+	if (o.midiController)       midiController.emplace();
+	if (o.midiReceiver)         midiReceiver.emplace();
+	if (o.midiSender)           midiSender.emplace(o.midiSender.value());
+	if (o.sampleActionRecorder) sampleActionRecorder.emplace();
+	if (o.midiActionRecorder)   midiActionRecorder.emplace();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::react(const eventDispatcher::EventBuffer& events, bool audible)
+{
+	for (const eventDispatcher::Event& e : events) {
+
+		if (e.channelId > 0 && e.channelId != id)
+			continue;
+
+        react(e);
+        //midiLighter::react(*this, e, audible);
+
+        //if (midiController)       midiController::react(*this, e);
+	#ifdef WITH_VST
+		//if (midiReceiver)         midiReceiver::react(*this, e);
+	#endif
+		//if (midiSender)           midiSender::react(*this, e);
+		//if (samplePlayer)         samplePlayer::react(*this, e);
+		//if (midiActionRecorder)   midiActionRecorder::react(*this, e);
+		//if (sampleActionRecorder && samplePlayer && samplePlayer->hasWave())
+		//	sampleActionRecorder::react(*this, e);
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::advance(const sequencer::EventBuffer& events) const
+{
+	for (const sequencer::Event& e : events) {
+		//if (midiController)       midiController::advance(*this, e);
+	#ifdef WITH_VST
+		//if (midiReceiver)         midiReceiver::advance(*this, e);
+	#endif
+		//if (samplePlayer)         samplePlayer::advance(*this, e);
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::render(AudioBuffer* out, AudioBuffer* in, bool audible) const
+{
+	if (id == mixer::MASTER_OUT_CHANNEL_ID)
+		renderMasterOut(*out);
+	else
+	if (id == mixer::MASTER_IN_CHANNEL_ID)
+		renderMasterIn(*in);
+	else 
+		renderChannel(*out, *in, audible);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::react(const eventDispatcher::Event& e)
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::CHANNEL_VOLUME:
+			volume = std::get<float>(e.data); break;
+
+		case eventDispatcher::EventType::CHANNEL_PAN:
+			pan = std::get<float>(e.data); break;
+
+		case eventDispatcher::EventType::CHANNEL_MUTE:
+			mute = !mute; break;
+
+		case eventDispatcher::EventType::CHANNEL_TOGGLE_ARM:
+			armed = !armed; break;
+			
+		case eventDispatcher::EventType::CHANNEL_SOLO:
+			solo = !solo; 
+			m::mh::updateSoloCount(); 
+			break;
+
+        case eventDispatcher::EventType::CHANNEL_REC_STATUS:
+            recStatus = std::get<ChannelStatus>(e.data);
+            break;
+		
+		case eventDispatcher::EventType::CHANNEL_SET_ACTIONS:
+			hasActions = std::get<bool>(e.data);
+			break;
+		
+		case eventDispatcher::EventType::CHANNEL_FUNCTION:
+			std::get<std::function<void(Channel_NEW&)>>(e.data)(*this);
+			break;
+
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::renderMasterOut(AudioBuffer& out) const
+{
+	data->audioBuffer.copyData(out);
+#ifdef WITH_VST
+	if (plugins.size() > 0)
+		pluginHost::processStack(data->audioBuffer, plugins, nullptr);
+#endif
+	out.copyData(data->audioBuffer, volume);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::renderMasterIn(AudioBuffer& in) const
+{
+#ifdef WITH_VST
+	if (plugins.size() > 0)
+		pluginHost::processStack(in, plugins, nullptr);
+#endif
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void Channel_NEW::renderChannel(AudioBuffer& out, AudioBuffer& in, bool audible) const
+{
+	data->audioBuffer.clear();
+
+	//if (samplePlayer)  samplePlayer::render(*this, out);
+	//if (audioReceiver) audioReceiver::render(*this, in);
+
+	/* If MidiReceiver exists, let it process the plug-in stack, as it can 
+	contain plug-ins that take MIDI events (i.e. synths). Otherwise process the
+	plug-in stack internally with no MIDI events. */
+
+#ifdef WITH_VST
+	//if (midiReceiver)
+	//	midiReceiver::render(*this, plugins);
+	//else
+	//if (plugins.size() > 0)
+	//	pluginHost::processStack(data->audioBuffer, plugins, nullptr);
+#endif
+
+	if (audible)
+	    out.addData(data->audioBuffer, volume * volume_i, calcPanning());
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+AudioBuffer::Pan Channel_NEW::calcPanning() const
+{
+	/* TODO - precompute the AudioBuffer::Pan when pan value changes instead of
+	building it on the fly. */
+
+	/* Center pan (0.5f)? Pass-through. */
+
+	if (pan == 0.5f) return { 1.0f, 1.0f };
+	return { 1.0f - pan, pan };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+bool Channel_NEW::isInternal() const
+{
+	return type == ChannelType::MASTER || type == ChannelType::PREVIEW;
+}
+
+
+bool Channel_NEW::isMuted() const
+{
+	/* Internals can't be muted. */
+	return !isInternal() && mute;
+}
+
+
+bool Channel_NEW::canInputRec() const
+{
+	if (type != ChannelType::SAMPLE)
+		return false;
+
+	bool hasWave     = samplePlayer->hasWave();
+	bool isProtected = audioReceiver->overdubProtection;
+	bool canOverdub  = !hasWave || (hasWave && !isProtected);
+
+	return armed && canOverdub;
+}
+
+
+bool Channel_NEW::canActionRec() const
+{
+	return hasWave() && !samplePlayer->isAnyLoopMode();
+}
+
+
+bool Channel_NEW::hasWave() const
+{
+	return type == ChannelType::SAMPLE && samplePlayer->hasWave();
+}
+
+bool Channel_NEW::isPlaying() const
+{
+	return playStatus == ChannelStatus::PLAY || playStatus == ChannelStatus::ENDING;
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+void pumpChannelFunction(ID channelId, std::function<void(Channel_NEW&)> f)
+{
+	eventDispatcher::pumpEvent({ eventDispatcher::EventType::CHANNEL_FUNCTION, 
+		0, channelId, f });
+}
+} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::channel
+{
+namespace
+{
+AudioBuffer::Pan calcPanning_(float pan)
+{
+	/* TODO - precompute the AudioBuffer::Pan when pan value changes instead of
+	building it on the fly. */
+
+	/* Center pan (0.5f)? Pass-through. */
+
+	if (pan == 0.5f) return { 1.0f, 1.0f };
+	return { 1.0f - pan, pan };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void react_(Data& d, const eventDispatcher::Event& e)
+{
+	switch (e.type) {
+
+		case eventDispatcher::EventType::CHANNEL_VOLUME:
+			d.volume = std::get<float>(e.data); break;
+
+		case eventDispatcher::EventType::CHANNEL_PAN:
+			d.pan = std::get<float>(e.data); break;
+
+		case eventDispatcher::EventType::CHANNEL_MUTE:
+			d.mute = !d.mute; break;
+
+		case eventDispatcher::EventType::CHANNEL_TOGGLE_ARM:
+			d.armed = !d.armed; break;
+			
+		case eventDispatcher::EventType::CHANNEL_SOLO:
+			d.solo = !d.solo;
+			m::mh::updateSoloCount(); 
+			break;
+
+        case eventDispatcher::EventType::CHANNEL_REC_STATUS:
+            d.recStatus = std::get<ChannelStatus>(e.data);
+            break;
+		
+		case eventDispatcher::EventType::CHANNEL_SET_ACTIONS:
+			d.hasActions = std::get<bool>(e.data);
+			break;
+		
+		case eventDispatcher::EventType::CHANNEL_FUNCTION:
+			//TODO - std::get<std::function<void(Channel_NEW&)>>(e.data)(*this);
+			break;
+
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void renderMasterOut_(const Data& d, AudioBuffer& out)
+{
+	d.buffer->audioBuffer.copyData(out);
+#ifdef WITH_VST
+	if (d.plugins.size() > 0)
+		pluginHost::processStack(d.buffer->audioBuffer, d.plugins, nullptr);
+#endif
+	out.copyData(d.buffer->audioBuffer, d.volume);
+
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void renderMasterIn_(const Data& d, AudioBuffer& in)
+{
+#ifdef WITH_VST
+	if (d.plugins.size() > 0)
+		pluginHost::processStack(in, d.plugins, nullptr);
+#endif
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void renderChannel_(const Data& d, AudioBuffer& out, AudioBuffer& in, bool audible)
+{
+	d.buffer->audioBuffer.clear();
+
+	if (d.samplePlayer)  samplePlayer::render(d, out);
+	if (d.audioReceiver) audioReceiver::render(d, in);
+
+	/* If MidiReceiver exists, let it process the plug-in stack, as it can 
+	contain plug-ins that take MIDI events (i.e. synths). Otherwise process the
+	plug-in stack internally with no MIDI events. */
+
+#ifdef WITH_VST
+	if (d.midiReceiver)  
+		midiReceiver::render(d, d.plugins);
+	else 
+	if (d.plugins.size() > 0)
+		pluginHost::processStack(d.buffer->audioBuffer, d.plugins, nullptr);
+#endif
+
+	if (audible)
+	    out.addData(d.buffer->audioBuffer, d.volume * d.volume_i, calcPanning_(d.pan));
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+Buffer::Buffer(Frame bufferSize)
+: audioBuffer(bufferSize, G_MAX_IO_CHANS)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+Data::Data(ChannelType type, ID id, ID columnId, State& state, Buffer& buffer)
+: state      (&state)
+, buffer     (&buffer)
+, id         (id)
+, type       (type)
+, columnId   (columnId)
+, volume     (G_DEFAULT_VOL)
+, volume_i   (G_DEFAULT_VOL)
+, pan        (G_DEFAULT_PAN)
+, mute       (false)
+, solo       (false)
+, armed      (false)
+, key        (0)
+, readActions(true)
+, hasActions (false)
+, height     (G_GUI_UNIT)
+, playStatus (ChannelStatus::OFF)
+, recStatus  (ChannelStatus::OFF)
+{
+	switch (type) {
+
+		case ChannelType::SAMPLE:
+			samplePlayer.emplace();
+			audioReceiver.emplace();
+			sampleActionRecorder.emplace();
+			break;
+		
+		case ChannelType::PREVIEW:
+			samplePlayer.emplace();
+			break;
+
+		case ChannelType::MIDI:
+			midiController.emplace();
+#ifdef WITH_VST
+			midiReceiver.emplace();
+#endif
+			midiSender.emplace();
+			midiActionRecorder.emplace();		
+			break;	
+		
+		default: break;
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplerateRatio)
+: state         (&state)
+, buffer        (&buffer)
+, id            (p.id)
+, type          (p.type)
+, columnId      (p.columnId)
+, volume        (p.volume)
+, volume_i      (0.0f)
+, pan           (p.pan)
+, mute          (p.mute)
+, solo          (p.solo)
+, armed         (p.armed)
+, key           (p.key)
+, readActions   (p.readActions)
+, hasActions    (p.hasActions)
+, name          (p.name)
+, height        (p.height)
+, playStatus    (ChannelStatus::OFF)
+, recStatus     (ChannelStatus::OFF)
+#ifdef WITH_VST
+, plugins       (pluginManager::hydratePlugins(p.pluginIds))
+#endif
+, midiLearner   (p)
+{
+	switch (type) {
+
+		case ChannelType::SAMPLE:
+			samplePlayer.emplace(p, samplerateRatio);
+			audioReceiver.emplace(p);
+			sampleActionRecorder.emplace();
+			break;
+		
+		case ChannelType::PREVIEW:
+			samplePlayer.emplace(p, samplerateRatio);
+			break;
+
+		case ChannelType::MIDI:
+			midiController.emplace();
+#ifdef WITH_VST
+			midiReceiver.emplace();
+#endif
+			midiSender.emplace(p);
+			midiActionRecorder.emplace();	
+			break;	
+		
+		default: break;
+	}
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
+
+bool Data::isInternal() const
+{
+	return type == ChannelType::MASTER || type == ChannelType::PREVIEW;
+}
+
+
+bool Data::isMuted() const
+{
+	/* Internals can't be muted. */
+	return !isInternal() && mute;
+}
+
+
+bool Data::canInputRec() const
+{
+	if (type != ChannelType::SAMPLE)
+		return false;
+
+	bool hasWave     = samplePlayer->hasWave();
+	bool isProtected = audioReceiver->overdubProtection;
+	bool canOverdub  = !hasWave || (hasWave && !isProtected);
+
+	return armed && canOverdub;
+}
+
+
+bool Data::canActionRec() const
+{
+	return hasWave() && !samplePlayer->isAnyLoopMode();
+}
+
+
+bool Data::hasWave() const
+{
+	return type == ChannelType::SAMPLE && samplePlayer->hasWave();
+}
+
+bool Data::isPlaying() const
+{
+	return playStatus == ChannelStatus::PLAY || playStatus == ChannelStatus::ENDING;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void advance(const Data& d, const sequencer::EventBuffer& events)
+{
+	for (const sequencer::Event& e : events) {
+		if (d.midiController) midiController::advance(d, e);
+	#ifdef WITH_VST
+		if (d.midiReceiver)   midiReceiver::advance(d, e);
+	#endif
+		if (d.samplePlayer)   samplePlayer::advance(d, e);
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void react(Data& d, const eventDispatcher::EventBuffer& events, bool audible)
+{
+	for (const eventDispatcher::Event& e : events) {
+
+		if (e.channelId > 0 && e.channelId != d.id)
+			continue;
+
+        react_(d, e);
+        midiLighter::react(d, e, audible);
+
+		if (d.midiController)       midiController::react(d, e);
+#ifdef WITH_VST
+		if (d.midiReceiver)         midiReceiver::react(d, e);
+#endif
+		if (d.midiSender)           midiSender::react(d, e);
+		if (d.samplePlayer)         samplePlayer::react(d, e);
+		if (d.midiActionRecorder)   midiActionRecorder::react(d, e);
+		if (d.sampleActionRecorder && d.samplePlayer && d.samplePlayer->hasWave()) 
+			sampleActionRecorder::react(d, e);
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void render(const Data& d, AudioBuffer* out, AudioBuffer* in, bool audible)
+{
+	if (d.id == mixer::MASTER_OUT_CHANNEL_ID)
+		renderMasterOut_(d, *out);
+	else
+	if (d.id == mixer::MASTER_IN_CHANNEL_ID)
+		renderMasterIn_(d, *in);
+	else 
+		renderChannel_(d, *out, *in, audible);
+}
+}

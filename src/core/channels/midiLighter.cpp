@@ -25,6 +25,7 @@
  * -------------------------------------------------------------------------- */
 
 
+#include "core/channels/channel.h"
 #include "core/channels/state.h"
 #include "core/mixer.h"
 #include "core/kernelMidi.h"
@@ -146,4 +147,244 @@ void MidiLighter::sendStatus(uint32_t l_playing, bool audible) const
         default: break;        
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiLighter_NEW::MidiLighter_NEW(const Channel_NEW& c)
+: m_channel(&c)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+MidiLighter_NEW::MidiLighter_NEW(const MidiLighter_NEW& o, const Channel_NEW* c)
+: playing  (o.playing)
+, mute     (o.mute)
+, solo     (o.solo)
+, m_channel(c)
+{
+    assert(c != nullptr);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+
+void MidiLighter_NEW::react(const eventDispatcher::Event& e, bool audible) const
+{
+    if (!enabled)
+        return;
+
+    uint32_t l_playing = playing.getValue();
+    uint32_t l_mute    = mute.getValue();
+    uint32_t l_solo    = solo.getValue();
+
+	switch (e.type) {
+
+        case eventDispatcher::EventType::KEY_PRESS:
+        case eventDispatcher::EventType::KEY_RELEASE:
+        case eventDispatcher::EventType::KEY_KILL:
+        case eventDispatcher::EventType::SEQUENCER_STOP:
+            if (l_playing != 0x0) sendStatus(l_playing, audible); 
+            break;
+
+        case eventDispatcher::EventType::CHANNEL_MUTE:
+            if (l_mute != 0x0) sendMute(l_mute); 
+            break;
+
+        case eventDispatcher::EventType::CHANNEL_SOLO:
+            if (l_solo != 0x0) sendSolo(l_solo); 
+            break;
+
+        default: break;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiLighter_NEW::sendMute(uint32_t l_mute) const
+{
+	if (m_channel->mute)
+		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOn);
+	else
+		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOff);    
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiLighter_NEW::sendSolo(uint32_t l_solo) const
+{
+	if (m_channel->solo)
+		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOn);
+	else
+		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOff);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void MidiLighter_NEW::sendStatus(uint32_t l_playing, bool audible) const
+{
+    switch (m_channel->playStatus) {
+        
+        case ChannelStatus::OFF:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopped);
+            break;
+        
+        case ChannelStatus::WAIT:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.waiting);
+            break;
+
+        case ChannelStatus::ENDING:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopping);
+            break;
+
+        case ChannelStatus::PLAY:
+            kernelMidi::sendMidiLightning(l_playing, audible ? midimap::midimap.playing : midimap::midimap.playingInaudible);
+            break;
+
+        default: break;        
+    }
+}
 }} // giada::m::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace giada::m::midiLighter
+{
+namespace
+{
+void sendMute_(channel::Data& ch, uint32_t l_mute)
+{
+	if (ch.mute)
+		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOn);
+	else
+		kernelMidi::sendMidiLightning(l_mute, midimap::midimap.muteOff);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void sendSolo_(channel::Data& ch, uint32_t l_solo)
+{
+	if (ch.solo)
+		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOn);
+	else
+		kernelMidi::sendMidiLightning(l_solo, midimap::midimap.soloOff);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void sendStatus_(channel::Data& ch, uint32_t l_playing, bool audible)
+{
+    switch (ch.playStatus) {
+        
+        case ChannelStatus::OFF:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopped);
+            break;
+        
+        case ChannelStatus::WAIT:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.waiting);
+            break;
+
+        case ChannelStatus::ENDING:
+            kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopping);
+            break;
+
+        case ChannelStatus::PLAY:
+            kernelMidi::sendMidiLightning(l_playing, audible ? midimap::midimap.playing : midimap::midimap.playingInaudible);
+            break;
+
+        default: break;        
+    }
+}
+} // {anonymous}
+
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
+Data::Data(const patch::Channel& p)
+: enabled(p.midiOutL)
+, playing(p.midiOutLplaying)
+, mute   (p.midiOutLmute)
+, solo   (p.midiOutLsolo)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void react(channel::Data& ch, const eventDispatcher::Event& e, bool audible)
+{
+    if (!ch.midiLighter.enabled)
+        return;
+
+    uint32_t l_playing = ch.midiLighter.playing.getValue();
+    uint32_t l_mute    = ch.midiLighter.mute.getValue();
+    uint32_t l_solo    = ch.midiLighter.solo.getValue();
+
+	switch (e.type) {
+
+        case eventDispatcher::EventType::KEY_PRESS:
+        case eventDispatcher::EventType::KEY_RELEASE:
+        case eventDispatcher::EventType::KEY_KILL:
+        case eventDispatcher::EventType::SEQUENCER_STOP:
+            if (l_playing != 0x0) sendStatus_(ch, l_playing, audible);
+            break;
+
+        case eventDispatcher::EventType::CHANNEL_MUTE:
+            if (l_mute != 0x0) sendMute_(ch, l_mute);
+            break;
+
+        case eventDispatcher::EventType::CHANNEL_SOLO:
+            if (l_solo != 0x0) sendSolo_(ch, l_solo);
+            break;
+
+        default: break;
+    }
+}
+}

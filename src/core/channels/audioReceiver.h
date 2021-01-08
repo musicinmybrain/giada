@@ -69,7 +69,60 @@ private:
 
     ChannelState* m_channelState;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+class Channel_NEW;
+class AudioReceiver_NEW
+{
+public:
+
+    AudioReceiver_NEW(Channel_NEW&);
+    AudioReceiver_NEW(const patch::Channel&, Channel_NEW&);
+    AudioReceiver_NEW(const AudioReceiver_NEW& o, Channel_NEW* c=nullptr);
+
+    void render(const AudioBuffer& in) const;
+
+    bool inputMonitor;
+    bool overdubProtection;
+
+private:
+
+    Channel_NEW& m_channel;
+};
 }} // giada::m::
 
+
+
+
+
+
+
+
+
+namespace giada::m::channel { struct Data; }
+namespace giada::m::audioReceiver
+{
+struct Data
+{
+    Data() = default;
+    Data(const patch::Channel& p);
+    Data(const Data& o) = default;
+
+    bool inputMonitor;
+    bool overdubProtection;
+};
+
+void render(const channel::Data& ch, const AudioBuffer& in);
+}
 
 #endif
