@@ -219,7 +219,7 @@ namespace giada::m::samplePlayer
 {
 struct Data
 {
-    Data() = default;
+    Data();
     Data(const patch::Channel& p, float samplerateRatio);
     Data(const Data& o) = default;
 

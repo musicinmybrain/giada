@@ -584,13 +584,24 @@ bool shouldLoop_(const channel::Data& ch)
 /* -------------------------------------------------------------------------- */
 
 
+Data::Data()
+: pitch        (G_DEFAULT_PITCH)
+, mode         (SamplePlayerMode::SINGLE_BASIC)
+, velocityAsVol(false)
+{
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 Data::Data(const patch::Channel& p, float samplerateRatio)
-: pitch             (p.pitch)
-, mode              (p.mode)
-, shift             (p.shift)
-, begin             (p.begin)
-, end               (p.end)
-, velocityAsVol     (p.midiInVeloAsVol)
+: pitch        (p.pitch)
+, mode         (p.mode)
+, shift        (p.shift)
+, begin        (p.begin)
+, end          (p.end)
+, velocityAsVol(p.midiInVeloAsVol)
 {
     //setWave(waveManager::hydrateWave(p.waveId), samplerateRatio);
 }
