@@ -109,9 +109,9 @@ std::unique_ptr<Channel> create(const Channel& o)
 /* -------------------------------------------------------------------------- */
 
 
-Channel_NEW deserializeChannel(const patch::Channel& pch, ChannelInfo info, float samplerateRatio)
+channel::Data deserializeChannel(const patch::Channel& pch, ChannelInfo info, float samplerateRatio)
 {
-	//return Channel_NEW(pch, info.state, info.buffer, samplerateRatio);
+	return channel::Data(pch, info.state, info.buffer, samplerateRatio);
 }
 
 

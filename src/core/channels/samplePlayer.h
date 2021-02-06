@@ -221,7 +221,10 @@ struct Data
 {
     Data();
     Data(const patch::Channel& p, float samplerateRatio);
-    Data(const Data& o) = default;
+    Data(const Data& o)          = default;
+    Data(Data&& o)               = default;
+    Data& operator=(const Data&) = default;
+    Data& operator=(Data&&)      = default;
 
     bool hasWave() const;
     bool hasLogicalWave() const;
@@ -229,7 +232,7 @@ struct Data
     bool isAnyLoopMode() const;
     ID getWaveId() const;
     Frame getWaveSize() const;
-    const Wave* getWave() const;
+    Wave* getWave() const;
 
     float            pitch;
     SamplePlayerMode mode;
@@ -249,14 +252,14 @@ void render (const channel::Data& ch, AudioBuffer& out);
 /* loadWave
 Loads Wave 'w' into channel ch and sets it up (name, markers, ...). */
 
-void loadWave(channel::Data& ch, const Wave* w);
+void loadWave(channel::Data& ch, Wave* w);
 
 /* setWave
 Just sets the pointer to a Wave object. Used during de-serialization. The
 ratio is used to adjust begin/end points in case of patch vs. conf sample
 rate mismatch. If nullptr, set the wave to invalid. */
 
-void setWave(channel::Data& ch, const Wave* w, float samplerateRatio);
+void setWave(channel::Data& ch, Wave* w, float samplerateRatio);
 
 /* kickIn
 Starts the player right away at frame 'f'. Used when launching a loop after

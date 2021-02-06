@@ -80,41 +80,39 @@ Data            data;
 /* -------------------------------------------------------------------------- */
 
 
-ChannelDataLock::ChannelDataLock(const channel::Data& ch)
-: m_channel(ch)
-, m_wave   (ch.samplePlayer->getWave())
-, m_plugins(ch.plugins)
+ChannelDataLock::ChannelDataLock(channel::Data& ch)
+: channel(ch)
+, wave   (ch.samplePlayer->getWave())
+, plugins(ch.plugins)
 {
-	swap([this](Layout& l)
-	{
-	    assert(false);
-		//samplePlayer::setWave(l.getChannel(m_channel.id), nullptr, 0);
-		l.getChannel(m_channel.id).plugins = {};
-	}, SwapType::NONE);	
+	samplePlayer::setWave(channel, nullptr, 0);
+	channel.plugins = {};
+	swap(SwapType::NONE);
 }
 
 
-ChannelDataLock::ChannelDataLock(ID channelId) : ChannelDataLock(*getPtr<channel::Data>(channelId)) {}
+ChannelDataLock::ChannelDataLock(ID channelId) 
+: ChannelDataLock(model::get().getChannel(channelId)) 
+{
+}
 
 
 ChannelDataLock::~ChannelDataLock()
 {
-	swap([this](Layout& l)
-	{
-        assert(false);
-            //samplePlayer::setWave(l.getChannel(m_channel.id), m_wave, 1.0f);
-            l.getChannel(m_channel.id).plugins = m_plugins;
-        }, SwapType::HARD);
-    }
+	samplePlayer::setWave(channel, wave, 1.0f);
+	channel.plugins = plugins;
+	swap(SwapType::HARD);
+}
 
 
-    /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 
 
 channel::Data& Layout::getChannel(ID id)
 {
 	return const_cast<channel::Data&>(const_cast<const Layout*>(this)->getChannel(id));
 }
+
 
 const channel::Data& Layout::getChannel(ID id) const
 {
@@ -132,11 +130,9 @@ const channel::Data& Layout::getChannel(ID id) const
 
 void init()
 {
-    layout.swap([](Layout& l)
-    {
-		l.clock.state = &state.clock;
-		l.mixer.state = &state.mixer;
-    });
+	get().clock.state = &state.clock;
+	get().mixer.state = &state.mixer;
+	swap(SwapType::NONE);
 }
 
 
@@ -155,10 +151,10 @@ Lock get_RT()
 }
 
 
-void swap(std::function<void(Layout&)> f, SwapType t)
+void swap(SwapType t)
 {
-	layout.swap(f);
-	if (onSwap_) onSwap_(t);
+    layout.swap();
+    if (onSwap_) onSwap_(t);
 }
 
 
@@ -188,12 +184,12 @@ template std::vector<std::unique_ptr<Wave>>&   getAll<Wave>();
 
 
 template <typename T>
-T* getPtr(ID id)
+T* find(ID id)
 {
 	std::vector<std::unique_ptr<T>>* source = nullptr;
 
-	if constexpr (std::is_same_v<T, Plugin>)      source = &data.plugins;
-    if constexpr (std::is_same_v<T, Wave>)        source = &data.waves;
+	if constexpr (std::is_same_v<T, Plugin>)        source = &data.plugins;
+    if constexpr (std::is_same_v<T, Wave>)          source = &data.waves;
 
     assert(source != nullptr);
 
@@ -201,9 +197,9 @@ T* getPtr(ID id)
 	return it == source->end() ? nullptr : it->get();
 }
 
-template Plugin*        getPtr<Plugin>       (ID id);
-template Wave*          getPtr<Wave>         (ID id);
-template channel::Data* getPtr<channel::Data>(ID id);
+template Plugin*        find<Plugin>       (ID id);
+template Wave*          find<Wave>         (ID id);
+template channel::Data* find<channel::Data>(ID id);
 
 
 /* -------------------------------------------------------------------------- */

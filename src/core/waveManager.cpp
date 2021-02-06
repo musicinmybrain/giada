@@ -188,7 +188,7 @@ const patch::Wave serializeWave(const Wave& w)
 
 Wave* hydrateWave(ID waveId)
 {
-	return model::getPtr<Wave>(waveId);
+	return model::find<Wave>(waveId);
 }
 
 

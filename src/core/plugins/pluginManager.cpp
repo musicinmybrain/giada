@@ -278,7 +278,7 @@ std::vector<Plugin*> hydratePlugins(std::vector<ID> pluginIds)
 {
 	std::vector<Plugin*> out;
 	for (ID id : pluginIds) {
-		Plugin* plugin = model::getPtr<Plugin>(id);
+		Plugin* plugin = model::find<Plugin>(id);
 		if (plugin != nullptr)
 			out.push_back(plugin);
 	}

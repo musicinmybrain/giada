@@ -428,7 +428,7 @@ G_DEBUG ("last frame tracker=" << tracker);
 
 void SamplePlayer_NEW::loadWave(const Wave* w)
 {
-    m_waveReader.wave = w;
+    //m_waveReader.wave = w;
 
     m_channel->state->tracker.store(0);
     shift = 0;
@@ -460,7 +460,7 @@ void SamplePlayer_NEW::setWave(const Wave* w, float samplerateRatio)
         return;
     }
 
-    m_waveReader.wave = w;
+    //m_waveReader.wave = w;
     m_waveId = w->id;
 
     if (samplerateRatio != 1.0f) {
@@ -630,7 +630,7 @@ bool Data::isAnyLoopMode() const
 /* -------------------------------------------------------------------------- */
 
 
-const Wave* Data::getWave() const
+Wave* Data::getWave() const
 {
     return waveReader.wave;
 }
@@ -735,7 +735,7 @@ G_DEBUG ("last frame tracker=" << tracker);
 /* -------------------------------------------------------------------------- */
 
 
-void loadWave(channel::Data& ch, const Wave* w)
+void loadWave(channel::Data& ch, Wave* w)
 {
     ch.samplePlayer->waveReader.wave = w;
 
@@ -759,7 +759,7 @@ void loadWave(channel::Data& ch, const Wave* w)
 /* -------------------------------------------------------------------------- */
 
 
-void setWave(channel::Data& ch, const Wave* w, float samplerateRatio)
+void setWave(channel::Data& ch, Wave* w, float samplerateRatio)
 {
     if (w == nullptr) {
         ch.samplePlayer->waveReader.wave = nullptr;

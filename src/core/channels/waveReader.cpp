@@ -214,6 +214,37 @@ WaveReader_NEW::WaveReader_NEW(const WaveReader_NEW& o)
 /* -------------------------------------------------------------------------- */
 
 
+WaveReader_NEW::WaveReader_NEW(WaveReader_NEW&& o)
+: wave      (o.wave)
+, m_srcState(nullptr)
+{
+	moveSrc(&o.m_srcState);
+}
+    
+
+/* -------------------------------------------------------------------------- */
+
+WaveReader_NEW& WaveReader_NEW::operator=(const WaveReader_NEW& o)
+{
+	if (this == &o) return *this;
+	wave = o.wave;
+	allocateSrc();
+	return *this;
+}
+
+
+WaveReader_NEW& WaveReader_NEW::operator=(WaveReader_NEW&& o)
+{
+	if (this == &o) return *this;
+	wave = o.wave;
+	moveSrc(&o.m_srcState);
+	return *this;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 WaveReader_NEW::~WaveReader_NEW()
 {
 	if (m_srcState != nullptr)
@@ -282,5 +313,16 @@ void WaveReader_NEW::allocateSrc()
 		u::log::print("[WaveReader] unable to allocate memory for SRC_STATE!\n");
 		throw std::bad_alloc();
 	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void WaveReader_NEW::moveSrc(SRC_STATE** other)
+{
+	if (m_srcState != nullptr)
+		src_delete(m_srcState);
+	m_srcState = *other;
+	*other = nullptr;
 }
 } // giada::m::

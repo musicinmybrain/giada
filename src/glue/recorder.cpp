@@ -86,10 +86,8 @@ void clearStartStopActions(ID channelId)
 void updateChannel(ID channelId, bool updateActionEditor)
 {
 	/* TODO - move somewhere else in the core area */
-	m::model::swap([channelId](m::model::Layout& l)
-	{
-		l.getChannel(channelId).hasActions = m::recorder::hasActions(channelId);
-	}, m::model::SwapType::HARD);
+	m::model::get().getChannel(channelId).hasActions = m::recorder::hasActions(channelId);
+	m::model::swap(m::model::SwapType::HARD);
 				
 	if (updateActionEditor)
 		u::gui::refreshActionEditor();

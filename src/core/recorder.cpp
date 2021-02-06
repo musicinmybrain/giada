@@ -75,14 +75,14 @@ void optimize_(ActionMap& map)
 
 void removeIf_(std::function<bool(const Action&)> f)
 {
-	// TODO - all these operations are performed twice. Optimize it
-    model::swap([&](model::Layout& l)
-    {
-		for (auto& [frame, actions] : l.actions)
-			actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
-		optimize_(l.actions);
-		updateMapPointers(l.actions);
-    }, model::SwapType::HARD);
+    ActionMap& map = model::get().actions;
+
+	for (auto& [frame, actions] : map)
+		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
+	optimize_(map);
+	updateMapPointers(map);
+
+    model::swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -122,7 +122,8 @@ void init()
 
 void clearAll()
 {
-    model::swap([&](model::Layout& l) { l.actions.clear(); }, model::SwapType::HARD);
+    model::get().actions.clear();
+    model::swap(model::SwapType::HARD);
 }
 
 
@@ -184,10 +185,8 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 	updateMapPointers(temp);
 
-    model::swap([&temp](model::Layout& l) 
-	{ 
-		l.actions = temp;
-	}, model::SwapType::HARD);
+	model::get().actions = temp;
+    model::swap(model::SwapType::HARD);
 }
 
 
@@ -196,10 +195,8 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 void updateEvent(ID id, MidiEvent e)
 {
-    model::swap([id, e](model::Layout& l) 
-	{ 
-		findAction_(l.actions, id)->event = e;
-	}, model::SwapType::HARD);
+	findAction_(model::get().actions, id)->event = e;
+    model::swap(model::SwapType::HARD);
 }
 
 
@@ -208,27 +205,25 @@ void updateEvent(ID id, MidiEvent e)
 
 void updateSiblings(ID id, ID prevId, ID nextId)
 {
-	// TODO - all these operations are performed twice. Optimize it
-	model::swap([&](model::Layout& l)
-	{
-		Action* pcurr = findAction_(l.actions, id);
-		Action* pprev = findAction_(l.actions, prevId);
-		Action* pnext = findAction_(l.actions, nextId);
+	Action* pcurr = findAction_(model::get().actions, id);
+	Action* pprev = findAction_(model::get().actions, prevId);
+	Action* pnext = findAction_(model::get().actions, nextId);
 
-		pcurr->prev   = pprev;
-		pcurr->prevId = pprev->id;
-		pcurr->next   = pnext;
-		pcurr->nextId = pnext->id;
+	pcurr->prev   = pprev;
+	pcurr->prevId = pprev->id;
+	pcurr->next   = pnext;
+	pcurr->nextId = pnext->id;
 
-		if (pprev != nullptr) {
-			pprev->next   = pcurr;
-			pprev->nextId = pcurr->id;
-		}
-		if (pnext != nullptr) {
-			pnext->prev   = pcurr;
-			pnext->prevId = pcurr->id;
-		}
-	}, model::SwapType::HARD);
+	if (pprev != nullptr) {
+		pprev->next   = pcurr;
+		pprev->nextId = pcurr->id;
+	}
+	if (pnext != nullptr) {
+		pnext->prev   = pcurr;
+		pnext->prevId = pcurr->id;
+	}
+
+	model::swap(model::SwapType::HARD);
 }
 
 
@@ -281,12 +276,10 @@ Action rec(ID channelId, Frame frame, MidiEvent event)
 	/* If key frame doesn't exist yet, the [] operator in std::map is smart 
 	enough to insert a new item first. No plug-in data for now. */
 
-	// TODO - all these operations are performed twice. Optimize it
-	model::swap([&](model::Layout& l)
-	{
-		l.actions[frame].push_back(a);
-		updateMapPointers(l.actions);
-	}, model::SwapType::HARD);
+	model::get().actions[frame].push_back(a);
+	updateMapPointers(model::get().actions);
+	
+	model::swap(model::SwapType::HARD);
 
 	return a;
 }
@@ -300,14 +293,12 @@ void rec(std::vector<Action>& actions)
 	if (actions.size() == 0)
 		return;
 
-	// TODO - all these operations are performed twice. Optimize it
-	model::swap([&](model::Layout& l)
-	{
-		for (const Action& a : actions)
-			if (!exists_(a.channelId, a.frame, a.event, l.actions))
-				l.actions[a.frame].push_back(a);
-		updateMapPointers(l.actions);
-	}, model::SwapType::HARD);
+	for (const Action& a : actions)
+		if (!exists_(a.channelId, a.frame, a.event, model::get().actions))
+			model::get().actions[a.frame].push_back(a);
+	updateMapPointers(model::get().actions);
+
+	model::swap(model::SwapType::HARD);
 }
 
 
@@ -316,19 +307,19 @@ void rec(std::vector<Action>& actions)
 
 void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 {
-	// TODO - all these operations are performed twice. Optimize it
-	model::swap([&](model::Layout& l)
-	{
-		l.actions[f1].push_back(makeAction(0, channelId, f1, e1));
-		l.actions[f2].push_back(makeAction(0, channelId, f2, e2));
+	ActionMap& map = model::get().actions;
 
-		Action* a1 = findAction_(l.actions, l.actions[f1].back().id);
-		Action* a2 = findAction_(l.actions, l.actions[f2].back().id);
-		a1->nextId = a2->id;
-		a2->prevId = a1->id;
+	map[f1].push_back(makeAction(0, channelId, f1, e1));
+	map[f2].push_back(makeAction(0, channelId, f2, e2));
 
-		updateMapPointers(l.actions);
-	}, model::SwapType::HARD);
+	Action* a1 = findAction_(map, map[f1].back().id);
+	Action* a2 = findAction_(map, map[f2].back().id);
+	a1->nextId = a2->id;
+	a2->prevId = a1->id;
+
+	updateMapPointers(map);
+	
+	model::swap(model::SwapType::HARD);
 }
 
 

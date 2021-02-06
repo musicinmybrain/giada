@@ -48,11 +48,8 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 
     for (const patch::Channel& pchannel : channels) {
 		channelManager::ChannelInfo info = channelManager::createInfo(pchannel.id);
-		swap([&](Layout& l)
-		{
-		    assert(false);
-			//l.channels.push_back(channelManager::deserializeChannel(pchannel, info, samplerateRatio));
-		}, SwapType::NONE);	
+		get().channels.push_back(channelManager::deserializeChannel(pchannel, info, samplerateRatio));
+		swap(SwapType::NONE);	
 	}
 }
 
@@ -63,10 +60,8 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 void loadActions_(const std::vector<patch::Action>& pactions)
 {
 	recorder::ActionMap actions = recorderHandler::deserializeActions(pactions);
-	swap([&](Layout& l)
-	{
-		l.actions = actions;
-	}, SwapType::NONE);	
+	get().actions = actions;
+	swap(SwapType::NONE);	
 }
 } // 
 
@@ -150,14 +145,13 @@ void load(const patch::Patch& patch)
 	loadChannels_(patch.channels, patch::patch.samplerate);
 	loadActions_(patch.actions);
 
-	swap([&](Layout& l)
-	{
-	    l.clock.status   = ClockStatus::STOPPED;
-	    l.clock.bars     = patch.bars;
-	    l.clock.beats    = patch.beats;
-	    l.clock.bpm      = patch.bpm;
-	    l.clock.quantize = patch.quantize;
-	}, SwapType::NONE);	
+	get().clock.status   = ClockStatus::STOPPED;
+	get().clock.bars     = patch.bars;
+	get().clock.beats    = patch.beats;
+	get().clock.bpm      = patch.bpm;
+	get().clock.quantize = patch.quantize;
+
+	swap(SwapType::NONE);	
 }
 
 
@@ -166,19 +160,18 @@ void load(const patch::Patch& patch)
 
 void load(const conf::Conf& c)
 {
-	swap([&](Layout& l)
-	{
-		l.midiIn.enabled    = c.midiInEnabled;
-		l.midiIn.filter     = c.midiInFilter;
-		l.midiIn.rewind     = c.midiInRewind;
-		l.midiIn.startStop  = c.midiInStartStop;
-		l.midiIn.actionRec  = c.midiInActionRec;
-		l.midiIn.inputRec   = c.midiInInputRec;
-		l.midiIn.volumeIn   = c.midiInVolumeIn;
-		l.midiIn.volumeOut  = c.midiInVolumeOut;
-		l.midiIn.beatDouble = c.midiInBeatDouble;
-		l.midiIn.beatHalf   = c.midiInBeatHalf;
-		l.midiIn.metronome  = c.midiInMetronome;
-	}, SwapType::NONE);	
+	get().midiIn.enabled    = c.midiInEnabled;
+	get().midiIn.filter     = c.midiInFilter;
+	get().midiIn.rewind     = c.midiInRewind;
+	get().midiIn.startStop  = c.midiInStartStop;
+	get().midiIn.actionRec  = c.midiInActionRec;
+	get().midiIn.inputRec   = c.midiInInputRec;
+	get().midiIn.volumeIn   = c.midiInVolumeIn;
+	get().midiIn.volumeOut  = c.midiInVolumeOut;
+	get().midiIn.beatDouble = c.midiInBeatDouble;
+	get().midiIn.beatHalf   = c.midiInBeatHalf;
+	get().midiIn.metronome  = c.midiInMetronome;
+
+	swap(SwapType::NONE);	
 }
 } // giada::m::model::

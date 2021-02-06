@@ -362,15 +362,13 @@ class ChannelDataLock
 {
 public:
 
-	ChannelDataLock(const channel::Data& ch);
+	ChannelDataLock(channel::Data& ch);
 	ChannelDataLock(ID channelId);
 	~ChannelDataLock();
 
-private:
-
-	const channel::Data& m_channel;
-	const Wave*          m_wave;
-	std::vector<Plugin*> m_plugins;
+	channel::Data&       channel;
+	Wave*                wave;
+	std::vector<Plugin*> plugins;
 };
 
 
@@ -394,9 +392,9 @@ Lock::get() method (returns ready-only Layout). */
 Lock get_RT();
 
 /* swap
-Applies the function 'f' to the current layout. */
+Swap non-rt layout with the rt one. See 'SwapType' notes above. */
 
-void swap(std::function<void(Layout&)> f, SwapType t);
+void swap(SwapType t);
 
 /* onSwap
 Registers an optional callback fired when the layout has been swapped. Useful 
@@ -414,8 +412,12 @@ void onSwap(std::function<void(SwapType)> f);
 template <typename T> 
 std::vector<std::unique_ptr<T>>& getAll();
 
+/* find
+Finds something (Plugins or Waves) given an ID. Returns nullptr if the object is
+not found. */
+
 template <typename T> 
-T* getPtr(ID id);
+T* find(ID id);
 
 template <typename T> 
 std::size_t getIndex(ID id);

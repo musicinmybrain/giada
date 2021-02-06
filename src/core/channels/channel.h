@@ -257,7 +257,10 @@ namespace giada::m::channel
 {
 struct State
 {
-    WeakAtomic<Frame> tracker{0};
+    /* tracker
+    Tells the channel progression. Must be atomic because changed by the RT 
+    thread and read by the UI thread. */
+    WeakAtomic<Frame> tracker{0}; 
     bool              rewinding;
     Frame             offset;
 };
@@ -266,9 +269,9 @@ struct Buffer
 {
     Buffer(Frame bufferSize);
     
-    AudioBuffer      audioBuffer;
+    AudioBuffer      audioBuffer; // TODO - rename audio
 #ifdef WITH_VST
-    juce::MidiBuffer midiBuffer;
+    juce::MidiBuffer midiBuffer; // TODO - rename midi
 #endif
 };
 
@@ -276,7 +279,10 @@ struct Data
 {
     Data(ChannelType t, ID id, ID columnId, State& state, Buffer& buffer);
     Data(const patch::Channel& p, State& state, Buffer& buffer, float samplerateRatio);
-    Data(const Data& o) = default;
+    Data(const Data& o)          = default;
+    Data(Data&& o)               = default;
+    Data& operator=(const Data&) = default;
+    Data& operator=(Data&&)      = default;
 
     bool isPlaying() const;
     bool isInternal() const;

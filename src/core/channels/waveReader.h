@@ -91,6 +91,9 @@ public:
 
     WaveReader_NEW();
     WaveReader_NEW(const WaveReader_NEW& o);
+    WaveReader_NEW(WaveReader_NEW&&);    
+	WaveReader_NEW& operator=(const WaveReader_NEW&);
+    WaveReader_NEW& operator=(WaveReader_NEW&&);
     ~WaveReader_NEW();
 
     Frame fill(AudioBuffer& out, Frame start, Frame offset, float pitch) const;
@@ -98,7 +101,7 @@ public:
 	/* wave
 	Wave object. Might be null if the channel has no sample. */
 
-	const Wave* wave;
+	Wave* wave;
 
 private:
 
@@ -106,6 +109,7 @@ private:
 	Frame fillCopy     (AudioBuffer& out, Frame start, Frame offset) const;
 
 	void allocateSrc();
+	void moveSrc(SRC_STATE** o);
 
 	/* srcState
 	Struct from libsamplerate. */

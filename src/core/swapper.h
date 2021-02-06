@@ -36,11 +36,7 @@
 namespace giada
 {
 /* Swapper
-A template class that performs atomic double buffering on type T. A swap 
-operation is made of two steps, one on the non-realtime slot and the other
-one on the realtime slot and can be Hard (T structure has changed), soft
-(T property has changed) or None (something has changed by the caller
-doesn't care). */
+A template class that performs atomic double buffering on type T. */
 
 template <typename T>
 class Swapper
@@ -72,6 +68,11 @@ public:
 		Swapper& m_swapper;
 	};
 
+	Swapper()
+	{
+		static_assert(std::is_assignable_v<T, T>);
+	}
+
 	/* get
 	Returns local data for non-realtime thread. */
 
@@ -80,34 +81,30 @@ public:
 		return m_data[(m_bits.load() & BIT_INDEX) ^ 1];
 	}
 
-	/* swap
-	Applies changes to data and swap it with the one currently processed by the
-	realtime thread. */
+    void swap()
+    {
+        int bits = m_bits.load();
 
-	void swap(std::function<void(T&)> f)
-	{
-		int bits = m_bits.load();
+        /* Wait for the audio thread to finish, i.e. until the BUSY bit becomes
+        zero. Only then, swap indexes. This will let the audio thread to pick
+        the updated data on its next cycle. */
+        int desired;
+        do
+        {
+            bits    = bits & ~BIT_BUSY;               // Expected: current value without busy bit set
+            desired = (bits ^ BIT_INDEX) & BIT_INDEX; // Desired: flipped (xor) index
+        }
+        while (!m_bits.compare_exchange_weak(bits, desired));
 
-		/* Apply changes in data from non-rt slot. */
-		f(m_data[(bits & BIT_INDEX) ^ 1]);
+        bits = desired;
 
-		/* Wait for the audio thread to finish, i.e. until the BUSY bit becomes
-		zero. Only then, swap indexes. This will let the audio thread to pick 
-		the updated data on its next cycle. */
-		int desired;
-		do 
-		{
-			bits    = bits & ~BIT_BUSY;               // Expected: current value without busy bit set
-			desired = (bits ^ BIT_INDEX) & BIT_INDEX; // Desired: flipped (xor) index
-		}
-		while (!m_bits.compare_exchange_weak(bits, desired));
-
-		bits = desired;
-
-		/* Apply changes again in data from the the non-rt slot, which is now 
-		the old one coming from the audio thread. */ 
-		f(m_data[(bits & BIT_INDEX) ^ 1]);
-	}
+        /* After the swap above, m_data[(bits & BIT_INDEX) ^ 1] has become the 
+		non-realtime slot and it points to the data previously read by the
+		realtime thread. That data is old, so update it: overwrite it with the 
+		realtime data in the realtime slot (m_data[bits & BIT_INDEX]) that is 
+		currently being read by the realtime thread. */
+        m_data[(bits & BIT_INDEX) ^ 1] = m_data[bits & BIT_INDEX];
+    }
 
 private:
 

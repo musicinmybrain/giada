@@ -71,7 +71,7 @@ std::unique_ptr<Channel> create(const Channel& ch);
 /* (de)serializeWave
 Creates a new Channel given the patch raw data and vice versa. */
 
-Channel_NEW deserializeChannel(const patch::Channel& c, ChannelInfo info, float samplerateRatio);
+channel::Data deserializeChannel(const patch::Channel& c, ChannelInfo info, float samplerateRatio);
 const patch::Channel     serializeChannel(const Channel_NEW& c);
 } // giada::m::channelManager::
 

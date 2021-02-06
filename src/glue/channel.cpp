@@ -263,10 +263,8 @@ void freeChannel(ID channelId)
 
 void setInputMonitor(ID channelId, bool value)
 {
-    m::model::swap([channelId, value](m::model::Layout& l)
-    {
-		l.getChannel(channelId).audioReceiver->inputMonitor = value;
-    }, m::model::SwapType::SOFT);
+	m::model::get().getChannel(channelId).audioReceiver->inputMonitor = value;
+    m::model::swap(m::model::SwapType::SOFT);
 }
 
 
@@ -300,11 +298,8 @@ void cloneChannel(ID channelId)
 
 void setSamplePlayerMode(ID channelId, SamplePlayerMode mode)
 {
-    m::model::swap([channelId, mode](m::model::Layout& l)
-    {
-		l.getChannel(channelId).samplePlayer->mode = mode;
-    }, m::model::SwapType::HARD); // TODO - SOFT should be enough, fix geChannel refresh method
-
+	m::model::get().getChannel(channelId).samplePlayer->mode = mode;
+    m::model::swap(m::model::SwapType::HARD); // TODO - SOFT should be enough, fix geChannel refresh method
 	u::gui::refreshActionEditor();
 }
 
@@ -314,10 +309,8 @@ void setSamplePlayerMode(ID channelId, SamplePlayerMode mode)
 
 void setHeight(ID channelId, Pixel p)
 {
-    m::model::swap([channelId, p](m::model::Layout& l)
-    {
-		l.getChannel(channelId).height = p;
-    }, m::model::SwapType::SOFT);
+	m::model::get().getChannel(channelId).height = p;
+    m::model::swap(m::model::SwapType::SOFT);
 }
 
 

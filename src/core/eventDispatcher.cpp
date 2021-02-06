@@ -66,7 +66,7 @@ void processChannels_()
 	for (channel::Data& ch : channels)
 		channel::react(ch, eventBuffer_, true); // TODO audible
 	
-	model::swap([&channels] (model::Layout& l) { l.channels = channels; }, model::SwapType::SOFT);
+	model::swap(model::SwapType::SOFT);
 }
 
 

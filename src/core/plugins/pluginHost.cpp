@@ -155,13 +155,11 @@ void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 {
 	const Plugin& pluginRef = model::add<Plugin>(std::move(p));
 
-    model::swap([channelId, &pluginRef](model::Layout& l)
-    {
-        /* TODO - unfortunately JUCE wants mutable plugin objects due to the
-        presence of the non-const processBlock() method. Why not const_casting
-        only in the Plugin class? */
-		l.getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
-    }, model::SwapType::HARD);
+	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
+	presence of the non-const processBlock() method. Why not const_casting
+	only in the Plugin class? */
+	model::get().getChannel(channelId).plugins.push_back(const_cast<Plugin*>(&pluginRef));
+    model::swap(model::SwapType::HARD);
 }
 
 
@@ -170,13 +168,12 @@ void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 
 void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 {
-    model::swap([&](model::Layout& l)
-    {
-		std::vector<m::Plugin*>& pvec = l.getChannel(channelId).plugins;
-		std::size_t index1 = u::vector::indexOf(pvec, &p1);
-		std::size_t index2 = u::vector::indexOf(pvec, &p2);
-		std::swap(pvec.at(index1), pvec.at(index2));
-    }, model::SwapType::HARD);
+	std::vector<m::Plugin*>& pvec = model::get().getChannel(channelId).plugins;
+	std::size_t index1 = u::vector::indexOf(pvec, &p1);
+	std::size_t index2 = u::vector::indexOf(pvec, &p2);
+	std::swap(pvec.at(index1), pvec.at(index2));
+	
+    model::swap(model::SwapType::HARD);
 }
 
 
@@ -185,17 +182,15 @@ void swapPlugin(const m::Plugin& p1, const m::Plugin& p2, ID channelId)
 
 void freePlugin(const m::Plugin& plugin, ID channelId)
 {
-    model::swap([channelId, &plugin](model::Layout& l)
-    {
-		u::vector::remove(l.getChannel(channelId).plugins, &plugin);
-    }, model::SwapType::HARD);
-
+	u::vector::remove(model::get().getChannel(channelId).plugins, &plugin);
+    model::swap(model::SwapType::HARD);
     model::remove(plugin);
 }
 
 
 void freePlugins(const std::vector<Plugin*>& plugins)
 {
+	// TODO - channels???
 	for (const Plugin* p : plugins)
 		model::remove(*p);
 }
@@ -219,7 +214,7 @@ std::vector<ID> clonePlugins(std::vector<ID> pluginIds)
 void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value)
 {
 	model::ChannelDataLock lock(channelId);
-    model::getPtr<Plugin>(pluginId)->setParameter(paramIndex, value);
+    model::find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
 
@@ -229,7 +224,7 @@ void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value)
 void setPluginProgram(ID pluginId, ID channelId, int programIndex)
 {
 	model::ChannelDataLock lock(channelId);
-    model::getPtr<Plugin>(pluginId)->setCurrentProgram(programIndex);
+    model::find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
 
@@ -240,7 +235,7 @@ void toggleBypass(ID pluginId, ID channelId)
 {
 	model::ChannelDataLock lock(channelId);
 
-	Plugin& plugin = *model::getPtr<Plugin>(pluginId);
+	Plugin& plugin = *model::find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
 }
 

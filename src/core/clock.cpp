@@ -90,14 +90,13 @@ void init(int sampleRate, float midiTCfps)
 {
 	midiTCrate_ = static_cast<int>((sampleRate / midiTCfps) * G_MAX_IO_CHANS);  // stereo values
 
-    model::swap([](model::Layout& l)
-    {
-        l.clock.bars     = G_DEFAULT_BARS;
-        l.clock.beats    = G_DEFAULT_BEATS;
-        l.clock.bpm      = G_DEFAULT_BPM;
-        l.clock.quantize = G_DEFAULT_QUANTIZE;
-        recomputeFrames_(l.clock);
-    }, model::SwapType::NONE);
+	model::get().clock.bars     = G_DEFAULT_BARS;
+	model::get().clock.beats    = G_DEFAULT_BEATS;
+	model::get().clock.bpm      = G_DEFAULT_BPM;
+	model::get().clock.quantize = G_DEFAULT_QUANTIZE;
+	recomputeFrames_(model::get().clock);
+
+    model::swap(model::SwapType::NONE);
 }
 
 
@@ -106,10 +105,8 @@ void init(int sampleRate, float midiTCfps)
 
 void recomputeFrames()
 {
-    model::swap([](model::Layout& l)
-    {
-       recomputeFrames_(l.clock);
-    }, model::SwapType::NONE);
+	recomputeFrames_(model::get().clock);
+    model::swap(model::SwapType::NONE);
 }
 
 
@@ -125,7 +122,6 @@ bool isRunning()
 bool isActive()
 {
     const model::Clock_NEW& c = model::get().clock;
-
 	return c.status == ClockStatus::RUNNING || c.status == ClockStatus::WAITING;
 }
 
@@ -172,11 +168,10 @@ void setBpm(float b)
 {	
 	b = std::clamp(b, G_MIN_BPM, G_MAX_BPM);
 
-    model::swap([b](model::Layout& l)
-    {
-        l.clock.bpm = b;
-        recomputeFrames_(l.clock);
-    }, model::SwapType::SOFT);
+    model::get().clock.bpm = b;
+    recomputeFrames_(model::get().clock);
+
+    model::swap(model::SwapType::SOFT);
 }
 
 
@@ -185,31 +180,27 @@ void setBeats(int newBeats, int newBars)
 	newBeats = std::clamp(newBeats, 1, G_MAX_BEATS);
 	newBars  = std::clamp(newBars, 1, newBeats); // Bars cannot be greater than beats
 
-    model::swap([newBeats, newBars](model::Layout& l)
-    {
-        l.clock.beats = newBeats;
-        l.clock.bars  = newBars;
-        recomputeFrames_(l.clock);
-    }, model::SwapType::SOFT);
+	model::get().clock.beats = newBeats;
+	model::get().clock.bars  = newBars;
+	recomputeFrames_(model::get().clock);
+
+    model::swap(model::SwapType::SOFT);
 }
 
 
 void setQuantize(int q)
 {
-    model::swap([q](model::Layout& l)
-	{
-        l.clock.quantize = q;
-		recomputeFrames_(l.clock);
-	}, model::SwapType::SOFT);
+    model::get().clock.quantize = q;
+	recomputeFrames_(model::get().clock);
+
+    model::swap(model::SwapType::SOFT);
 }
 
 
 void setStatus(ClockStatus s)
 {
-    model::swap([s](model::Layout& l)
-	{
-        l.clock.status = s;
-	}, model::SwapType::SOFT);
+	model::get().clock.status = s;
+    model::swap(model::SwapType::SOFT);
 	
 	if (s == ClockStatus::RUNNING) {
 		if (conf::conf.midiSync == MIDI_SYNC_CLOCK_M) {

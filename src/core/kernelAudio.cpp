@@ -197,10 +197,8 @@ int openDevice()
 			nullptr,                                               // user data (unused)
 			&options);
 		
-		model::swap([](model::Layout& l)
-		{
-			l.kernel.audioReady = true;
-		}, model::SwapType::NONE);
+		model::get().kernel.audioReady = true;
+		model::swap(model::SwapType::NONE);
 		return 1;
 	}
 	catch (RtAudioError &e) {

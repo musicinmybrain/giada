@@ -82,36 +82,6 @@ m::Wave& getWave_(ID channelId)
 
 /* -------------------------------------------------------------------------- */
 
-// TODO use model:: version (ChannelDataLock)
-class WaveLock
-{
-public:
-
-	WaveLock(ID channelId) : wave(getWave_(channelId)), m_channelId(channelId)
-	{
-		m::model::swap([this](m::model::Layout& l)
-		{
-            assert(false);
-			//m::samplePlayer::setWave(l.getChannel(m_channelId), nullptr, 0);
-		}, m::model::SwapType::NONE);
-	}
-
-	~WaveLock()
-	{
-		m::model::swap([this](m::model::Layout& l)
-		{
-            assert(false);
-            //m::samplePlayer::setWave(l.getChannel(m_channelId), &wave, 1.0f);
-		}, m::model::SwapType::HARD);
-	}
-
-	m::Wave& wave;
-
-private:
-
-	ID m_channelId;
-};
-
 /* waveBuffer
 A Wave used during cut/copy/paste operations. */
 
@@ -185,12 +155,8 @@ const m::Wave& Data::getWaveRef() const
 Data getData(ID channelId)
 {
 	/* Prepare the preview channel first, then return Data object. */
-
-    m::model::swap([channelId](m::model::Layout& l)
-    {
-        assert(false);
-		//m::samplePlayer::loadWave(l.getChannel(m::mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
-    }, m::model::SwapType::SOFT);
+	m::samplePlayer::loadWave(m::model::get().getChannel(m::mixer::PREVIEW_CHANNEL_ID), &getWave_(channelId));
+    m::model::swap(m::model::SwapType::SOFT);
 
 	return Data(getChannel_(channelId));
 }
@@ -233,13 +199,9 @@ void setBeginEnd(ID channelId, Frame b, Frame e)
 	if (c.state->tracker.load() < b)
 		c.state->tracker.store(b);
 
-    m::model::swap([channelId, &b, &e](m::model::Layout& l)
-    {
-        /*
-		m::Channel_NEW& c = l.getChannel(channelId);
-		c.samplePlayer->begin = b;
-		c.samplePlayer->end   = e;*/
-    }, m::model::SwapType::SOFT);
+	m::model::get().getChannel(channelId).samplePlayer->begin = b;
+	m::model::get().getChannel(channelId).samplePlayer->end   = e;
+    m::model::swap(m::model::SwapType::SOFT);
 
 	/* TODO waveform widget is dumb and wants a rebuild. Refactoring needed! */
 	getSampleEditorWindow()->rebuild();
@@ -252,7 +214,7 @@ void setBeginEnd(ID channelId, Frame b, Frame e)
 void cut(ID channelId, Frame a, Frame b)
 {
 	copy(channelId, a, b);
-	m::wfx::cut(WaveLock(channelId).wave, a, b);
+	m::wfx::cut(*m::model::ChannelDataLock(channelId).wave, a, b);
 	resetBeginEnd_(channelId);
 }
 
@@ -283,7 +245,7 @@ void paste(ID channelId, Frame a)
 	/* Temporary disable wave reading in channel. From now on, the audio thread
 	won't be reading any wave, so editing it is safe.  */
 
-	WaveLock lock(channelId); 
+	m::model::ChannelDataLock lock(channelId); 
 
 	/* Paste copied data to destination wave. */
 
@@ -292,7 +254,7 @@ void paste(ID channelId, Frame a)
 	/* Pass the old wave to lock, so that when it goes out of scope it assigns
 	to channel that specific wave (which contains the pasted data). */
 
-	lock.wave = wave; 
+	lock.wave = &wave;
 
 	/* In the meantime, shift begin/end points to keep the previous position. */
 
@@ -315,7 +277,7 @@ void paste(ID channelId, Frame a)
 
 void silence(ID channelId, int a, int b)
 {
-	m::wfx::silence(WaveLock(channelId).wave, a, b);
+	m::wfx::silence(*m::model::ChannelDataLock(channelId).wave, a, b);
 }
 
 
@@ -324,7 +286,7 @@ void silence(ID channelId, int a, int b)
 
 void fade(ID channelId, int a, int b, m::wfx::Fade type)
 {
-	m::wfx::fade(WaveLock(channelId).wave, a, b, type);
+	m::wfx::fade(*m::model::ChannelDataLock(channelId).wave, a, b, type);
 }
 
 
@@ -333,7 +295,7 @@ void fade(ID channelId, int a, int b, m::wfx::Fade type)
 
 void smoothEdges(ID channelId, int a, int b)
 {
-	m::wfx::smooth(WaveLock(channelId).wave, a, b);
+	m::wfx::smooth(*m::model::ChannelDataLock(channelId).wave, a, b);
 }
 
 
@@ -342,7 +304,7 @@ void smoothEdges(ID channelId, int a, int b)
 
 void reverse(ID channelId, Frame a, Frame b)
 {
-	m::wfx::reverse(WaveLock(channelId).wave, a, b);
+	m::wfx::reverse(*m::model::ChannelDataLock(channelId).wave, a, b);
 }
 
 
@@ -351,7 +313,7 @@ void reverse(ID channelId, Frame a, Frame b)
 
 void normalize(ID channelId, int a, int b)
 {
-    m::wfx::normalize(WaveLock(channelId).wave, a, b);
+    m::wfx::normalize(*m::model::ChannelDataLock(channelId).wave, a, b);
 }
 
 
@@ -360,7 +322,7 @@ void normalize(ID channelId, int a, int b)
 
 void trim(ID channelId, int a, int b)
 {
-	m::wfx::trim(WaveLock(channelId).wave, a, b);
+	m::wfx::trim(*m::model::ChannelDataLock(channelId).wave, a, b);
 	resetBeginEnd_(channelId);
 }
 
@@ -394,10 +356,8 @@ void setPreviewTracker(Frame f)
 {
 	namespace mm = m::model;
 
-    mm::swap([f](mm::Layout& l)
-    {
-		l.getChannel(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
-    }, mm::SwapType::SOFT);
+	mm::get().getChannel(m::mixer::PREVIEW_CHANNEL_ID).state->tracker.store(f);
+    mm::swap(mm::SwapType::SOFT);
 
 	previewTracker_ = f;
 
@@ -409,11 +369,8 @@ void cleanupPreview()
 {
 	namespace mm = m::model;
 
-    mm::swap([](mm::Layout& l)
-    {
-        assert(false);
-        //m::samplePlayer::loadWave(l.getChannel(m::mixer::PREVIEW_CHANNEL_ID), nullptr);
-    }, mm::SwapType::SOFT);
+    m::samplePlayer::loadWave(mm::get().getChannel(m::mixer::PREVIEW_CHANNEL_ID), nullptr);
+    mm::swap(mm::SwapType::SOFT);
 }
 
 
@@ -468,12 +425,10 @@ void shift(ID channelId, Frame offset)
 	namespace mm = m::model;
 
 	Frame shift = getSamplePlayer_(channelId).shift;
-	m::wfx::shift(WaveLock(channelId).wave, offset - shift);
+	m::wfx::shift(*m::model::ChannelDataLock(channelId).wave, offset - shift);
 
-    mm::swap([channelId, offset](mm::Layout& l)
-    {
-        l.getChannel(channelId).samplePlayer->shift = offset;
-    }, mm::SwapType::SOFT);
+    mm::get().getChannel(channelId).samplePlayer->shift = offset;
+    mm::swap(mm::SwapType::SOFT);
 
 	getSampleEditorWindow()->shiftTool->update(offset);
 }

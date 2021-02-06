@@ -274,20 +274,19 @@ void learnMaster_(MidiEvent e, int param, std::function<void()> doneCb)
 
 	uint32_t raw = e.getRawNoVelocity();
 
-	model::swap([param, raw](model::Layout& l)
-	{
-		switch (param) {
-			case G_MIDI_IN_REWIND:      l.midiIn.rewind     = raw; break;
-			case G_MIDI_IN_START_STOP:  l.midiIn.startStop  = raw; break;
-			case G_MIDI_IN_ACTION_REC:  l.midiIn.actionRec  = raw; break;
-			case G_MIDI_IN_INPUT_REC:   l.midiIn.inputRec   = raw; break;
-			case G_MIDI_IN_METRONOME:   l.midiIn.metronome  = raw; break;
-			case G_MIDI_IN_VOLUME_IN:   l.midiIn.volumeIn   = raw; break;
-			case G_MIDI_IN_VOLUME_OUT:  l.midiIn.volumeOut  = raw; break;
-			case G_MIDI_IN_BEAT_DOUBLE: l.midiIn.beatDouble = raw; break;
-			case G_MIDI_IN_BEAT_HALF:   l.midiIn.beatHalf   = raw; break;
-		}
-	}, model::SwapType::SOFT);
+	switch (param) {
+		case G_MIDI_IN_REWIND:      model::get().midiIn.rewind     = raw; break;
+		case G_MIDI_IN_START_STOP:  model::get().midiIn.startStop  = raw; break;
+		case G_MIDI_IN_ACTION_REC:  model::get().midiIn.actionRec  = raw; break;
+		case G_MIDI_IN_INPUT_REC:   model::get().midiIn.inputRec   = raw; break;
+		case G_MIDI_IN_METRONOME:   model::get().midiIn.metronome  = raw; break;
+		case G_MIDI_IN_VOLUME_IN:   model::get().midiIn.volumeIn   = raw; break;
+		case G_MIDI_IN_VOLUME_OUT:  model::get().midiIn.volumeOut  = raw; break;
+		case G_MIDI_IN_BEAT_DOUBLE: model::get().midiIn.beatDouble = raw; break;
+		case G_MIDI_IN_BEAT_HALF:   model::get().midiIn.beatHalf   = raw; break;
+	}
+
+	model::swap(model::SwapType::SOFT);
 
 	stopLearn();
 	doneCb();
