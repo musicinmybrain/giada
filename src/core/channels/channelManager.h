@@ -29,17 +29,12 @@
 #define G_CHANNEL_MANAGER_H
 
 
-#include <memory>
 #include "core/types.h"
 
 
-namespace giada::m::channel  { struct Data; }
-namespace giada::m::conf  { struct Conf; }
-namespace giada::m::patch { struct Channel; }
-namespace giada::m
-{
-class  Channel;
-}
+namespace giada::m::channel { struct Data; }
+namespace giada::m::conf    { struct Conf; }
+namespace giada::m::patch   { struct Channel; }
 namespace giada::m::channelManager
 {
 /* init
@@ -47,19 +42,19 @@ Initializes internal data. */
 	
 void init();
 
-/* create
+/* create (1)
 Creates a new channel. If channelId == 0 generates a new ID, reuse the one 
 passed in otherwise. */
 
 channel::Data create(ID channelId, ChannelType type, ID columnId);
 
 /* create (2)
-Creates a new Channel given an existing one (i.e. clone). */
+Creates a new channel given an existing one (i.e. clone). */
 
-std::unique_ptr<Channel> create(const Channel& ch);
+channel::Data create(const channel::Data& ch);
 
 /* (de)serializeWave
-Creates a new Channel given the patch raw data and vice versa. */
+Creates a new channel given the patch raw data and vice versa. */
 
 channel::Data deserializeChannel(const patch::Channel& c, float samplerateRatio);
 const patch::Channel     serializeChannel(const Channel_NEW& c);

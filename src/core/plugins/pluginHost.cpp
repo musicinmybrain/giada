@@ -82,21 +82,6 @@ void processPlugins_(const std::vector<Plugin*>& plugins, juce::MidiBuffer& even
 		events.clear();
 	}
 }
-
-
-ID clonePlugin_(ID pluginId)
-{
-	/*
-	model::PluginsLock l(model::plugins);
-
-	const Plugin&           original = model::get(model::plugins, pluginId);
-	std::unique_ptr<Plugin> clone    = pluginManager::makePlugin(original);
-	ID                      newId    = clone->id;
-
-	model::plugins.push(std::move(clone));
-
-	return newId;*/
-}
 } // {anonymous}
 
 
@@ -199,11 +184,11 @@ void freePlugins(const std::vector<Plugin*>& plugins)
 /* -------------------------------------------------------------------------- */
 
 
-std::vector<ID> clonePlugins(std::vector<ID> pluginIds)
+std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
 {
-	std::vector<ID> out;
-	for (ID id : pluginIds)
-		out.push_back(clonePlugin_(id));
+	std::vector<Plugin*> out;
+	for (const Plugin* p : plugins)
+		out.push_back(&model::add<Plugin>(pluginManager::makePlugin(*p)));
 	return out;
 }
 

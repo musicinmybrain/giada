@@ -51,6 +51,24 @@ namespace giada::m::channelManager
 namespace
 {
 IdManager channelId_;
+
+
+/* -------------------------------------------------------------------------- */
+
+
+channel::State& makeState_()
+{
+	return model::add<channel::State> (std::make_unique<channel::State>());
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+channel::Buffer& makeBuffer_()
+{
+	return model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
+}
 } // {anonymous}
 
 
@@ -70,24 +88,23 @@ void init()
 
 channel::Data create(ID channelId, ChannelType type, ID columnId)
 {
-	ID               id = channelId_.generate(channelId);
-	channel::State&  s  = model::add<channel::State> (std::make_unique<channel::State>());
-	channel::Buffer& b  = model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
-	
-	return channel::Data(type, id, columnId, s, b);
+	ID id = channelId_.generate(channelId);
+	return channel::Data(type, id, columnId, makeState_(), makeBuffer_());
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Channel> create(const Channel& o)
+channel::Data create(const channel::Data& o)
 {
-	std::unique_ptr<Channel> ch = std::make_unique<Channel>(o);
-	ID id = channelId_.get();
-	ch->id        = id;
-	ch->state->id = id;
-	return ch;
+	channel::Data out = channel::Data(o);
+
+	out.id     = channelId_.generate();
+	out.state  = &makeState_();
+	out.buffer = &makeBuffer_();
+
+	return out;
 }
 
 
@@ -96,10 +113,7 @@ std::unique_ptr<Channel> create(const Channel& o)
 
 channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRatio)
 {
-	channel::State&  s = model::add<channel::State> (std::make_unique<channel::State>());
-	channel::Buffer& b = model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
-
-	return channel::Data(pch, s, b, samplerateRatio);
+	return channel::Data(pch, makeState_(), makeBuffer_(), samplerateRatio);
 }
 
 

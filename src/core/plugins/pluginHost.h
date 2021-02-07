@@ -74,10 +74,9 @@ Unloads multiple plugins. Useful when freeing or deleting a channel. */
 void freePlugins(const std::vector<Plugin*>& plugins);
 
 /* clonePlugins
-Clones all the plug-ins from 'pluginIds' vector coming from the old channel
-and returns new IDs. */
+Clones all the plug-ins in the 'plugins' vector. */
 
-std::vector<ID> clonePlugins(std::vector<ID> pluginIds);
+std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins);
 
 void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value);
 
