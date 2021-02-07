@@ -258,7 +258,7 @@ namespace
 {
 ChannelStatus onFirstBeat_(const channel::Data& ch)
 {
-	ChannelStatus playStatus = ch.playStatus;
+	ChannelStatus playStatus = ch.state->playStatus.load();
 
 	if (playStatus == ChannelStatus::ENDING)
 		playStatus = ChannelStatus::OFF;
@@ -275,7 +275,7 @@ ChannelStatus onFirstBeat_(const channel::Data& ch)
 
 ChannelStatus press_(const channel::Data& ch)
 {
-    ChannelStatus playStatus = ch.playStatus;
+    ChannelStatus playStatus = ch.state->playStatus.load();
 
 	switch (playStatus) {
 		case ChannelStatus::PLAY:
@@ -306,14 +306,14 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 	switch (e.type) {
 
 		case eventDispatcher::EventType::KEY_PRESS:
-			ch.playStatus = press_(ch); break;
+			ch.state->playStatus.store(press_(ch)); break;
 
 		case eventDispatcher::EventType::KEY_KILL:
 		case eventDispatcher::EventType::SEQUENCER_STOP:
-			ch.playStatus = ChannelStatus::OFF; break;
+			ch.state->playStatus.store(ChannelStatus::OFF); break;
 
 		case eventDispatcher::EventType::SEQUENCER_REWIND:
-			ch.playStatus = onFirstBeat_(ch);
+			ch.state->playStatus.store(onFirstBeat_(ch));
 
 		default: break;
 	}

@@ -794,7 +794,7 @@ void react_(Data& d, const eventDispatcher::Event& e)
 			break;
 
         case eventDispatcher::EventType::CHANNEL_REC_STATUS:
-            d.recStatus = std::get<ChannelStatus>(e.data);
+            d.state->recStatus.store(std::get<ChannelStatus>(e.data));
             break;
 		
 		case eventDispatcher::EventType::CHANNEL_SET_ACTIONS:
@@ -895,8 +895,6 @@ Data::Data(ChannelType type, ID id, ID columnId, State& state, Buffer& buffer)
 , readActions(true)
 , hasActions (false)
 , height     (G_GUI_UNIT)
-, playStatus (ChannelStatus::OFF)
-, recStatus  (ChannelStatus::OFF)
 {
 	switch (type) {
 
@@ -944,8 +942,6 @@ Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplera
 , hasActions    (p.hasActions)
 , name          (p.name)
 , height        (p.height)
-, playStatus    (ChannelStatus::OFF)
-, recStatus     (ChannelStatus::OFF)
 #ifdef WITH_VST
 , plugins       (pluginManager::hydratePlugins(p.pluginIds))
 #endif
@@ -1020,7 +1016,8 @@ bool Data::hasWave() const
 
 bool Data::isPlaying() const
 {
-	return playStatus == ChannelStatus::PLAY || playStatus == ChannelStatus::ENDING;
+    ChannelStatus s = state->playStatus.load();
+	return s == ChannelStatus::PLAY || s == ChannelStatus::ENDING;
 }
 
 

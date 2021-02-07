@@ -317,7 +317,7 @@ void sendSolo_(channel::Data& ch, uint32_t l_solo)
 
 void sendStatus_(channel::Data& ch, uint32_t l_playing, bool audible)
 {
-    switch (ch.playStatus) {
+    switch (ch.state->playStatus.load()) {
         
         case ChannelStatus::OFF:
             kernelMidi::sendMidiLightning(l_playing, midimap::midimap.stopped);

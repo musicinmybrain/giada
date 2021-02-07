@@ -149,8 +149,8 @@ Data::Data(const m::channel::Data& c)
 
 bool          Data::getSolo() const           { return m_channel.solo; }
 bool          Data::getMute() const           { return m_channel.mute; }
-ChannelStatus Data::getPlayStatus() const     { return m_channel.playStatus; }
-ChannelStatus Data::getRecStatus() const      { return m_channel.recStatus; }
+ChannelStatus Data::getPlayStatus() const     { return m_channel.state->playStatus.load(); }
+ChannelStatus Data::getRecStatus() const      { return m_channel.state->recStatus.load(); }
 bool          Data::getReadActions() const    { return m_channel.readActions; }
 bool          Data::isArmed() const           { return m_channel.armed; }
 bool          Data::isRecordingInput() const  { return m::recManager::isRecordingInput(); }

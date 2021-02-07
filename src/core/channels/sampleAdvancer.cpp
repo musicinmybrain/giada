@@ -285,7 +285,7 @@ void onFirstBeat_(const channel::Data& ch, Frame localFrame)
 {
 G_DEBUG("onFirstBeat ch=" << ch.id << ", localFrame=" << localFrame);
 
-	ChannelStatus playStatus = ch.playStatus;
+	ChannelStatus playStatus = ch.state->playStatus.load();
 	bool          isLoop     = ch.samplePlayer->isAnyLoopMode();
 
 	switch (playStatus) { 
@@ -321,21 +321,15 @@ void onBar_(const channel::Data& ch, Frame localFrame)
 {
 	G_DEBUG("onBar ch=" << ch.id);
 
-	ChannelStatus    playStatus = ch.playStatus;
+	ChannelStatus    playStatus = ch.state->playStatus.load();;
 	SamplePlayerMode mode       = ch.samplePlayer->mode;
 
 	if (playStatus == ChannelStatus::PLAY && (mode == SamplePlayerMode::LOOP_REPEAT || 
 											  mode == SamplePlayerMode::LOOP_ONCE_BAR))
 		rewind_(ch.id, localFrame);
 	else
-	if (playStatus == ChannelStatus::WAIT && mode == SamplePlayerMode::LOOP_ONCE_BAR) {
-		assert(false);
-		/*
-		pumpChannelFunction(ch.id, [] (channel::Data& ch)
-		{
-			ch.playStatus = ChannelStatus::PLAY;
-		});*/
-	}	
+	if (playStatus == ChannelStatus::WAIT && mode == SamplePlayerMode::LOOP_ONCE_BAR)
+	    ch.state->playStatus.store(ChannelStatus::PLAY);
 }
 
 

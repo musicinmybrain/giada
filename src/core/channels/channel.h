@@ -257,12 +257,11 @@ namespace giada::m::channel
 {
 struct State
 {
-    /* tracker
-    Tells the channel progression. Must be atomic because changed by the RT 
-    thread and read by the UI thread. */
-    WeakAtomic<Frame> tracker{0}; 
-    bool              rewinding;
-    Frame             offset;
+    WeakAtomic<Frame>         tracker    = 0;
+    WeakAtomic<ChannelStatus> playStatus = ChannelStatus::OFF;
+    WeakAtomic<ChannelStatus> recStatus  = ChannelStatus::OFF;
+    bool                      rewinding;
+    Frame                     offset;
 };
 
 struct Buffer
@@ -307,8 +306,6 @@ struct Data
     bool                 hasActions;
     std::string          name;
     Pixel                height;
-    ChannelStatus        playStatus;
-    ChannelStatus        recStatus;
 #ifdef WITH_VST
     std::vector<Plugin*> plugins;
 #endif

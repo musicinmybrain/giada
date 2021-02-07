@@ -592,7 +592,7 @@ void toggleReadActions_(channel::Data& ch)
 		return;
 
 	bool          readActions = ch.readActions;
-	ChannelStatus recStatus   = ch.recStatus;
+	ChannelStatus recStatus   = ch.state->recStatus.load();
 
 	if (readActions || (!readActions && recStatus == ChannelStatus::WAIT))
 		stopReadActions_(ch, recStatus);
@@ -607,9 +607,9 @@ void toggleReadActions_(channel::Data& ch)
 void startReadActions_(channel::Data& ch)
 {
 	if (conf::conf.treatRecsAsLoops)
-		ch.recStatus = ChannelStatus::WAIT;
+		ch.state->recStatus.store(ChannelStatus::WAIT);
 	else {
-    	ch.recStatus = ChannelStatus::PLAY;
+        ch.state->recStatus.store(ChannelStatus::PLAY);
 		ch.readActions = true;
 	}
 }
@@ -625,17 +625,17 @@ void stopReadActions_(channel::Data& ch, ChannelStatus curRecStatus)
 	behave like a dynamic one. */
 
 	if (!clock::isRunning() || !conf::conf.treatRecsAsLoops) {
-        ch.recStatus = ChannelStatus::OFF;
+        ch.state->recStatus.store(ChannelStatus::OFF);
 	    ch.readActions = false;
 	}
 	else
 	if (curRecStatus == ChannelStatus::WAIT)
-        ch.recStatus = ChannelStatus::OFF;
+        ch.state->recStatus.store(ChannelStatus::OFF);
 	else
 	if (curRecStatus == ChannelStatus::ENDING)
-        ch.recStatus = ChannelStatus::PLAY;
+        ch.state->recStatus.store(ChannelStatus::PLAY);
 	else
-        ch.recStatus = ChannelStatus::ENDING;
+        ch.state->recStatus.store(ChannelStatus::ENDING);
 }
 
 
@@ -649,7 +649,7 @@ void killReadActions_(channel::Data& ch)
 
 	if (!conf::conf.treatRecsAsLoops)
 		return;
-    ch.recStatus = ChannelStatus::OFF;
+    ch.state->recStatus.store(ChannelStatus::OFF);
 	ch.readActions = false;
 }
 } // {anonymous}

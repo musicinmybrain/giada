@@ -296,7 +296,7 @@ void          rewind_           (channel::Data& ch, Frame localFrame=0);
 
 void press_(channel::Data& ch, int velocity)
 {
-    ChannelStatus    playStatus = ch.playStatus;
+    ChannelStatus    playStatus = ch.state->playStatus.load();
     SamplePlayerMode mode       = ch.samplePlayer->mode;
 	bool             isLoop     = ch.samplePlayer->isAnyLoopMode();
 
@@ -316,7 +316,7 @@ void press_(channel::Data& ch, int velocity)
 		default: break;
 	}
 
-	ch.playStatus = playStatus;
+	ch.state->playStatus.store(playStatus);
 }
 
 
@@ -334,7 +334,7 @@ void release_(channel::Data& ch)
 	quantization step in progress that would play the channel later on: 
 	disable it. */
 
-	if (ch.playStatus == ChannelStatus::PLAY)
+	if (ch.state->playStatus.load() == ChannelStatus::PLAY)
 		kill_(ch);
 	//else
     // TODO if (m_quantizer.isTriggered())
@@ -347,7 +347,7 @@ void release_(channel::Data& ch)
 
 void kill_(channel::Data& ch)
 {
-    ch.playStatus = ChannelStatus::OFF;
+    ch.state->playStatus.store(ChannelStatus::OFF);
     ch.state->tracker.store(ch.samplePlayer->begin);
     // TODO m_samplePlayer.quantizing = false; 
 }
@@ -360,7 +360,7 @@ void onStopBySeq_(channel::Data& ch)
 {
 	G_DEBUG("onStopBySeq ch=" << ch.id);
 
-	ChannelStatus playStatus       = ch.playStatus;
+	ChannelStatus playStatus       = ch.state->playStatus.load();
 	bool          isReadingActions = ch.readActions;
 	bool          isLoop           = ch.samplePlayer->isAnyLoopMode();
 
@@ -369,7 +369,7 @@ void onStopBySeq_(channel::Data& ch)
 		case ChannelStatus::WAIT:
 			/* Loop-mode channels in wait status get stopped right away. */
 			if (isLoop)
-                ch.playStatus = ChannelStatus::OFF;
+                ch.state->playStatus.store(ChannelStatus::OFF);
 			break;
 
 		case ChannelStatus::PLAY:
@@ -436,7 +436,7 @@ ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isL
 
 void toggleReadActions_(channel::Data& ch)
 {
-	if (clock::isRunning() && ch.recStatus == ChannelStatus::PLAY && !conf::conf.treatRecsAsLoops)
+	if (clock::isRunning() && ch.state->recStatus.load() == ChannelStatus::PLAY && !conf::conf.treatRecsAsLoops)
 		kill_(ch);
 }
 

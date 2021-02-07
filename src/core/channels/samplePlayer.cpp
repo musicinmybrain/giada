@@ -569,7 +569,7 @@ namespace
 {
 bool shouldLoop_(const channel::Data& ch)
 {
-    ChannelStatus    playStatus = ch.playStatus;
+    ChannelStatus    playStatus = ch.state->playStatus.load();
     SamplePlayerMode mode       = ch.samplePlayer->mode;
     
     return (mode == SamplePlayerMode::LOOP_BASIC  || 
@@ -683,7 +683,9 @@ void render(const channel::Data& ch, AudioBuffer& out)
 {
     // TODO - shorten variables
 
-    if (ch.samplePlayer->waveReader.wave == nullptr || !ch.isPlaying())
+    const WaveReader_NEW& waveReader = ch.samplePlayer->waveReader;
+
+    if (waveReader.wave == nullptr || !ch.isPlaying())
         return;
 
     Frame tracker = ch.state->tracker.load();
@@ -696,20 +698,19 @@ void render(const channel::Data& ch, AudioBuffer& out)
     /* Adjust tracker in case someone has changed the begin/end points in the
     meantime. */
     
-    if (tracker < ch.samplePlayer->begin || tracker >= ch.samplePlayer->end)
-        tracker = ch.samplePlayer->begin;
+    tracker = std::clamp(tracker, ch.samplePlayer->begin, ch.samplePlayer->end);
 
     /* If rewinding, fill the tail first, then reset the tracker to the begin
     point. The rest is performed as usual. */
 
     if (ch.state->rewinding) {
 		if (tracker < ch.samplePlayer->end)
-            ch.samplePlayer->waveReader.fill(buffer, tracker, 0, ch.samplePlayer->pitch);
+            waveReader.fill(buffer, tracker, 0, ch.samplePlayer->pitch);
         ch.state->rewinding = false;
 		tracker = ch.samplePlayer->begin;
     }
 
-    used     = ch.samplePlayer->waveReader.fill(buffer, tracker, ch.state->offset, ch.samplePlayer->pitch);
+    used     = waveReader.fill(buffer, tracker, ch.state->offset, ch.samplePlayer->pitch);
     tracker += used;
 
 G_DEBUG ("block=[" << tracker - used << ", " << tracker << ")" << 
@@ -723,7 +724,7 @@ G_DEBUG ("last frame tracker=" << tracker);
         //m_sampleAdvancer.onLastFrame(); // TODO - better moving this to samplerAdvancer::advance
         if (shouldLoop_(ch)) {
             Frame offset = std::min(static_cast<Frame>(used / ch.samplePlayer->pitch), buffer.countFrames() - 1);
-            tracker += ch.samplePlayer->waveReader.fill(buffer, tracker, offset, ch.samplePlayer->pitch);
+            tracker += waveReader.fill(buffer, tracker, offset, ch.samplePlayer->pitch);
         }
     }
 
@@ -744,12 +745,12 @@ void loadWave(channel::Data& ch, Wave* w)
     ch.samplePlayer->begin = 0;
 
     if (w != nullptr) {
-        ch.playStatus = ChannelStatus::OFF;
+        ch.state->playStatus.store(ChannelStatus::OFF);
         ch.name = w->getBasename(/*ext=*/false);
         ch.samplePlayer->end = w->getSize() - 1;
     }
     else {
-        ch.playStatus = ChannelStatus::EMPTY;
+        ch.state->playStatus.store(ChannelStatus::EMPTY);
         ch.name = "";
         ch.samplePlayer->end = 0;
     }
@@ -784,6 +785,6 @@ void kickIn(channel::Data& ch, Frame f)
     assert(ch.samplePlayer->hasWave());
     
 	ch.state->tracker.store(f);
-    ch.playStatus = ChannelStatus::PLAY;
+    ch.state->playStatus.store(ChannelStatus::PLAY);
 }
 }
