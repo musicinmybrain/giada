@@ -81,12 +81,12 @@ Data            data;
 
 
 ChannelDataLock::ChannelDataLock(channel::Data& ch)
-: channel(ch)
-, wave   (ch.samplePlayer->getWave())
-, plugins(ch.plugins)
+: channelId(ch.id)
+, wave     (ch.samplePlayer->getWave())
+, plugins  (ch.plugins)
 {
-	samplePlayer::setWave(channel, nullptr, 0);
-	channel.plugins = {};
+	samplePlayer::setWave(ch, nullptr, 0);
+	ch.plugins = {};
 	swap(SwapType::NONE);
 }
 
@@ -99,8 +99,9 @@ ChannelDataLock::ChannelDataLock(ID channelId)
 
 ChannelDataLock::~ChannelDataLock()
 {
-	samplePlayer::setWave(channel, wave, 1.0f);
-	channel.plugins = plugins;
+    channel::Data& ch = model::get().getChannel(channelId);
+	samplePlayer::setWave(ch, wave, 1.0f);
+    ch.plugins = plugins;
 	swap(SwapType::HARD);
 }
 

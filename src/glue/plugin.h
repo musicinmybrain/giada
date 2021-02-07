@@ -48,6 +48,7 @@ class Plugin;
 class Channel;
 class Channel_NEW;
 }
+namespace giada::m::channel { struct Data; }
 namespace giada::c::plugin 
 {
 struct Program
@@ -99,7 +100,7 @@ private:
 struct Plugins
 {
     Plugins() = default;
-    Plugins(const m::Channel_NEW&);
+    Plugins(const m::channel::Data&);
 
     ID channelId;
     std::vector<m::Plugin*> plugins; 

@@ -116,7 +116,7 @@ void Plugin::setResizeCallback(std::function<void(int, int)> f)
 /* -------------------------------------------------------------------------- */
 
 
-Plugins::Plugins(const m::Channel_NEW& c)
+Plugins::Plugins(const m::channel::Data& c)
 : channelId(c.id)
 , plugins  (c.plugins) 
 {
@@ -130,8 +130,7 @@ Plugins::Plugins(const m::Channel_NEW& c)
 
 Plugins getPlugins(ID channelId)
 {
-    assert(false);
-	//return Plugins(m::model::get().getChannel(channelId));
+	return Plugins(m::model::get().getChannel(channelId));
 }
 
 

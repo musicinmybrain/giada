@@ -366,7 +366,7 @@ public:
 	ChannelDataLock(ID channelId);
 	~ChannelDataLock();
 
-	channel::Data&       channel;
+	ID                   channelId;
 	Wave*                wave;
 	std::vector<Plugin*> plugins;
 };
