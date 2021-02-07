@@ -35,21 +35,15 @@
 #include "core/waveFx.h"
 
 
-namespace giada::m
-{
-class Channel_NEW;
-class Wave;
-}
-namespace giada::v 
-{
-class gdSampleEditor;
-}
-namespace giada::c::sampleEditor 
+namespace giada::m { class Wave; }
+namespace giada::m::channel { struct Data; }
+namespace giada::v { class gdSampleEditor; }
+namespace giada::c::sampleEditor
 {
 struct Data
 {
     Data() = default;
-    Data(const m::Channel_NEW&);
+    Data(const m::channel::Data&);
 
     ChannelStatus a_getPreviewStatus() const;
     Frame a_getPreviewTracker() const;
@@ -72,7 +66,7 @@ struct Data
 
 private:
 
-	const m::Channel_NEW* m_channel;
+	const m::channel::Data* m_channel;
 };
 
 /* onRefresh --- TODO - wrong name */

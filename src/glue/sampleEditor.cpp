@@ -60,17 +60,15 @@ namespace giada::c::sampleEditor
 {
 namespace
 {
-/* TODO - move these utils to m::model*/
-m::Channel_NEW& getChannel_(ID channelId)
+m::channel::Data& getChannel_(ID channelId)
 {
-	//return m::model::get().getChannel(channelId);
+	return m::model::get().getChannel(channelId);
 }
 
 
-m::SamplePlayer_NEW& getSamplePlayer_(ID channelId)
+m::samplePlayer::Data& getSamplePlayer_(ID channelId)
 {
-    assert(false);
-	//return getChannel_(channelId).samplePlayer.value();
+	return getChannel_(channelId).samplePlayer.value();
 }
 
 
@@ -109,7 +107,7 @@ void resetBeginEnd_(ID channelId)
 /* -------------------------------------------------------------------------- */
 
 
-Data::Data(const m::Channel_NEW& c)
+Data::Data(const m::channel::Data& c)
 : channelId   (c.id)
 , name        (c.name)
 , volume      (c.volume)
@@ -131,7 +129,7 @@ Data::Data(const m::Channel_NEW& c)
 
 ChannelStatus Data::a_getPreviewStatus() const
 {
-	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).playStatus;
+	return getChannel_(m::mixer::PREVIEW_CHANNEL_ID).state->playStatus.load();
 }
 
 
@@ -189,7 +187,7 @@ v::gdSampleEditor* getSampleEditorWindow()
 
 void setBeginEnd(ID channelId, Frame b, Frame e)
 {
-	m::Channel_NEW& c = getChannel_(channelId);
+	m::channel::Data& c = getChannel_(channelId);
 	
 	b = std::clamp(b, 0, c.samplePlayer->getWaveSize() - 1);
 	e = std::clamp(e, 1, c.samplePlayer->getWaveSize() - 1);
