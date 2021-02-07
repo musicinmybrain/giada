@@ -366,23 +366,23 @@ void freeAllChannels()
 
 void deleteChannel(ID channelId)
 {
-	const channel::Data& ch = model::get().getChannel(channelId);
-
+	const channel::Data&       ch      = model::get().getChannel(channelId);
 	const Wave*                wave    = ch.samplePlayer ? ch.samplePlayer->getWave() : nullptr;
 #ifdef WITH_VST
 	const std::vector<Plugin*> plugins = ch.plugins;
 #endif
 
-	assert(false);
-    //model::swap([channelIndex = model::getIndex<Channel_NEW>(channelId)](model::Layout& l)
-    //{
-    	// TODO - l.channels.erase(l.channels.begin() + channelIndex);
-    //}, model::SwapType::HARD);
+	u::vector::removeIf(model::get().channels, [channelId] (const channel::Data& c) 
+	{ 
+		return c.id == channelId; 
+	});
+    model::swap(model::SwapType::HARD);
 
-	//if (wave != nullptr)
-	//	model::remove<Wave>(*wave);
+	if (wave != nullptr)
+		model::remove<Wave>(*wave);
+
 #ifdef WITH_VST
-	//pluginHost::freePlugins(plugins);
+	pluginHost::freePlugins(plugins);
 #endif
 }
 
