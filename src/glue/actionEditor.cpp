@@ -118,7 +118,7 @@ bool isSinglePressMode_(ID channelId)
 /* -------------------------------------------------------------------------- */
 
 
-SampleData::SampleData(const m::SamplePlayer_NEW& s)
+SampleData::SampleData(const m::samplePlayer::Data& s)
 : channelMode(s.mode)
 , isLoopMode (s.isAnyLoopMode())
 {
@@ -128,14 +128,13 @@ SampleData::SampleData(const m::SamplePlayer_NEW& s)
 /* -------------------------------------------------------------------------- */
 
 
-Data::Data(const m::Channel_NEW& c)
+Data::Data(const m::channel::Data& c)
 : channelId  (c.id)
 , channelName(c.name)
 , actions    (m::recorder::getActionsOnChannel(c.id))
 {
 	if (c.type == ChannelType::SAMPLE)
-	    assert(false);
-		//sample = std::make_optional<SampleData>(c.samplePlayer.value());
+		sample = std::make_optional<SampleData>(c.samplePlayer.value());
 }
 
 
@@ -146,8 +145,7 @@ Data::Data(const m::Channel_NEW& c)
 
 Data getData(ID channelId)
 {
-	/* TODO - use m::model getChannel utils (to be added) */
-	//return Data(m::model::get().getChannel(channelId));
+    return Data(m::model::get().getChannel(channelId));
 }
 
 

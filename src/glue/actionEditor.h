@@ -35,17 +35,14 @@
 #include "core/types.h"
 
 
-namespace giada::m
-{
-struct Action;
-class  Channel_NEW;
-class  SamplePlayer_NEW;
-}
-namespace giada::c::actionEditor 
+namespace giada::m               { struct Action; }
+namespace giada::m::channel      { struct Data; }
+namespace giada::m::samplePlayer { struct Data; }
+namespace giada::c::actionEditor
 {
 struct SampleData
 {
-	SampleData(const m::SamplePlayer_NEW&);
+	SampleData(const m::samplePlayer::Data&);
 
     SamplePlayerMode channelMode;
 	bool             isLoopMode;
@@ -54,7 +51,7 @@ struct SampleData
 struct Data
 {
     Data() = default;
-    Data(const m::Channel_NEW&);
+    Data(const m::channel::Data&);
 
     ID                     channelId; 
     std::string            channelName;
