@@ -61,9 +61,7 @@ bool hasChannelEvents_()
 
 void processChannels_()
 {
-	std::vector<channel::Data> channels = model::get().channels;
-
-	for (channel::Data& ch : channels)
+	for (channel::Data& ch : model::get().channels)
 		channel::react(ch, eventBuffer_, true); // TODO audible
 	
 	model::swap(model::SwapType::SOFT);
