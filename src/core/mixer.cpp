@@ -75,7 +75,7 @@ std::function<void()> signalCb_ = nullptr;
 /* -------------------------------------------------------------------------- */
 
 
-bool isChannelAudible_(const Channel_NEW& c)
+bool isChannelAudible_(const channel::Data& c)
 {
     if (c.isInternal())
         return true;
@@ -142,7 +142,7 @@ void processChannels_(const model::Layout& layout, AudioBuffer& out, AudioBuffer
 {
 	for (const channel::Data& c : layout.channels)
 		if (!c.isInternal())
-			channel::render(c, &out, &in, /*TODO */ true /*isChannelAudible_(c)*/);
+			channel::render(c, &out, &in, isChannelAudible_(c));
 }
 
 
