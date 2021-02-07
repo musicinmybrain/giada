@@ -46,11 +46,10 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 {
 	float samplerateRatio = conf::conf.samplerate / static_cast<float>(samplerate);
 
-    for (const patch::Channel& pchannel : channels) {
-		channelManager::ChannelInfo info = channelManager::createInfo(pchannel.id);
-		get().channels.push_back(channelManager::deserializeChannel(pchannel, info, samplerateRatio));
-		swap(SwapType::NONE);	
-	}
+    for (const patch::Channel& pchannel : channels)
+		get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
+
+    swap(SwapType::NONE);
 }
 
 

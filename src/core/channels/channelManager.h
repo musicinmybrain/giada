@@ -39,8 +39,6 @@ namespace giada::m::patch { struct Channel; }
 namespace giada::m
 {
 class  Channel;
-class  Channel_NEW;
-struct ChannelState;
 }
 namespace giada::m::channelManager
 {
@@ -49,19 +47,11 @@ Initializes internal data. */
 	
 void init();
 
-/* create (1)
-Creates a new Channel from scratch. */
+/* create
+Creates a new channel. If channelId == 0 generates a new ID, reuse the one 
+passed in otherwise. */
 
-struct ChannelInfo
-{
-    ID               id;
-    channel::State&  state;
-    channel::Buffer& buffer;
-};
-
-std::unique_ptr<Channel> create(ChannelType type, ID columnId, const conf::Conf& conf);
-channel::Data create(ChannelType type, ID columnId, ChannelInfo info);
-ChannelInfo createInfo(ID channelId=0);
+channel::Data create(ID channelId, ChannelType type, ID columnId);
 
 /* create (2)
 Creates a new Channel given an existing one (i.e. clone). */
@@ -71,7 +61,7 @@ std::unique_ptr<Channel> create(const Channel& ch);
 /* (de)serializeWave
 Creates a new Channel given the patch raw data and vice versa. */
 
-channel::Data deserializeChannel(const patch::Channel& c, ChannelInfo info, float samplerateRatio);
+channel::Data deserializeChannel(const patch::Channel& c, float samplerateRatio);
 const patch::Channel     serializeChannel(const Channel_NEW& c);
 } // giada::m::channelManager::
 

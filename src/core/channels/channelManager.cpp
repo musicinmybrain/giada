@@ -68,28 +68,13 @@ void init()
 /* -------------------------------------------------------------------------- */
 
 
-std::unique_ptr<Channel> create(ChannelType type, ID columnId, const conf::Conf& conf)
+channel::Data create(ID channelId, ChannelType type, ID columnId)
 {
-	std::unique_ptr<Channel> ch = std::make_unique<Channel>(type, 
-		channelId_.generate(), columnId, kernelAudio::getRealBufSize(), conf);
+	ID               id = channelId_.generate(channelId);
+	channel::State&  s  = model::add<channel::State> (std::make_unique<channel::State>());
+	channel::Buffer& b  = model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
 	
-	return ch;
-}
-
-
-channel::Data create(ChannelType type, ID columnId, ChannelInfo extra)
-{
-	return channel::Data(type, extra.id, columnId, extra.state, extra.buffer);
-}
-
-
-ChannelInfo createInfo(ID channelId)
-{
-	return {
-	    channelId_.generate(channelId), // if cId == 0 generate a new one, else reuse it
-		model::add<channel::State> (std::make_unique<channel::State>()),
-		model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()))
-	};
+	return channel::Data(type, id, columnId, s, b);
 }
 
 
@@ -109,9 +94,12 @@ std::unique_ptr<Channel> create(const Channel& o)
 /* -------------------------------------------------------------------------- */
 
 
-channel::Data deserializeChannel(const patch::Channel& pch, ChannelInfo info, float samplerateRatio)
+channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRatio)
 {
-	return channel::Data(pch, info.state, info.buffer, samplerateRatio);
+	channel::State&  s = model::add<channel::State> (std::make_unique<channel::State>());
+	channel::Buffer& b = model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
+
+	return channel::Data(pch, s, b, samplerateRatio);
 }
 
 

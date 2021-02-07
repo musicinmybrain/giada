@@ -63,9 +63,7 @@ namespace
 {
 channel::Data& addChannel_(ChannelType type, ID columnId)
 {
-	channelManager::ChannelInfo info = channelManager::createInfo();
-
-	model::get().channels.push_back(channelManager::create(type, columnId, info));
+	model::get().channels.push_back(channelManager::create(/*id=*/0, type, columnId));
     model::swap(model::SwapType::HARD);
 
    return model::get().channels.back();
@@ -219,14 +217,15 @@ void init()
 {
 	mixer::init(clock::getFramesInLoop(), kernelAudio::getRealBufSize());
 
-	channelManager::ChannelInfo infoOut = channelManager::createInfo(mixer::MASTER_OUT_CHANNEL_ID);
-	channelManager::ChannelInfo infoIn  = channelManager::createInfo(mixer::MASTER_IN_CHANNEL_ID);
-	channelManager::ChannelInfo infoPre = channelManager::createInfo(mixer::PREVIEW_CHANNEL_ID);
-
     model::get().channels.clear();
-    model::get().channels.push_back(channelManager::create(ChannelType::MASTER,  /*columnId=*/0, infoOut));
-    model::get().channels.push_back(channelManager::create(ChannelType::MASTER,  /*columnId=*/0, infoIn));
-    model::get().channels.push_back(channelManager::create(ChannelType::PREVIEW, /*columnId=*/0, infoPre));
+
+    model::get().channels.push_back(channelManager::create(
+            mixer::MASTER_OUT_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+    model::get().channels.push_back(channelManager::create(
+            mixer::MASTER_IN_CHANNEL_ID, ChannelType::MASTER, /*columnId=*/0));
+    model::get().channels.push_back(channelManager::create(
+            mixer::PREVIEW_CHANNEL_ID, ChannelType::PREVIEW, /*columnId=*/0));
+
     model::swap(model::SwapType::NONE);
 }
 
