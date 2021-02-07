@@ -75,7 +75,7 @@ channel::Data& addChannel_(ChannelType type, ID columnId)
 
 waveManager::Result createWave_(const std::string& fname)
 {
-	return waveManager::createFromFile(fname, /*ID=*/0, conf::conf.samplerate, 
+	return waveManager::createFromFile(fname, /*id=*/0, conf::conf.samplerate, 
 		conf::conf.rsmpQuality); 
 }
 
@@ -288,14 +288,11 @@ int addAndLoadChannel(ID columnId, const std::string& fname)
 
 void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 {
-    /*
-    const Wave&          wave    = model::add<Wave>(std::move(w));
-    const channel::Data& channel = addChannel_(ChannelType::SAMPLE, columnId);
+    Wave&          wave    = model::add<Wave>(std::move(w));
+    channel::Data& channel = addChannel_(ChannelType::SAMPLE, columnId);
 
-    model::swap([channelId = channel.id, &wave](model::Layout& l)
-    {
-       samplePlayer::loadWave(l.getChannel(channelId), &wave);
-    }, model::SwapType::HARD);*/
+	samplePlayer::loadWave(channel, &wave);
+    model::swap(model::SwapType::HARD);
 }
 
 
