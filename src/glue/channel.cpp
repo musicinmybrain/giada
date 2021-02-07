@@ -91,34 +91,35 @@ void printLoadError_(int res)
 
 
 // TODO - just pass const channel::Data&
-SampleData::SampleData(const m::samplePlayer::Data& s, const m::audioReceiver::Data& a)
-: waveId         (s.getWaveId())
-, mode           (s.mode)
-, isLoop         (s.isAnyLoopMode())
-, pitch          (s.pitch)
-, m_samplePlayer (&s)
-, m_audioReceiver(&a)
+SampleData::SampleData(const m::channel::Data& ch)
+: waveId         (ch.samplePlayer->getWaveId())
+, mode           (ch.samplePlayer->mode)
+, isLoop         (ch.samplePlayer->isAnyLoopMode())
+, pitch          (ch.samplePlayer->pitch)
+, m_channel      (&ch)
 {
 }
 
 
-Frame SampleData::getTracker() const           { return 0; /* TODO */ }
-Frame SampleData::getBegin() const             { return m_samplePlayer->begin; }
-Frame SampleData::getEnd() const               { return m_samplePlayer->end; }
-bool  SampleData::getInputMonitor() const      { return m_audioReceiver->inputMonitor; }
-bool  SampleData::getOverdubProtection() const { return m_audioReceiver->overdubProtection; }
+Frame SampleData::getTracker() const           { return m_channel->state->tracker.load(); }
+/* TODO - useless methods, turn them into member vars */
+Frame SampleData::getBegin() const             { return m_channel->samplePlayer->begin; }
+Frame SampleData::getEnd() const               { return m_channel->samplePlayer->end; }
+bool  SampleData::getInputMonitor() const      { return m_channel->audioReceiver->inputMonitor; }
+bool  SampleData::getOverdubProtection() const { return m_channel->audioReceiver->overdubProtection; }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-MidiData::MidiData(const m::midiSender::Data& m)
-: m_midiSender(&m)
+MidiData::MidiData(const m::channel::Data& m)
+: m_channel(&m)
 {
 }
 
-bool MidiData::isOutputEnabled() const { return m_midiSender->enabled; }
-int  MidiData::getFilter() const       { return m_midiSender->filter; }
+/* TODO - useless methods, turn them into member vars */
+bool MidiData::isOutputEnabled() const { return m_channel->midiSender->enabled; }
+int  MidiData::getFilter() const       { return m_channel->midiSender->filter; }
 
 
 /* -------------------------------------------------------------------------- */
@@ -140,21 +141,22 @@ Data::Data(const m::channel::Data& c)
 , m_channel  (c)
 {
 	if (c.type == ChannelType::SAMPLE)
-		sample = std::make_optional<SampleData>(*c.samplePlayer, *c.audioReceiver);
+		sample = std::make_optional<SampleData>(c);
 	else
 	if (c.type == ChannelType::MIDI)
-		midi   = std::make_optional<MidiData>(*c.midiSender);
+		midi   = std::make_optional<MidiData>(c);
 }
 
 
-bool          Data::getSolo() const           { return m_channel.solo; }
-bool          Data::getMute() const           { return m_channel.mute; }
 ChannelStatus Data::getPlayStatus() const     { return m_channel.state->playStatus.load(); }
 ChannelStatus Data::getRecStatus() const      { return m_channel.state->recStatus.load(); }
-bool          Data::getReadActions() const    { return m_channel.readActions; }
-bool          Data::isArmed() const           { return m_channel.armed; }
 bool          Data::isRecordingInput() const  { return m::recManager::isRecordingInput(); }
 bool          Data::isRecordingAction() const { return m::recManager::isRecordingAction(); }
+/* TODO - useless methods, turn them into member vars */
+bool          Data::getSolo() const           { return m_channel.solo; }
+bool          Data::getMute() const           { return m_channel.mute; }
+bool          Data::getReadActions() const    { return m_channel.readActions; }
+bool          Data::isArmed() const           { return m_channel.armed; }
 
 
 /* -------------------------------------------------------------------------- */

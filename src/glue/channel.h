@@ -48,7 +48,7 @@ namespace giada::c::channel
 struct SampleData
 {
 	SampleData() = delete;
-	SampleData(const m::samplePlayer::Data&, const m::audioReceiver::Data&);
+	SampleData(const m::channel::Data&);
 
 	Frame getTracker() const;
 	Frame getBegin() const;
@@ -63,21 +63,20 @@ struct SampleData
 
 private:
 
-	const m::samplePlayer::Data*  m_samplePlayer;
-	const m::audioReceiver::Data* m_audioReceiver;
+	const m::channel::Data* m_channel;
 };
 
 struct MidiData
 {
 	MidiData() = delete;
-	MidiData(const m::midiSender::Data&);
+	MidiData(const m::channel::Data&);
 
 	bool isOutputEnabled() const;
 	int  getFilter() const;
 
 private:
 
-	const m::midiSender::Data* m_midiSender;
+	const m::channel::Data* m_channel;
 };
 
 struct Data

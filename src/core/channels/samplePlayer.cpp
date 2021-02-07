@@ -681,8 +681,6 @@ void advance(const channel::Data& ch, const sequencer::Event& e)
 
 void render(const channel::Data& ch, AudioBuffer& out)
 {
-    // TODO - shorten variables
-
     const WaveReader_NEW& waveReader = ch.samplePlayer->waveReader;
 
     if (waveReader.wave == nullptr || !ch.isPlaying())
@@ -721,7 +719,7 @@ G_DEBUG ("block=[" << tracker - used << ", " << tracker << ")" <<
     if (tracker >= ch.samplePlayer->end) {
 G_DEBUG ("last frame tracker=" << tracker);
         tracker = ch.samplePlayer->begin;
-        //m_sampleAdvancer.onLastFrame(); // TODO - better moving this to samplerAdvancer::advance
+        sampleAdvancer::onLastFrame(ch); // TODO - better moving this to samplerAdvancer::advance
         if (shouldLoop_(ch)) {
             Frame offset = std::min(static_cast<Frame>(used / ch.samplePlayer->pitch), buffer.countFrames() - 1);
             tracker += waveReader.fill(buffer, tracker, offset, ch.samplePlayer->pitch);

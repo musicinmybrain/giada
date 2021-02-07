@@ -65,7 +65,7 @@ private:
 namespace giada::m::channel { struct Data; }
 namespace giada::m::sampleAdvancer
 {
-void onLastFrame();
+void onLastFrame(const channel::Data& ch);
 void advance(const channel::Data& ch, const sequencer::Event& e);
 }
 

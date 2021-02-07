@@ -370,8 +370,31 @@ void parseActions_(const channel::Data& ch, const std::vector<Action>& as, Frame
 /* -------------------------------------------------------------------------- */
 
 
-void onLastFrame()
+void onLastFrame(const channel::Data& ch)
 {
+	ChannelStatus    playStatus = ch.state->playStatus.load();
+	SamplePlayerMode mode       = ch.samplePlayer->mode;
+	bool             isLoop     = ch.samplePlayer->isAnyLoopMode();
+	bool             running    = clock::isRunning();
+	
+	if (playStatus == ChannelStatus::PLAY) {
+		/* Stop LOOP_* when the sequencer is off, or SINGLE_* except for
+		SINGLE_ENDLESS, which runs forever unless it's in ENDING mode. 
+		Other loop once modes are put in wait mode. */
+		if ((mode == SamplePlayerMode::SINGLE_BASIC   || 
+			 mode == SamplePlayerMode::SINGLE_PRESS   ||
+			 mode == SamplePlayerMode::SINGLE_RETRIG) || 
+			(isLoop && !running))
+			playStatus = ChannelStatus::OFF;
+		else
+		if (mode == SamplePlayerMode::LOOP_ONCE || mode == SamplePlayerMode::LOOP_ONCE_BAR)
+			playStatus = ChannelStatus::WAIT;
+	}
+	else
+	if (playStatus == ChannelStatus::ENDING)
+		playStatus = ChannelStatus::OFF;
+
+	ch.state->playStatus.store(playStatus);
 }
 
 
