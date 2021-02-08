@@ -243,15 +243,10 @@ namespace giada::m::sampleAdvancer
 {
 namespace
 {
-void rewind_(ID channelId, Frame localFrame)
+void rewind_(const channel::Data& ch, Frame localFrame)
 {
-	assert(false);
-	/*
-	pumpChannelFunction(channelId, [localFrame] (channel::Data& ch)
-	{
-		ch.state->rewinding = true;
-		ch.state->offset    = localFrame;
-	});*/
+    ch.state->rewinding = true;
+    ch.state->offset    = localFrame;
 }
 
 
@@ -260,15 +255,9 @@ void rewind_(ID channelId, Frame localFrame)
 
 void stop_(const channel::Data& ch, Frame localFrame)
 {
-	assert(false);
-	/*
-    pumpChannelFunction(ch.id, [begin = ch.samplePlayer->begin] (channel::Data& ch)
-    {
-        ch.playStatus = ChannelStatus::OFF;
-        ch.state->tracker.store(begin);
-        ch.samplePlayer->quantizing = false;
-    });
-	*/
+	ch.state->playStatus.store(ChannelStatus::OFF);
+	ch.state->tracker.store(ch.samplePlayer->begin);
+	// TODO ? ch.samplePlayer->quantizing = false;
 
     /*  Clear data in range [localFrame, (buffer.size)) if the event occurs in
     the middle of the buffer. TODO - samplePlayer should be responsible for this*/
@@ -292,16 +281,11 @@ G_DEBUG("onFirstBeat ch=" << ch.id << ", localFrame=" << localFrame);
 
 		case ChannelStatus::PLAY:
 			if (isLoop) 
-				rewind_(ch.id, localFrame);
+				rewind_(ch, localFrame);
 			break;
 		
 		case ChannelStatus::WAIT:
-			assert(false);
-			/*
-			pumpChannelFunction(ch.id, [] (channel::Data& ch)
-			{
-				ch.playStatus = ChannelStatus::PLAY;
-			});*/
+		    ch.state->playStatus.store(ChannelStatus::PLAY);
 			break;
 
 		case ChannelStatus::ENDING:
@@ -326,7 +310,7 @@ void onBar_(const channel::Data& ch, Frame localFrame)
 
 	if (playStatus == ChannelStatus::PLAY && (mode == SamplePlayerMode::LOOP_REPEAT || 
 											  mode == SamplePlayerMode::LOOP_ONCE_BAR))
-		rewind_(ch.id, localFrame);
+		rewind_(ch, localFrame);
 	else
 	if (playStatus == ChannelStatus::WAIT && mode == SamplePlayerMode::LOOP_ONCE_BAR)
 	    ch.state->playStatus.store(ChannelStatus::PLAY);
@@ -414,7 +398,7 @@ void advance(const channel::Data& ch, const sequencer::Event& e)
 			break;
 
 		case sequencer::EventType::REWIND:
-			rewind_(ch.id, e.delta);
+			rewind_(ch, e.delta);
 			break;
 
 		case sequencer::EventType::ACTIONS:
