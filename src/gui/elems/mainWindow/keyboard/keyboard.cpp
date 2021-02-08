@@ -52,6 +52,7 @@ geKeyboard::geKeyboard(int X, int Y, int W, int H)
 {
 	end();
 	init();
+	rebuild();
 }
 
 

@@ -57,7 +57,7 @@ channel::Data create(const channel::Data& ch);
 Creates a new channel given the patch raw data and vice versa. */
 
 channel::Data deserializeChannel(const patch::Channel& c, float samplerateRatio);
-const patch::Channel     serializeChannel(const Channel_NEW& c);
+const patch::Channel serializeChannel(const channel::Data& c);
 } // giada::m::channelManager::
 
 

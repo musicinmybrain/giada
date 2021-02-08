@@ -125,13 +125,9 @@ bool savePatch_(const std::string& path, const std::string& name)
 
 void saveWavesToProject_(const std::string& basePath)
 {
-	/* No need for a hard Wave swap here: nobody is reading the path data. */
-
-	m::model::WavesLock l(m::model::waves);
-
-	for (m::Wave* w : m::model::waves) {
+	for (const std::unique_ptr<m::Wave>& w : m::model::getAll<m::Wave>()) {
 		w->setPath(makeUniqueWavePath_(basePath, *w));
-		m::waveManager::save(*w, w->getPath()); // TODO - error checking			
+		m::waveManager::save(*w, w->getPath()); // TODO - error checking	
 	}
 }
 } // {anonymous}
@@ -182,8 +178,8 @@ void loadProject(void* data)
 	/* Then reset the system (it disables mixer) and fill the model. */
 
 	m::init::reset();
-	m::model::load(m::patch::patch);
-	v::model::load(m::patch::patch);
+    v::model::load(m::patch::patch);
+    m::model::load(m::patch::patch);
 
 	/* Prepare the engine. Recorder has to recompute the actions positions if 
 	the current samplerate != patch samplerate. Clock needs to update frames

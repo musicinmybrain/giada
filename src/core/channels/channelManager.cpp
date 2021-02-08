@@ -120,7 +120,7 @@ channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRati
 /* -------------------------------------------------------------------------- */
 
 
-const patch::Channel serializeChannel(const Channel_NEW& c)
+const patch::Channel serializeChannel(const channel::Data& c)
 {
 	patch::Channel pc;
 

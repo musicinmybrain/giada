@@ -576,7 +576,27 @@ bool shouldLoop_(const channel::Data& ch)
             mode == SamplePlayerMode::LOOP_REPEAT || 
             mode == SamplePlayerMode::SINGLE_ENDLESS) && playStatus == ChannelStatus::PLAY;
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void setWave_(samplePlayer::Data& sp, Wave* w, float samplerateRatio)
+{
+    if (w == nullptr) {
+        sp.waveReader.wave = nullptr;
+        return;
+    }
+
+    sp.waveReader.wave = w;
+
+    if (samplerateRatio != 1.0f) {
+        sp.begin *= samplerateRatio;
+        sp.end   *= samplerateRatio;
+        sp.shift *= samplerateRatio;
+    }
 }
+} // {anonymous}
 
 
 /* -------------------------------------------------------------------------- */
@@ -603,7 +623,7 @@ Data::Data(const patch::Channel& p, float samplerateRatio)
 , end          (p.end)
 , velocityAsVol(p.midiInVeloAsVol)
 {
-    //setWave(waveManager::hydrateWave(p.waveId), samplerateRatio);
+    setWave_(*this, waveManager::hydrateWave(p.waveId), samplerateRatio);
 }
 
 
@@ -760,18 +780,7 @@ void loadWave(channel::Data& ch, Wave* w)
 
 void setWave(channel::Data& ch, Wave* w, float samplerateRatio)
 {
-    if (w == nullptr) {
-        ch.samplePlayer->waveReader.wave = nullptr;
-        return;
-    }
-
-    ch.samplePlayer->waveReader.wave = w;
-
-    if (samplerateRatio != 1.0f) {
-        ch.samplePlayer->begin *= samplerateRatio;
-        ch.samplePlayer->end   *= samplerateRatio;
-        ch.samplePlayer->shift *= samplerateRatio;
-    }
+    setWave_(ch.samplePlayer.value(), w, samplerateRatio);
 }
 
 

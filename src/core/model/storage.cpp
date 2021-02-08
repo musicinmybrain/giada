@@ -48,8 +48,6 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 
     for (const patch::Channel& pchannel : channels)
 		get().channels.push_back(channelManager::deserializeChannel(pchannel, samplerateRatio));
-
-    swap(SwapType::NONE);
 }
 
 
@@ -60,7 +58,6 @@ void loadActions_(const std::vector<patch::Action>& pactions)
 {
 	recorder::ActionMap actions = recorderHandler::deserializeActions(pactions);
 	get().actions = actions;
-	swap(SwapType::NONE);	
 }
 } // 
 
@@ -91,9 +88,8 @@ void store(patch::Patch& patch)
 	for (const auto& w : getAll<Wave>())
 		patch.waves.push_back(waveManager::serializeWave(*w));
 
-	assert(false);
-	//for (const auto& c : layout.channels)
-	//	patch.channels.push_back(channelManager::serializeChannel(c));
+	for (const channel::Data& c : layout.channels)
+		patch.channels.push_back(channelManager::serializeChannel(c));
 }
 
 
@@ -123,6 +119,12 @@ void store(conf::Conf& conf)
 
 void load(const patch::Patch& patch)
 {
+	/* Clear and re-initialize channels and actions first. */
+
+	get().channels = {};
+	get().actions  = {};
+	swap(SwapType::NONE);
+
 	/* Load external data first: plug-ins and waves. */
 
 #ifdef WITH_VST
@@ -139,7 +141,7 @@ void load(const patch::Patch& patch)
 			getAll<Wave>().push_back(std::move(w));
 	}
 
-	/* Then channels, actions and global properties. */
+	/* Then load up channels, actions and global properties. */
 
 	loadChannels_(patch.channels, patch::patch.samplerate);
 	loadActions_(patch.actions);
@@ -150,7 +152,7 @@ void load(const patch::Patch& patch)
 	get().clock.bpm      = patch.bpm;
 	get().clock.quantize = patch.quantize;
 
-	swap(SwapType::NONE);	
+	swap(SwapType::HARD);
 }
 
 
