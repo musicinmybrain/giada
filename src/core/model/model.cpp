@@ -256,7 +256,8 @@ void clear()
 {
 	std::vector<std::unique_ptr<T>>* dest = nullptr;
 
-    if constexpr (std::is_same_v<T, Wave>) dest = &data.waves;
+    if constexpr (std::is_same_v<T, Wave>)   dest = &data.waves;
+    if constexpr (std::is_same_v<T, Plugin>) dest = &data.plugins;
 
     assert(dest != nullptr);
 
