@@ -41,16 +41,16 @@ namespace giada::m::channel { struct Data; }
 namespace giada::m::model
 { 
 struct Clock;
-struct Clock_NEW;
+struct Clock;
 struct Mixer;
-struct Mixer_NEW;
+struct Mixer;
 }
 namespace giada::c::main
 {
 struct Timer
 {
     Timer() = default;
-    Timer(const m::model::Clock_NEW& c);
+    Timer(const m::model::Clock& c);
 
     float bpm;
     int   beats;
@@ -63,7 +63,7 @@ struct Timer
 struct IO
 {
     IO() = default;
-    IO(const m::channel::Data& out, const m::channel::Data& in, const m::model::Mixer_NEW& m);
+    IO(const m::channel::Data& out, const m::channel::Data& in, const m::model::Mixer& m);
 
     float masterOutVol;
     float masterInVol;

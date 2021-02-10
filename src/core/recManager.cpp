@@ -101,16 +101,18 @@ bool isRecording()
 
 
 bool isRecordingAction()
-{ 
+{
+    assert(false);/*
 	model::RecorderLock lock(model::recorder); 
-	return model::recorder.get()->isRecordingAction;
+	return model::recorder.get()->isRecordingAction;*/
 }
 
 
 bool isRecordingInput()
-{ 
+{
+    assert(false);/*
 	model::RecorderLock lock(model::recorder); 
-	return model::recorder.get()->isRecordingInput; 
+	return model::recorder.get()->isRecordingInput; */
 }
 
 
@@ -156,6 +158,8 @@ void stopActionRec()
 	actions. Start reading right away, without checking whether 
 	conf::treatRecsAsLoops is enabled or not. Same thing for MIDI channels.  */
 
+    assert(false);
+#if 0
 	for (ID id : channels) {
 		model::onGet(model::channels, id, [](Channel& c)
 		{
@@ -164,6 +168,7 @@ void stopActionRec()
 				c.state->playStatus.store(ChannelStatus::PLAY);
 		});
 	}
+#endif
 }
 
 

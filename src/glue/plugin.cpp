@@ -151,6 +151,8 @@ Param getParam (int index, const m::Plugin& plugin)
 
 void updateWindow(ID pluginId, bool gui)
 {
+    assert(false);
+#if 0
 	m::model::PluginsLock l(m::model::plugins);
 	const m::Plugin& p = m::model::get(m::model::plugins, pluginId);
 
@@ -170,6 +172,7 @@ void updateWindow(ID pluginId, bool gui)
 	if (!gui) Fl::lock();
 	child->updateParameters(!gui);
 	if (!gui) Fl::unlock();
+#endif
 }
 
 

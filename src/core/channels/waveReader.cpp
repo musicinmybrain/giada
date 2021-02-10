@@ -107,8 +107,6 @@ Frame WaveReader::fill(AudioBuffer& out, Frame start, Frame offset, float pitch)
 	assert(start >= 0);
 	assert(offset < out.countFrames());
 
-	model::WavesLock l(model::waves); // TODO dependency
-	
 	if (pitch == 1.0) return fillCopy(out, start, offset);
 	else              return fillResampled(out, start, offset, pitch);
 }
@@ -261,8 +259,6 @@ Frame WaveReader_NEW::fill(AudioBuffer& out, Frame start, Frame offset, float pi
 	assert(start >= 0);
 	assert(offset < out.countFrames());
 
-	model::WavesLock l(model::waves); // TODO dependency
-	
 	if (pitch == 1.0) return fillCopy(out, start, offset);
 	else              return fillResampled(out, start, offset, pitch);
 }

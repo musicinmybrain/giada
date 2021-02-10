@@ -96,7 +96,7 @@ void setBpm_(float current, std::string s)
 /* -------------------------------------------------------------------------- */
 
 
-Timer::Timer(const m::model::Clock_NEW& c)
+Timer::Timer(const m::model::Clock& c)
 : bpm             (c.bpm)
 , beats           (c.beats)
 , bars            (c.bars)
@@ -112,7 +112,7 @@ Timer::Timer(const m::model::Clock_NEW& c)
 /* -------------------------------------------------------------------------- */
 
 
-IO::IO(const m::channel::Data& out, const m::channel::Data& in, const m::model::Mixer_NEW& m)
+IO::IO(const m::channel::Data& out, const m::channel::Data& in, const m::model::Mixer& m)
 : masterOutVol       (out.volume)
 , masterInVol        (in.volume)
 #ifdef WITH_VST

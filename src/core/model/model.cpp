@@ -38,8 +38,8 @@ namespace
 {
 struct State
 {
-	Clock_NEW::State clock;
-	Mixer_NEW::State mixer;
+	Clock::State clock;
+	Mixer::State mixer;
 	std::vector<std::unique_ptr<channel::State>> channels;
 };
 
@@ -58,7 +58,7 @@ struct Data
 
 
 template <typename T>
-auto getIter_NEW(const std::vector<std::unique_ptr<T>>& source, ID id)
+auto getIter_(const std::vector<std::unique_ptr<T>>& source, ID id)
 {
 	return u::vector::findIf(source, [id](const std::unique_ptr<T>& p) { return p->id == id; });
 }
@@ -194,29 +194,13 @@ T* find(ID id)
 
     assert(source != nullptr);
 
-	auto it = getIter_NEW(*source, id);
+	auto it = getIter_(*source, id);
 	return it == source->end() ? nullptr : it->get();
 }
 
 template Plugin*        find<Plugin>       (ID id);
 template Wave*          find<Wave>         (ID id);
 template channel::Data* find<channel::Data>(ID id);
-
-
-/* -------------------------------------------------------------------------- */
-
-
-template <typename T>
-std::size_t getIndex(ID id)
-{
-	static_assert(std::is_same_v<T, channel::Data>); // Only channel::Data for now
-
-	// Why decltype: https://stackoverflow.com/a/25185070/3296421
-	auto it = u::vector::findIf(get().channels, [id](const channel::Data& c) { return c.id == id; });
-	return std::distance<decltype(it)>(get().channels.begin(), it);
-}
-
-template std::size_t getIndex<channel::Data>(ID id);
 
 
 /* -------------------------------------------------------------------------- */
@@ -266,6 +250,7 @@ template void remove<Wave>  (const Wave& t);
 
 /* -------------------------------------------------------------------------- */
 
+
 template <typename T> 
 void clear()
 {
@@ -279,63 +264,10 @@ void clear()
 }
 
 template void clear<Wave>();
+template void clear<Plugin>();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-RCUList<Clock>    clock(std::make_unique<Clock>());
-RCUList<Mixer>    mixer(std::make_unique<Mixer>());
-RCUList<Kernel>   kernel(std::make_unique<Kernel>());
-RCUList<Recorder> recorder(std::make_unique<Recorder>());
-RCUList<MidiIn>   midiIn(std::make_unique<MidiIn>());
-RCUList<Actions>  actions(std::make_unique<Actions>());
-RCUList<Channel> channels;
-RCUList<Wave>     waves;
-#ifdef WITH_VST
-RCUList<Plugin>   plugins;
-#endif
-
-
-Actions::Actions(const Actions& o) : map(o.map)
-{
-	/* Needs to update all pointers of prev and next actions with addresses 
-	coming from the new 'actions' map.  */
-
-	recorder::updateMapPointers(map);
-}
+/* -------------------------------------------------------------------------- */
 
 
 #ifdef G_DEBUG_MODE
@@ -380,84 +312,6 @@ void debug()
 	for (const auto& p : data.plugins)
 		printf("\t%d) %p - ID=%d\n", i++, (void*) p.get(), p->id);
 
-#endif
-
-
-
-
-
-
-
-
-
-
-
-#if 0	
-	ChannelsLock chl(channels);
-	ClockLock    cl(clock);
-	WavesLock    wl(waves);
-	ActionsLock  al(actions);
-#ifdef WITH_VST
-	PluginsLock  pl(plugins);
-#endif
-
-	puts("======== SYSTEM STATUS ========");
-	
-	puts("model::channels");
-
-	int i = 0;
-	for (const Channel* c : channels) {
-		printf("\t%d) %p - ID=%d name='%s' type=%d columnID=%d\n",
-		        i++, (void*) c, c->state->id, c->state->name.c_str(), (int) c->getType(), c->getColumnId());
-/*
-		if (c->hasData())
-			printf("\t\twave: ID=%d\n", static_cast<const SampleChannel*>(c)->waveId);
-*/
-#ifdef WITH_VST
-		if (c->pluginIds.size() > 0) {
-			puts("\t\tplugins:");
-			for (ID id : c->pluginIds)
-				printf("\t\t\tID=%d\n", id);
-		}
-#endif
-	}
-
-	puts("model::waves");
-
-	i = 0;
-	for (const Wave* w : waves) 
-		printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*)w, w->id, w->getPath().c_str());
-		
-#ifdef WITH_VST
-	puts("model::plugins");
-
-	i = 0;
-	for (const Plugin* p : plugins) {
-		if (p->valid)
-			printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*)p, p->id, p->getName().c_str());
-		else
-			printf("\t%d) %p - ID=%d INVALID\n", i++, (void*)p, p->id); 
-	}
-#endif
-
-	puts("model::clock");
-
-	printf("\tclock.status   = %d\n", static_cast<int>(clock.get()->status));
-	printf("\tclock.bars     = %d\n", clock.get()->bars);
-	printf("\tclock.beats    = %d\n", clock.get()->beats);
-	printf("\tclock.bpm      = %f\n", clock.get()->bpm);
-	printf("\tclock.quantize = %d\n", clock.get()->quantize);
-
-	puts("model::actions");
-
-	for (auto& kv : actions.get()->map) {
-		printf("\tframe: %d\n", kv.first);
-		for (const Action& a : kv.second)
-			printf("\t\t(%p) - ID=%d, frame=%d, channel=%d, value=0x%X, prevId=%d, prev=%p, nextId=%d, next=%p\n", 
-				(void*) &a, a.id, a.frame, a.channelId, a.event.getRaw(), a.prevId, (void*) a.prev, a.nextId, (void*) a.next);	
-	}
-	
-	puts("===============================");
 #endif
 }
 

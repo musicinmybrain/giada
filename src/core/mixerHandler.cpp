@@ -95,13 +95,15 @@ bool anyChannel_(std::function<bool(const channel::Data&)> f)
 template <typename F>
 std::vector<ID> getChannelsIf_(F f)
 {
+    assert(false);
+    /*
 	model::ChannelsLock l(model::channels);
 
 	std::vector<ID> ids;
 	for (const Channel* c : model::channels)
 		if (f(c)) ids.push_back(c->id);
 	
-	return ids;	
+	return ids;	*/
 }
 
 
@@ -125,12 +127,13 @@ Use this when modifying a local model, before swapping it. */
 
 void pushWave_(Channel& ch, std::unique_ptr<Wave>&& w)
 {
+    assert(false);/*
 	assert(ch.getType() == ChannelType::SAMPLE);
 
 	model::waves.push(std::move(w));
 
 	model::WavesLock l(model::waves);
-	ch.samplePlayer->loadWave(model::waves.back());
+	ch.samplePlayer->loadWave(model::waves.back());*/
 }
 
 
@@ -188,6 +191,8 @@ Wave, overdub mode. */
 
 void overdubChannel_(ID channelId)
 {
+    assert(false);
+    /*
 	ID waveId;
 	model::onGet(model::channels, channelId, [&](Channel& c)
 	{
@@ -203,7 +208,7 @@ void overdubChannel_(ID channelId)
 	model::onGet(model::channels, channelId, [&](Channel& c)
 	{
 		setupChannelPostRecording_(c);
-	});
+	});*/
 }
 } // {anonymous}
 

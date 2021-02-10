@@ -111,7 +111,7 @@ void lineInRec_(const AudioBuffer& inBuf)
 Computes line in peaks and prepares the internal working buffer for input
 recording. */
 
-void processLineIn_(const model::Mixer_NEW& mixer, const AudioBuffer& inBuf)
+void processLineIn_(const model::Mixer& mixer, const AudioBuffer& inBuf)
 {
 	if (!kernelAudio::isInputEnabled())
 		return;
@@ -209,7 +209,7 @@ void limit_(AudioBuffer& outBuf)
 Last touches after the output has been rendered: apply inToOut if any, apply
 output volume, compute peak. */
 
-void finalizeOutput_(const model::Mixer_NEW& mixer, AudioBuffer& outBuf)
+void finalizeOutput_(const model::Mixer& mixer, AudioBuffer& outBuf)
 {
 	bool  inToOut = mh::getInToOut();
 	float outVol  = mh::getOutVol();
@@ -299,7 +299,7 @@ int masterPlay(void* outBuf, void* inBuf, unsigned bufferSize,
 	double /*streamTime*/, RtAudioStreamStatus /*status*/, void* /*userData*/)
 {
 	model::Lock rtLock = model::get_RT();
-	const model::Mixer_NEW& mixer  = rtLock.get().mixer;
+	const model::Mixer& mixer  = rtLock.get().mixer;
 	const model::Kernel&    kernel = rtLock.get().kernel;
 
 	if (!kernel.audioReady || mixer.state->active.load() == false)

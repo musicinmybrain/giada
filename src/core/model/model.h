@@ -44,77 +44,17 @@
 
 namespace giada::m::model
 {
-namespace
-{
-/* getIter_
-Returns an iterator of an element from list 'list' with given ID. */
-
-template<typename L>
-auto getIter_(L& list, ID id)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	auto it = std::find_if(list.begin(), list.end(), [&](auto* t)
-	{
-		return t->id == id;
-	});
-	assert(it != list.end());
-	return it;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-/* onSwapByIndex_
-Swaps i-th element from list with a new one and applies a function f to it. */
-
-template<typename L>
-void onSwapByIndex_(L& list, std::size_t i, std::function<void(typename L::value_type&)> f)
-{
-	std::unique_ptr<typename L::value_type> o = list.clone(i);
-	f(*o.get());
-	list.swap(std::move(o), i);
-}
-} // {anonymous}
-
-
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-
-struct Clock
-{	
-	ClockStatus status       = ClockStatus::STOPPED;
-	int         framesInLoop = 0;
-	int         framesInBar  = 0;
-	int         framesInBeat = 0;
-	int         framesInSeq  = 0;
-	int         bars         = G_DEFAULT_BARS;
-	int         beats        = G_DEFAULT_BEATS;
-	float       bpm          = G_DEFAULT_BPM;
-	int         quantize     = G_DEFAULT_QUANTIZE;
-};
-
-struct Mixer
-{
-	bool hasSolos = false;    
-	bool inToOut  = false;
-};
-
-
 struct Kernel
 {
 	bool audioReady = false;
 	bool midiReady  = false;
 };
 
-
 struct Recorder
 {
 	bool isRecordingAction = false;
 	bool isRecordingInput  = false;
 };
-
 
 struct MidiIn
 {
@@ -131,162 +71,7 @@ struct MidiIn
 	uint32_t metronome  = 0x0;	
 };
 
-
-struct Actions
-{
-	Actions() = default;
-	Actions(const Actions& o);
-
-	recorder::ActionMap map;
-};
-
-
-using ClockLock    = RCUList<Clock>::Lock;
-using MixerLock    = RCUList<Mixer>::Lock;
-using RecorderLock = RCUList<Recorder>::Lock;
-using MidiInLock   = RCUList<MidiIn>::Lock;
-using ActionsLock  = RCUList<Actions>::Lock;
-using ChannelsLock = RCUList<Channel>::Lock;
-using WavesLock    = RCUList<Wave>::Lock;
-#ifdef WITH_VST
-using PluginsLock  = RCUList<Plugin>::Lock;
-#endif
-
-extern RCUList<Clock>    clock;
-extern RCUList<Mixer>    mixer;
-extern RCUList<Recorder> recorder;
-extern RCUList<MidiIn>   midiIn;
-extern RCUList<Actions>  actions;
-extern RCUList<Channel>  channels;
-extern RCUList<Wave>     waves;
-#ifdef WITH_VST
-extern RCUList<Plugin>   plugins;
-#endif
-
-
-/* -------------------------------------------------------------------------- */
-
-
-template<typename L>
-bool exists(L& list, ID id)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");	
-	typename L::Lock l(list);
-	auto it = std::find_if(list.begin(), list.end(), [&](auto* t)
-	{
-		return t->id == id;
-	});
-	return it != list.end();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-/* getIndex (thread safe)
-Returns the index of element with ID from a list. */
-
-template<typename L>
-std::size_t getIndex(L& list, ID id)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	typename L::Lock l(list);
-	return std::distance(list.begin(), getIter_(list, id));
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-/* getIndex (thread safe)
-Returns the element ID of the i-th element of a list. */
-
-template<typename L>
-ID getId(L& list, std::size_t i)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	typename L::Lock l(list);
-	return list.get(i)->id;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-template<typename L>
-typename L::value_type& get(L& list, ID id)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	return **getIter_(list, id);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-/* onGet (1) (thread safe)
-Utility function for reading ID-based things from a RCUList. */
-
-template<typename L>
-void onGet(L& list, ID id, std::function<void(typename L::value_type&)> f, bool rebuild=false)
-{
-	static_assert(has_id<typename L::value_type>(), "This type has no ID");
-	typename L::Lock l(list);
-	f(**getIter_(list, id));
-	if (rebuild)
-		list.changed.store(true);
-}
-
-
-/* onGet (2) (thread safe)
-Same as (1), for non-ID-based things. */
-
-template<typename L>
-void onGet(L& list, std::function<void(typename L::value_type&)> f)
-{
-	static_assert(!has_id<typename L::value_type>(), "This type has ID");
-	typename L::Lock l(list);
-	f(*list.get());
-}
-
-
-/* ---------------------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-struct Clock_NEW
+struct Clock
 {	
 	struct State
 	{
@@ -305,10 +90,9 @@ struct Clock_NEW
 	int         beats        = G_DEFAULT_BEATS;
 	float       bpm          = G_DEFAULT_BPM;
 	int         quantize     = G_DEFAULT_QUANTIZE;
-
 };
 
-struct Mixer_NEW
+struct Mixer
 {
 	struct State
 	{
@@ -328,8 +112,8 @@ struct Layout
 	channel::Data&       getChannel(ID id); 
 	const channel::Data& getChannel(ID id) const;
 
-	Clock_NEW clock;
-	Mixer_NEW mixer;
+	Clock clock;
+	Mixer mixer;
 	Kernel   kernel;
 	Recorder recorder;
 	MidiIn   midiIn;
@@ -418,9 +202,6 @@ not found. */
 
 template <typename T> 
 T* find(ID id);
-
-template <typename T> 
-std::size_t getIndex(ID id);
 
 template <typename T> 
 T& add(std::unique_ptr<T>);

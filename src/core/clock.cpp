@@ -68,7 +68,7 @@ kernelAudio::JackState jackStatePrev_;
 /* recomputeFrames_
 Updates bpm, frames, beats and so on. Private version. */
 
-void recomputeFrames_(model::Clock_NEW& c)
+void recomputeFrames_(model::Clock& c)
 {
 	c.framesInLoop = static_cast<int>((conf::conf.samplerate * (60.0f / c.bpm)) * c.beats);
 	c.framesInBar  = static_cast<int>(c.framesInLoop / (float) c.bars);
@@ -121,21 +121,21 @@ bool isRunning()
 
 bool isActive()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 	return c.status == ClockStatus::RUNNING || c.status == ClockStatus::WAITING;
 }
 
 
 bool quantoHasPassed()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 	return clock::getQuantizerValue() != 0 && c.state->currentFrame.load() % quantizerStep_ == 0;
 }
 
 
 bool isOnBar()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 
 	int currentFrame = c.state->currentFrame.load();
 
@@ -147,7 +147,7 @@ bool isOnBar()
 
 bool isOnBeat()
 {
-	const model::Clock_NEW& c = model::get().clock;
+	const model::Clock& c = model::get().clock;
 	
 	if (c.status == ClockStatus::WAITING)
 		return c.state->currentFrameWait.load() % c.framesInBeat == 0;
@@ -221,7 +221,7 @@ void setStatus(ClockStatus s)
 
 void incrCurrentFrame(Frame amount) 
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 
 	if (c.status == ClockStatus::WAITING) {
 		int f = (c.state->currentFrameWait.load() + amount) % c.framesInLoop;
@@ -242,7 +242,7 @@ void incrCurrentFrame(Frame amount)
 
 void rewind()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 
 	c.state->currentFrame.store(0);
     c.state->currentBeat.store(0);
@@ -257,7 +257,7 @@ void rewind()
 
 void sendMIDIsync()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 
 	/* Sending MIDI sync while waiting is meaningless. */
 
@@ -398,7 +398,7 @@ G_DEBUG("JackState received - running=" << jackStateCurr.running);
 
 bool canQuantize()
 {
-    const model::Clock_NEW& c = model::get().clock;
+    const model::Clock& c = model::get().clock;
 
 	return c.quantize > 0 && c.status == ClockStatus::RUNNING;
 }

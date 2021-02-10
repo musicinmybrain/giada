@@ -93,7 +93,7 @@ void processPlugins_(const std::vector<Plugin*>& plugins, juce::MidiBuffer& even
 void close()
 {
 	messageManager_->deleteInstance();
-	model::plugins.clear();
+	model::clear<Plugin>();
 }
 
 

@@ -61,10 +61,12 @@ std::function<void(MidiEvent)> learnCb_  = nullptr;
 
 bool isMasterMidiInAllowed_(int c)
 {
+    assert(false);
+    /*
 	model::MidiInLock l(model::midiIn);
 	int filter   = model::midiIn.get()->filter;
 	bool enabled = model::midiIn.get()->enabled;
-	return enabled && (filter == -1 || filter == c);
+	return enabled && (filter == -1 || filter == c);*/
 }
 
 
@@ -73,8 +75,9 @@ bool isMasterMidiInAllowed_(int c)
 
 bool isChannelMidiInAllowed_(ID channelId, int c)
 {
-	model::ChannelsLock l(model::channels);
-	return model::get(model::channels, channelId).midiLearner.state->isAllowed(c);
+    assert(false);
+	//model::ChannelsLock l(model::channels);
+	//return model::get(model::channels, channelId).midiLearner.state->isAllowed(c);
 }
 
 
@@ -85,6 +88,8 @@ bool isChannelMidiInAllowed_(ID channelId, int c)
 
 void processPlugins_(const std::vector<ID>& ids, ID channelId, const MidiEvent& midiEvent)
 {
+    assert(false);
+#if 0
 	uint32_t pure = midiEvent.getRawNoVelocity();
 	float    vf   = u::math::map(midiEvent.getVelocity(), G_MAX_VELOCITY, 1.0f);
 
@@ -104,6 +109,7 @@ void processPlugins_(const std::vector<ID>& ids, ID channelId, const MidiEvent& 
 				p.id, param.getIndex(), pure, midiEvent.getVelocity(), vf);
 		}
 	}
+#endif
 }
 
 #endif
@@ -114,6 +120,8 @@ void processPlugins_(const std::vector<ID>& ids, ID channelId, const MidiEvent& 
 
 void processChannels_(const MidiEvent& midiEvent)
 {
+    assert(false);
+#if 0
 	uint32_t pure = midiEvent.getRawNoVelocity();
 
 	model::ChannelsLock lock(model::channels);
@@ -178,6 +186,7 @@ void processChannels_(const MidiEvent& midiEvent)
 		if (c->state->armed.load() == true)
 			c::events::sendMidiToChannel(c->id, midiEvent, Thread::MIDI);
 	}
+#endif
 }
 
 
@@ -186,6 +195,8 @@ void processChannels_(const MidiEvent& midiEvent)
 
 void processMaster_(const MidiEvent& midiEvent)
 {
+    assert(false);
+    /*
 	m::model::MidiInLock l(m::model::midiIn);
 
 	const uint32_t       pure   = midiEvent.getRawNoVelocity();
@@ -230,7 +241,7 @@ void processMaster_(const MidiEvent& midiEvent)
 	else if (pure == midiIn->beatHalf) {
 		c::events::divideBeats();
 		u::log::print("  >>> sequencer /2 (master) (pure=0x%X)\n", pure);
-	}
+	}*/
 }
 
 
@@ -239,6 +250,8 @@ void processMaster_(const MidiEvent& midiEvent)
 
 void learnChannel_(MidiEvent e, int param, ID channelId, std::function<void()> doneCb)
 {
+    assert(false);
+#if 0
 	if (!isChannelMidiInAllowed_(channelId, e.getChannel()))
 		return;	
 
@@ -264,6 +277,7 @@ void learnChannel_(MidiEvent e, int param, ID channelId, std::function<void()> d
 
 	stopLearn();
 	doneCb();
+#endif
 }
 
 
@@ -297,6 +311,8 @@ void learnMaster_(MidiEvent e, int param, std::function<void()> doneCb)
 
 void learnPlugin_(MidiEvent e, std::size_t paramIndex, ID pluginId, std::function<void()> doneCb)
 {
+    assert(false);
+#if 0
 	model::onGet(model::plugins, pluginId, [&](Plugin& p)
 	{
 		assert(paramIndex < p.midiInParams.size());
@@ -305,6 +321,7 @@ void learnPlugin_(MidiEvent e, std::size_t paramIndex, ID pluginId, std::functio
 
 	stopLearn();
 	doneCb();
+#endif
 }
 
 #endif

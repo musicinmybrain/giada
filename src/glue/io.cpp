@@ -92,6 +92,8 @@ Channel_InputData::Channel_InputData(const m::Channel& c)
 , pitch        (c.midiLearner.state->pitch.getValue())
 , readActions  (c.midiLearner.state->readActions.getValue()) 
 {
+    assert(false);
+#if 0
 #ifdef WITH_VST
 	for (ID id : c.pluginIds) {
 		m::Plugin& p = m::model::get(m::model::plugins, id);
@@ -104,6 +106,7 @@ Channel_InputData::Channel_InputData(const m::Channel& c)
 
 		plugins.push_back(pd);
 	}
+#endif
 #endif
 }
 
@@ -159,6 +162,8 @@ Master_InputData::Master_InputData(const m::model::MidiIn& midiIn)
 
 Channel_InputData channel_getInputData(ID channelId)
 {
+    assert(false);
+#if 0
 	namespace mm = m::model;
 
 	mm::ChannelsLock cl(mm::channels);
@@ -166,7 +171,8 @@ Channel_InputData channel_getInputData(ID channelId)
 	mm::PluginsLock  ml(mm::plugins);
 #endif
 
-	return Channel_InputData(mm::get(mm::channels, channelId));	
+	return Channel_InputData(mm::get(mm::channels, channelId));
+#endif
 }
 
 
@@ -175,10 +181,13 @@ Channel_InputData channel_getInputData(ID channelId)
 
 Channel_OutputData channel_getOutputData(ID channelId)
 {
+    assert(false);
+#if 0
 	namespace mm = m::model;
 
 	mm::ChannelsLock cl(mm::channels);
-	return Channel_OutputData(mm::get(mm::channels, channelId));		
+	return Channel_OutputData(mm::get(mm::channels, channelId));
+#endif
 }
 
 
@@ -187,10 +196,11 @@ Channel_OutputData channel_getOutputData(ID channelId)
 
 Master_InputData master_getInputData()
 {
+    assert(false);/*
 	namespace mm = m::model;
 
 	mm::MidiInLock l(mm::midiIn);
-	return Master_InputData(*mm::midiIn.get());
+	return Master_InputData(*mm::midiIn.get());*/
 }
 
 
@@ -199,11 +209,13 @@ Master_InputData master_getInputData()
 
 void channel_enableMidiLearn(ID channelId, bool v)
 {
+    assert(false);
+    /*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.midiLearner.state->enabled.store(v);
 	});
-	rebuildMidiWindows_();
+	rebuildMidiWindows_();*/
 }
 
 
@@ -212,11 +224,12 @@ void channel_enableMidiLearn(ID channelId, bool v)
 
 void channel_enableMidiLightning(ID channelId, bool v)
 {
+    assert(false);/*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.midiLighter.state->enabled.store(v);
 	});
-	rebuildMidiWindows_();
+	rebuildMidiWindows_();*/
 }
 
 
@@ -225,11 +238,12 @@ void channel_enableMidiLightning(ID channelId, bool v)
 
 void channel_enableMidiOutput(ID channelId, bool v)
 {
+    assert(false);/*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.midiSender->state->enabled.store(v);
 	});	
-	rebuildMidiWindows_();
+	rebuildMidiWindows_();*/
 }
 
 
@@ -238,10 +252,11 @@ void channel_enableMidiOutput(ID channelId, bool v)
 
 void channel_enableVelocityAsVol(ID channelId, bool v)
 {
+    assert(false);/*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.samplePlayer->state->velocityAsVol.store(v);
-	});
+	});*/
 }
 
 
@@ -250,19 +265,21 @@ void channel_enableVelocityAsVol(ID channelId, bool v)
 
 void channel_setMidiInputFilter(ID channelId, int ch)
 {
+    assert(false);/*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.midiLearner.state->filter.store(ch);
-	});
+	});*/
 }
 
 
 void channel_setMidiOutputFilter(ID channelId, int ch)
 {
+    assert(false);/*
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.midiSender->state->filter.store(ch);
-	});	
+	});	*/
 }
 
 
@@ -271,10 +288,13 @@ void channel_setMidiOutputFilter(ID channelId, int ch)
 
 void channel_setKey(ID channelId, int k)
 {
+    assert(false);
+#if 0
 	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
 	{
 		c.state->key.store(k);
 	}, /*rebuild=*/true);
+#endif
 }
 
 

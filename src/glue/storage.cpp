@@ -75,12 +75,13 @@ std::string makeWavePath_(const std::string& base, const m::Wave& w, int k)
 
 bool isWavePathUnique_(const m::Wave& skip, const std::string& path)
 {
+    assert(false);/*
 	m::model::WavesLock l(m::model::waves);
 
 	for (const m::Wave* w : m::model::waves)
 		if (w->id != skip.id && w->getPath() == path)
 			return false;
-	return true;
+	return true;*/
 }
 
 std::string makeUniqueWavePath_(const std::string& base, const m::Wave& w)
@@ -287,18 +288,13 @@ void saveSample(void* data)
 
 	if (u::fs::fileExists(filePath) && !v::gdConfirmWin("Warning", "File exists: overwrite?"))
 		return;
+	
+	ID       waveId = m::model::get().getChannel(channelId).samplePlayer->getWaveId();
+	m::Wave* wave   = m::model::find<m::Wave>(waveId);
 
-	ID waveId;
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		waveId = c.samplePlayer->getWaveId();
-	});
+	assert(wave != nullptr);
 
-	std::size_t waveIndex = m::model::getIndex(m::model::waves, waveId);
-
-	std::unique_ptr<m::Wave> wave = m::model::waves.clone(waveIndex);
-
-	if (!m::waveManager::save(*wave.get(), filePath)) {
+	if (!m::waveManager::save(*wave, filePath)) {
 		v::gdAlert("Unable to save this sample!");
 		return;
 	}
@@ -310,11 +306,11 @@ void saveSample(void* data)
 	m::conf::conf.samplePath = u::fs::dirname(filePath);
 
 	/* Update logical and edited states in Wave. */
+    
+	m::model::ChannelDataLock lock(channelId);
 
 	wave->setLogical(false);
 	wave->setEdited(false);
-
-	m::model::waves.swap(std::move(wave), waveIndex);
 
 	/* Finally close the browser. */
 

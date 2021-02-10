@@ -232,13 +232,14 @@ void updateSiblings(ID id, ID prevId, ID nextId)
 
 bool hasActions(ID channelId, int type)
 {
+    assert(false);/*
 	model::ActionsLock lock(model::actions);
 	
 	for (const auto& [frame, actions] : model::get().actions)
 		for (const Action& a : actions)
 			if (a.channelId == channelId && (type == 0 || type == a.event.getStatus()))
 				return true;
-	return false;
+	return false;*/
 }
 
 
