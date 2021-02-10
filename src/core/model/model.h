@@ -75,9 +75,9 @@ struct Clock
 {	
 	struct State
 	{
-		std::atomic<int> currentFrameWait{0};// TODO - weakatomic
-		std::atomic<int> currentFrame{0};// TODO - weakatomic
-		std::atomic<int> currentBeat{0};// TODO - weakatomic
+		WeakAtomic<int> currentFrameWait = 0;
+		WeakAtomic<int> currentFrame     = 0;
+		WeakAtomic<int> currentBeat      = 0;
 	};
 
 	State*      state        = nullptr;
@@ -96,10 +96,10 @@ struct Mixer
 {
 	struct State
 	{
-		std::atomic<bool>  processing{false};
-		std::atomic<bool>  active{false};
-		std::atomic<float> peakOut{0.0f}; // TODO - weakatomic
-		std::atomic<float> peakIn{0.0f}; // TODO - weakatomic
+		std::atomic<bool> processing = false;
+		std::atomic<bool> active     = false;
+		WeakAtomic<float> peakOut    = 0.0f;
+		WeakAtomic<float> peakIn     = 0.0f;
 	};
 
 	State* state    = nullptr;
@@ -112,8 +112,8 @@ struct Layout
 	channel::Data&       getChannel(ID id); 
 	const channel::Data& getChannel(ID id) const;
 
-	Clock clock;
-	Mixer mixer;
+	Clock    clock;
+	Mixer    mixer;
 	Kernel   kernel;
 	Recorder recorder;
 	MidiIn   midiIn;

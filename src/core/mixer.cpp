@@ -319,8 +319,8 @@ int masterPlay(void* outBuf, void* inBuf, unsigned bufferSize,
 
 	/* Reset peak computation. */
 
-	mixer.state->peakOut = 0.0;
-	mixer.state->peakIn  = 0.0;
+	mixer.state->peakOut.store(0.0);
+	mixer.state->peakIn.store(0.0);
 
 	prepareBuffers_(out);
 	processLineIn_(mixer, in);
