@@ -142,17 +142,21 @@ enum class SwapType { HARD, SOFT, NONE };
 /* -------------------------------------------------------------------------- */
 
 
-class ChannelDataLock
+// TODO - can we move these two in DataLock:: ?
+using PluginLock = std::vector<Plugin*>;
+using WaveLock   = Wave*;
+
+template <typename T>
+class DataLock
 {
 public:
 
-	ChannelDataLock(channel::Data& ch);
-	ChannelDataLock(ID channelId);
-	~ChannelDataLock();
+	DataLock(channel::Data& ch);
+	DataLock(ID channelId);
+	~DataLock();
 
-	ID                   channelId;
-	Wave*                wave;
-	std::vector<Plugin*> plugins;
+	ID channelId;
+	T  data;
 };
 
 

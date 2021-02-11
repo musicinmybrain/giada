@@ -80,30 +80,46 @@ Data            data;
 /* -------------------------------------------------------------------------- */
 
 
-ChannelDataLock::ChannelDataLock(channel::Data& ch)
+template <typename T>
+DataLock<T>::DataLock(channel::Data& ch)
 : channelId(ch.id)
-, wave     (ch.samplePlayer->getWave())
-, plugins  (ch.plugins)
 {
-	samplePlayer::setWave(ch, nullptr, 0);
-	ch.plugins = {};
+	if constexpr(std::is_same_v<T, WaveLock>) {
+		data = ch.samplePlayer->getWave();
+		samplePlayer::setWave(ch, nullptr, 0);
+	}
+	if constexpr(std::is_same_v<T, PluginLock>) {
+		data = ch.plugins;
+		ch.plugins = {};
+	}
 	swap(SwapType::NONE);
 }
 
 
-ChannelDataLock::ChannelDataLock(ID channelId) 
-: ChannelDataLock(model::get().getChannel(channelId)) 
+template <typename T>
+DataLock<T>::DataLock(ID channelId)
+: DataLock<T>(model::get().getChannel(channelId))
 {
 }
 
 
-ChannelDataLock::~ChannelDataLock()
+template <typename T>
+DataLock<T>::~DataLock()
 {
     channel::Data& ch = model::get().getChannel(channelId);
-	samplePlayer::setWave(ch, wave, 1.0f);
-    ch.plugins = plugins;
+
+	if constexpr(std::is_same_v<T, WaveLock>) {
+		samplePlayer::setWave(ch, data, 1.0f);
+	}
+	if constexpr(std::is_same_v<T, PluginLock>) {
+    	ch.plugins = data;
+	}
 	swap(SwapType::HARD);
 }
+
+
+template class DataLock<WaveLock>;
+template class DataLock<PluginLock>;
 
 
 /* -------------------------------------------------------------------------- */

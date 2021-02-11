@@ -198,7 +198,7 @@ std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
 
 void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value)
 {
-	model::ChannelDataLock lock(channelId);
+	model::DataLock<model::PluginLock> lock(channelId);
     model::find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
@@ -208,7 +208,7 @@ void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value)
 
 void setPluginProgram(ID pluginId, ID channelId, int programIndex)
 {
-	model::ChannelDataLock lock(channelId);
+	model::DataLock<model::PluginLock> lock(channelId);
     model::find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
@@ -218,7 +218,7 @@ void setPluginProgram(ID pluginId, ID channelId, int programIndex)
 
 void toggleBypass(ID pluginId, ID channelId)
 {
-	model::ChannelDataLock lock(channelId);
+	model::DataLock<model::PluginLock> lock(channelId);
 
 	Plugin& plugin = *model::find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
