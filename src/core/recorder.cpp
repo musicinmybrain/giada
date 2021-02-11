@@ -60,6 +60,27 @@ Action* findAction_(ActionMap& src, ID id)
 
 /* -------------------------------------------------------------------------- */
 
+
+/* updateMapPointers_
+Updates all prev/next actions pointers into the action map. This is required
+after an action has been recorded, since pushing back new actions in a Action 
+vector makes it reallocating the existing ones. */
+
+void updateMapPointers_(ActionMap& src)
+{
+	for (auto& kv : src) {
+		for (Action& action : kv.second) {
+			if (action.nextId != 0)
+				action.next = findAction_(src, action.nextId);
+			if (action.prevId != 0)
+				action.prev = findAction_(src, action.prevId);
+		}
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /* optimize
 Removes frames without actions. */
 
@@ -80,7 +101,7 @@ void removeIf_(std::function<bool(const Action&)> f)
 	for (auto& [frame, actions] : map)
 		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
 	optimize_(map);
-	updateMapPointers(map);
+	updateMapPointers_(map);
 
     model::swap(model::SwapType::HARD);
 }
@@ -183,7 +204,7 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 G_DEBUG(oldFrame << " -> " << newFrame);
 	}
 
-	updateMapPointers(temp);
+	updateMapPointers_(temp);
 
 	model::get().actions = temp;
     model::swap(model::SwapType::HARD);
@@ -275,7 +296,7 @@ Action rec(ID channelId, Frame frame, MidiEvent event)
 	enough to insert a new item first. No plug-in data for now. */
 
 	model::get().actions[frame].push_back(a);
-	updateMapPointers(model::get().actions);
+	updateMapPointers_(model::get().actions);
 	
 	model::swap(model::SwapType::HARD);
 
@@ -294,7 +315,7 @@ void rec(std::vector<Action>& actions)
 	for (const Action& a : actions)
 		if (!exists_(a.channelId, a.frame, a.event, model::get().actions))
 			model::get().actions[a.frame].push_back(a);
-	updateMapPointers(model::get().actions);
+	updateMapPointers_(model::get().actions);
 
 	model::swap(model::SwapType::HARD);
 }
@@ -315,7 +336,7 @@ void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 	a1->nextId = a2->id;
 	a2->prevId = a1->id;
 
-	updateMapPointers(map);
+	updateMapPointers_(map);
 	
 	model::swap(model::SwapType::HARD);
 }
@@ -361,22 +382,6 @@ std::vector<Action> getActionsOnChannel(ID channelId)
 			out.push_back(a);
 	});
 	return out;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void updateMapPointers(ActionMap& src)
-{
-	for (auto& kv : src) {
-		for (Action& action : kv.second) {
-			if (action.nextId != 0)
-				action.next = findAction_(src, action.nextId);
-			if (action.prevId != 0)
-				action.prev = findAction_(src, action.prevId);
-		}
-	}
 }
 
 
