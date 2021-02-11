@@ -30,6 +30,13 @@
 
 namespace giada::m
 {
+MidiLearnParam::MidiLearnParam()
+: m_param(0)
+, m_index(0) 
+{
+}
+
+
 MidiLearnParam::MidiLearnParam(uint32_t v, std::size_t index)
 : m_param(v)
 , m_index(index) 

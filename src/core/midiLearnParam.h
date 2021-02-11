@@ -39,7 +39,7 @@ class MidiLearnParam
 {
 public:
 
-	MidiLearnParam() = default;
+	MidiLearnParam();
 	MidiLearnParam(uint32_t v, std::size_t index=0);
 	MidiLearnParam(const MidiLearnParam& o) = default;
 

@@ -58,9 +58,7 @@
 extern giada::v::gdMainWindow* G_MainWin;
 
 
-namespace giada {
-namespace c {
-namespace io 
+namespace giada::c::io 
 {
 namespace
 {
@@ -76,47 +74,41 @@ void rebuildMidiWindows_()
 /* -------------------------------------------------------------------------- */
 
 
-Channel_InputData::Channel_InputData(const m::Channel& c)
+Channel_InputData::Channel_InputData(const m::channel::Data& c)
 : channelId    (c.id)
-, channelType  (c.getType())
-, enabled      (c.midiLearner.state->enabled.load())
-, velocityAsVol(c.samplePlayer ? c.samplePlayer->state->velocityAsVol.load() : 0)
-, filter       (c.midiLearner.state->filter.load())
-, keyPress     (c.midiLearner.state->keyPress.getValue())
-, keyRelease   (c.midiLearner.state->keyRelease.getValue())
-, kill         (c.midiLearner.state->kill.getValue())
-, arm          (c.midiLearner.state->arm.getValue())
-, volume       (c.midiLearner.state->volume.getValue())
-, mute         (c.midiLearner.state->mute.getValue())
-, solo         (c.midiLearner.state->solo.getValue())
-, pitch        (c.midiLearner.state->pitch.getValue())
-, readActions  (c.midiLearner.state->readActions.getValue()) 
+, channelType  (c.type)
+, enabled      (c.midiLearner.enabled)
+, velocityAsVol(c.samplePlayer ? c.samplePlayer->velocityAsVol : 0)
+, filter       (c.midiLearner.filter)
+, keyPress     (c.midiLearner.keyPress.getValue())
+, keyRelease   (c.midiLearner.keyRelease.getValue())
+, kill         (c.midiLearner.kill.getValue())
+, arm          (c.midiLearner.arm.getValue())
+, volume       (c.midiLearner.volume.getValue())
+, mute         (c.midiLearner.mute.getValue())
+, solo         (c.midiLearner.solo.getValue())
+, pitch        (c.midiLearner.pitch.getValue())
+, readActions  (c.midiLearner.readActions.getValue()) 
 {
-    assert(false);
-#if 0
 #ifdef WITH_VST
-	for (ID id : c.pluginIds) {
-		m::Plugin& p = m::model::get(m::model::plugins, id);
-		
+	for (const m::Plugin* p : c.plugins) {		
 		PluginData pd;
-		pd.id = p.id;
-		pd.name = p.getName();
-		for (int i = 0; i < p.getNumParameters(); i++)
-			pd.params.push_back({ i, p.getParameterName(i), p.midiInParams.at(i).getValue() });
-
+		pd.id   = p->id;
+		pd.name = p->getName();
+		for (int i = 0; i < p->getNumParameters(); i++)
+			pd.params.push_back({ i, p->getParameterName(i), p->midiInParams.at(i).getValue() });
 		plugins.push_back(pd);
 	}
 #endif
-#endif
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-MidiChannel_OutputData::MidiChannel_OutputData(const m::MidiSender& s)
-: enabled(s.state->enabled.load())
-, filter (s.state->filter.load())
+MidiChannel_OutputData::MidiChannel_OutputData(const m::midiSender::Data& s)
+: enabled(s.enabled)
+, filter (s.filter)
 {
 }
 
@@ -124,14 +116,14 @@ MidiChannel_OutputData::MidiChannel_OutputData(const m::MidiSender& s)
 /* -------------------------------------------------------------------------- */
 
 
-Channel_OutputData::Channel_OutputData(const m::Channel& c)
+Channel_OutputData::Channel_OutputData(const m::channel::Data& c)
 : channelId       (c.id)
-, lightningEnabled(c.midiLighter.state->enabled.load())
-, lightningPlaying(c.midiLighter.state->playing.getValue())
-, lightningMute   (c.midiLighter.state->mute.getValue())
-, lightningSolo   (c.midiLighter.state->solo.getValue())
+, lightningEnabled(c.midiLighter.enabled)
+, lightningPlaying(c.midiLighter.playing.getValue())
+, lightningMute   (c.midiLighter.mute.getValue())
+, lightningSolo   (c.midiLighter.solo.getValue())
 {	
-	if (c.getType() == ChannelType::MIDI)
+	if (c.type == ChannelType::MIDI)
 		output = std::make_optional<MidiChannel_OutputData>(*c.midiSender);
 }
 
@@ -162,17 +154,7 @@ Master_InputData::Master_InputData(const m::model::MidiIn& midiIn)
 
 Channel_InputData channel_getInputData(ID channelId)
 {
-    assert(false);
-#if 0
-	namespace mm = m::model;
-
-	mm::ChannelsLock cl(mm::channels);
-#ifdef WITH_VST
-	mm::PluginsLock  ml(mm::plugins);
-#endif
-
-	return Channel_InputData(mm::get(mm::channels, channelId));
-#endif
+	return Channel_InputData(m::model::get().getChannel(channelId));
 }
 
 
@@ -181,13 +163,7 @@ Channel_InputData channel_getInputData(ID channelId)
 
 Channel_OutputData channel_getOutputData(ID channelId)
 {
-    assert(false);
-#if 0
-	namespace mm = m::model;
-
-	mm::ChannelsLock cl(mm::channels);
-	return Channel_OutputData(mm::get(mm::channels, channelId));
-#endif
+	return Channel_OutputData(m::model::get().getChannel(channelId));
 }
 
 
@@ -288,13 +264,8 @@ void channel_setMidiOutputFilter(ID channelId, int ch)
 
 void channel_setKey(ID channelId, int k)
 {
-    assert(false);
-#if 0
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.state->key.store(k);
-	}, /*rebuild=*/true);
-#endif
+	m::model::get().getChannel(channelId).key = k;
+	m::model::swap(m::model::SwapType::HARD);
 }
 
 
@@ -377,4 +348,4 @@ void master_setMidiFilter(int c)
     m::model::get().midiIn.filter = c;
     m::model::swap(m::model::SwapType::NONE);
 }
-}}} // giada::c::io::
+} // giada::c::io::
