@@ -172,11 +172,7 @@ Channel_OutputData channel_getOutputData(ID channelId)
 
 Master_InputData master_getInputData()
 {
-    assert(false);/*
-	namespace mm = m::model;
-
-	mm::MidiInLock l(mm::midiIn);
-	return Master_InputData(*mm::midiIn.get());*/
+	return Master_InputData(m::model::get().midiIn);
 }
 
 
@@ -185,13 +181,9 @@ Master_InputData master_getInputData()
 
 void channel_enableMidiLearn(ID channelId, bool v)
 {
-    assert(false);
-    /*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.midiLearner.state->enabled.store(v);
-	});
-	rebuildMidiWindows_();*/
+	m::model::get().getChannel(channelId).midiLearner.enabled = v;
+	m::model::swap(m::model::SwapType::NONE);
+	rebuildMidiWindows_();
 }
 
 
@@ -200,12 +192,9 @@ void channel_enableMidiLearn(ID channelId, bool v)
 
 void channel_enableMidiLightning(ID channelId, bool v)
 {
-    assert(false);/*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.midiLighter.state->enabled.store(v);
-	});
-	rebuildMidiWindows_();*/
+	m::model::get().getChannel(channelId).midiLighter.enabled = v;
+	m::model::swap(m::model::SwapType::NONE);
+	rebuildMidiWindows_();
 }
 
 
@@ -214,12 +203,9 @@ void channel_enableMidiLightning(ID channelId, bool v)
 
 void channel_enableMidiOutput(ID channelId, bool v)
 {
-    assert(false);/*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.midiSender->state->enabled.store(v);
-	});	
-	rebuildMidiWindows_();*/
+	m::model::get().getChannel(channelId).midiSender->enabled = v;
+	m::model::swap(m::model::SwapType::NONE);
+	rebuildMidiWindows_();
 }
 
 
@@ -228,11 +214,8 @@ void channel_enableMidiOutput(ID channelId, bool v)
 
 void channel_enableVelocityAsVol(ID channelId, bool v)
 {
-    assert(false);/*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.samplePlayer->state->velocityAsVol.store(v);
-	});*/
+	m::model::get().getChannel(channelId).samplePlayer->velocityAsVol = v;
+	m::model::swap(m::model::SwapType::NONE);
 }
 
 
@@ -241,21 +224,15 @@ void channel_enableVelocityAsVol(ID channelId, bool v)
 
 void channel_setMidiInputFilter(ID channelId, int ch)
 {
-    assert(false);/*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.midiLearner.state->filter.store(ch);
-	});*/
+	m::model::get().getChannel(channelId).midiLearner.filter = ch;
+	m::model::swap(m::model::SwapType::NONE);
 }
 
 
 void channel_setMidiOutputFilter(ID channelId, int ch)
 {
-    assert(false);/*
-	m::model::onGet(m::model::channels, channelId, [&](m::Channel& c)
-	{
-		c.midiSender->state->filter.store(ch);
-	});	*/
+	m::model::get().getChannel(channelId).midiSender->filter = ch;
+	m::model::swap(m::model::SwapType::NONE);	
 }
 
 

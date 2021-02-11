@@ -29,16 +29,11 @@
 #define G_GLUE_IO_H
 
 
-#include <atomic>
 #include "core/types.h"
 #include "core/midiEvent.h"
 #include "core/model/model.h"
 
 
-namespace giada::m
-{
-class Channel;
-}
 namespace giada::m::channel { struct Data; }
 namespace giada::c::io 
 {

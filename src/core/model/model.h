@@ -151,12 +151,13 @@ class DataLock
 {
 public:
 
-	DataLock(channel::Data& ch);
-	DataLock(ID channelId);
+	DataLock(channel::Data& ch, SwapType t=SwapType::HARD);
+	DataLock(ID channelId, SwapType t=SwapType::HARD);
 	~DataLock();
 
-	ID channelId;
-	T  data;
+	ID       channelId;
+	T        data;
+	SwapType swapType;
 };
 
 

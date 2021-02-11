@@ -81,8 +81,9 @@ Data            data;
 
 
 template <typename T>
-DataLock<T>::DataLock(channel::Data& ch)
+DataLock<T>::DataLock(channel::Data& ch, SwapType t)
 : channelId(ch.id)
+, swapType (t)
 {
 	if constexpr(std::is_same_v<T, WaveLock>) {
 		data = ch.samplePlayer->getWave();
@@ -97,8 +98,8 @@ DataLock<T>::DataLock(channel::Data& ch)
 
 
 template <typename T>
-DataLock<T>::DataLock(ID channelId)
-: DataLock<T>(model::get().getChannel(channelId))
+DataLock<T>::DataLock(ID channelId, SwapType t)
+: DataLock<T>(model::get().getChannel(channelId), t)
 {
 }
 
@@ -114,7 +115,7 @@ DataLock<T>::~DataLock()
 	if constexpr(std::is_same_v<T, PluginLock>) {
     	ch.plugins = data;
 	}
-	swap(SwapType::HARD);
+	swap(swapType);
 }
 
 

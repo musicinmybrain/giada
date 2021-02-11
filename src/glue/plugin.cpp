@@ -151,28 +151,26 @@ Param getParam (int index, const m::Plugin& plugin)
 
 void updateWindow(ID pluginId, bool gui)
 {
-    assert(false);
-#if 0
-	m::model::PluginsLock l(m::model::plugins);
-	const m::Plugin& p = m::model::get(m::model::plugins, pluginId);
+    m::Plugin* p = m::model::find<m::Plugin>(pluginId);
 
-	if (p.hasEditor())
-		return;
+    assert(p != nullptr);
 
-	/* Get the parent window first: the plug-in list. Then, if it exists, get
-	the child window - the actual pluginWindow. */
+    if (p->hasEditor())
+        return;
 
-	v::gdPluginList* parent = static_cast<v::gdPluginList*>(u::gui::getSubwindow(G_MainWin, WID_FX_LIST));
-	if (parent == nullptr)
-		return;
-	v::gdPluginWindow* child = static_cast<v::gdPluginWindow*>(u::gui::getSubwindow(parent, pluginId + 1));
-	if (child == nullptr) 
-		return;
-	
-	if (!gui) Fl::lock();
-	child->updateParameters(!gui);
-	if (!gui) Fl::unlock();
-#endif
+    /* Get the parent window first: the plug-in list. Then, if it exists, get
+    the child window - the actual pluginWindow. */
+
+    v::gdPluginList* parent = static_cast<v::gdPluginList*>(u::gui::getSubwindow(G_MainWin, WID_FX_LIST));
+    if (parent == nullptr)
+        return;
+    v::gdPluginWindow* child = static_cast<v::gdPluginWindow*>(u::gui::getSubwindow(parent, pluginId + 1));
+    if (child == nullptr)
+        return;
+
+    if (!gui) Fl::lock();
+    child->updateParameters(!gui);
+    if (!gui) Fl::unlock();
 }
 
 
