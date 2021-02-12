@@ -111,7 +111,7 @@ Returns ViewModel objects. */
 
 Plugins getPlugins(ID channelId);
 Plugin  getPlugin (m::Plugin& plugin, ID channelId);
-Param   getParam  (int index, const m::Plugin& plugin);
+Param   getParam  (int index, const m::Plugin& plugin, ID channelId);
 
 /* updateWindow
 Updates the editor-less plug-in window. This is useless if the plug-in has an

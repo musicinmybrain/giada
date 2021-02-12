@@ -973,6 +973,14 @@ Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplera
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+
+bool Data::operator==(const Data& other)
+{
+	return id == other.id;
+}
+
 
 /* -------------------------------------------------------------------------- */
 

@@ -283,6 +283,8 @@ struct Data
     Data& operator=(const Data&) = default;
     Data& operator=(Data&&)      = default;
 
+    bool operator==(const Data&);
+
     bool isPlaying() const;
     bool isInternal() const;
     bool isMuted() const;

@@ -80,47 +80,27 @@ Data            data;
 /* -------------------------------------------------------------------------- */
 
 
-template <typename T>
-DataLock<T>::DataLock(channel::Data& ch, SwapType t)
-: channelId(ch.id)
-, swapType (t)
+DataLock::DataLock(const channel::Data& ch, SwapType t)
+: channel   (ch)
+, m_index   (u::vector::indexOf(get().channels, ch))
+, m_swapType(t)
 {
-	if constexpr(std::is_same_v<T, WaveLock>) {
-		data = ch.samplePlayer->getWave();
-		samplePlayer::setWave(ch, nullptr, 0);
-	}
-	if constexpr(std::is_same_v<T, PluginLock>) {
-		data = ch.plugins;
-		ch.plugins = {};
-	}
+	u::vector::remove(get().channels, ch);
 	swap(SwapType::NONE);
 }
 
 
-template <typename T>
-DataLock<T>::DataLock(ID channelId, SwapType t)
-: DataLock<T>(model::get().getChannel(channelId), t)
+DataLock::DataLock(ID channelId, SwapType t)
+: DataLock(model::get().getChannel(channelId), t)
 {
 }
 
 
-template <typename T>
-DataLock<T>::~DataLock()
+DataLock::~DataLock()
 {
-    channel::Data& ch = model::get().getChannel(channelId);
-
-	if constexpr(std::is_same_v<T, WaveLock>) {
-		samplePlayer::setWave(ch, data, 1.0f);
-	}
-	if constexpr(std::is_same_v<T, PluginLock>) {
-    	ch.plugins = data;
-	}
-	swap(swapType);
+	get().channels.insert(get().channels.begin() + m_index, channel);
+	swap(m_swapType);
 }
-
-
-template class DataLock<WaveLock>;
-template class DataLock<PluginLock>;
 
 
 /* -------------------------------------------------------------------------- */

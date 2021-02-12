@@ -140,9 +140,9 @@ Plugin getPlugin(m::Plugin& plugin, ID channelId)
 }
 
 
-Param getParam (int index, const m::Plugin& plugin)
+Param getParam (int index, const m::Plugin& plugin, ID channelId)
 {
-	return Param(plugin, index, plugin.id);
+	return Param(plugin, index, channelId);
 }
 
 
