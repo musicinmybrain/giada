@@ -154,17 +154,13 @@ void stopActionRec()
 	actions. Start reading right away, without checking whether 
 	conf::treatRecsAsLoops is enabled or not. Same thing for MIDI channels.  */
 
-    assert(false);
-#if 0
 	for (ID id : channels) {
-		model::onGet(model::channels, id, [](Channel& c)
-		{
-			c.state->readActions.store(true);
-			if (c.getType() == ChannelType::MIDI)
-				c.state->playStatus.store(ChannelStatus::PLAY);
-		});
+	    channel::Data& ch = model::get().getChannel(id);
+	    ch.readActions = true;
+	    if (ch.type == ChannelType::MIDI)
+            ch.state->playStatus.store(ChannelStatus::PLAY);
 	}
-#endif
+    model::swap(model::SwapType::HARD);
 }
 
 

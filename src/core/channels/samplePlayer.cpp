@@ -789,8 +789,6 @@ void setWave(channel::Data& ch, Wave* w, float samplerateRatio)
 
 void kickIn(channel::Data& ch, Frame f)
 {
-    assert(ch.samplePlayer->hasWave());
-    
 	ch.state->tracker.store(f);
     ch.state->playStatus.store(ChannelStatus::PLAY);
 }

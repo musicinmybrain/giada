@@ -95,59 +95,36 @@ bool anyChannel_(std::function<bool(const channel::Data&)> f)
 template <typename F>
 std::vector<ID> getChannelsIf_(F f)
 {
-    assert(false);
-    /*
-	model::ChannelsLock l(model::channels);
-
 	std::vector<ID> ids;
-	for (const Channel* c : model::channels)
-		if (f(c)) ids.push_back(c->id);
-	
-	return ids;	*/
+	for (const channel::Data& ch : model::get().channels)
+		if (f(ch)) ids.push_back(ch.id);
+	return ids;
 }
 
 
 std::vector<ID> getRecordableChannels_()
 {
-	return getChannelsIf_([] (const Channel* c) { return c->canInputRec() && !c->hasWave(); });
+	return getChannelsIf_([] (const channel::Data& c) { return c.canInputRec() && !c.hasWave(); });
 }
 
 
 std::vector<ID> getOverdubbableChannels_()
 {
-	return getChannelsIf_([] (const Channel* c) { return c->canInputRec() && c->hasWave(); });
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-/* pushWave_
-Pushes a new wave into Channel 'ch' and into the corresponding Wave list.
-Use this when modifying a local model, before swapping it. */
-
-void pushWave_(Channel& ch, std::unique_ptr<Wave>&& w)
-{
-    assert(false);/*
-	assert(ch.getType() == ChannelType::SAMPLE);
-
-	model::waves.push(std::move(w));
-
-	model::WavesLock l(model::waves);
-	ch.samplePlayer->loadWave(model::waves.back());*/
+	return getChannelsIf_([] (const channel::Data& c) { return c.canInputRec() && c.hasWave(); });
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 
-void setupChannelPostRecording_(Channel& c)
+void setupChannelPostRecording_(channel::Data& ch)
 {
 	/* Start sample channels in loop mode right away. */
-	if (c.samplePlayer->state->isAnyLoopMode())
-		c.samplePlayer->kickIn(clock::getCurrentFrame());
+	if (ch.samplePlayer->isAnyLoopMode())
+		samplePlayer::kickIn(ch, clock::getCurrentFrame());
 	/* Disable 'arm' button if overdub protection is on. */
-	if (c.audioReceiver->state->overdubProtection.load() == true)
-		c.state->armed.store(false);
+	if (ch.audioReceiver->overdubProtection == true)
+		ch.armed = false;
 }
 
 
@@ -159,8 +136,6 @@ Records the current Mixer audio input data into an empty channel. */
 
 void recordChannel_(ID channelId)
 {
-    assert(false);
-#if 0
 	/* Create a new Wave with audio coming from Mixer's virtual input. */
 
 	std::string filename = "TAKE-" + std::to_string(patch::patch.lastTakeId++) + ".wav";
@@ -170,15 +145,15 @@ void recordChannel_(ID channelId)
 
 	wave->copyData(mixer::getRecBuffer());
 
-	/* Update Channel with the new Wave. The function pushWave_ will take
-	care of pushing it into the Wave stack first. */
+	/* Update channel with the new Wave. */
 
-	model::onSwap(model::channels, channelId, [&](Channel& c)
-	{
-		pushWave_(c, std::move(wave));
-		setupChannelPostRecording_(c);
-	});
-#endif
+	Wave& w = model::add<Wave>(std::move(wave));
+
+	channel::Data& ch = model::get().getChannel(channelId);
+	samplePlayer::loadWave(ch, &w);
+    setupChannelPostRecording_(ch);
+
+	model::swap(model::SwapType::HARD);
 }
 
 
@@ -191,24 +166,13 @@ Wave, overdub mode. */
 
 void overdubChannel_(ID channelId)
 {
-    assert(false);
-    /*
-	ID waveId;
-	model::onGet(model::channels, channelId, [&](Channel& c)
-	{
-		waveId = c.samplePlayer->getWaveId();
-	});
+    Wave* wave = model::get().getChannel(channelId).samplePlayer->getWave();
 
-	model::onGet(m::model::waves, waveId, [&](Wave& w)
-	{
-		w.addData(mixer::getRecBuffer());
-		w.setLogical(true);
-	});
+    model::DataLock lock(channelId);
+    wave->addData(mixer::getRecBuffer());
+    wave->setLogical(true);
 
-	model::onGet(model::channels, channelId, [&](Channel& c)
-	{
-		setupChannelPostRecording_(c);
-	});*/
+    setupChannelPostRecording_(lock.channel);
 }
 } // {anonymous}
 
