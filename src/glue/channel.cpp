@@ -166,8 +166,7 @@ bool          Data::isArmed() const           { return m_channel.armed; }
 
 Data getData(ID channelId)
 {
-    assert(false);
-	//return Data(m::model::get().getChannel(channelId));
+	return Data(m::model::get().getChannel(channelId));
 }
 
 
@@ -275,14 +274,11 @@ void setInputMonitor(ID channelId, bool value)
 
 void setOverdubProtection(ID channelId, bool value)
 {
-    /*
-    m::model::swap([channelId, value](m::model::Layout& l)
-    {
-		m::Channel_NEW& channel = l.getChannel(channelId);
-		channel.audioReceiver->overdubProtection = value;
-		if (value == true && channel.armed)
-			channel.armed = false;
-    }, m::model::SwapType::SOFT);*/
+	m::channel::Data& ch = m::model::get().getChannel(channelId);
+	ch.audioReceiver->overdubProtection = value;
+	if (value == true && ch.armed)
+		ch.armed = false;
+	m::model::swap(m::model::SwapType::SOFT);
 }
 
 

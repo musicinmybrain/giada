@@ -64,13 +64,10 @@ enum class EventType
 	CHANNEL_VOLUME,
 	CHANNEL_PITCH,
 	CHANNEL_PAN,
-    CHANNEL_REC_STATUS,
-	CHANNEL_SET_ACTIONS,
-	CHANNEL_FUNCTION
+	FUNCTION
 };
 
-using EventData = std::variant<bool, int, float, Action, ChannelStatus, 
-                               std::function<void(Channel_NEW&)>>;
+using EventData = std::variant<int, float, Action, std::function<void()>>;
 
 struct Event
 {

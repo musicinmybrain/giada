@@ -155,10 +155,10 @@ void MidiActionRecorder_NEW::record(const MidiEvent& e)
 	MidiEvent flat(e);
 	flat.setChannel(0);
 	recorderHandler::liveRec(m_channelId, flat, clock::quantize(clock::getCurrentFrame()));
-	pumpChannelFunction(m_channelId, [] (Channel_NEW& c)
+/*	pumpChannelFunction(m_channelId, [] (Channel_NEW& c)
 	{
 		c.hasActions = true;
-	});
+	});*/
 }
 
 

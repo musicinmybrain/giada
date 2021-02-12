@@ -75,6 +75,25 @@ std::function<void()> signalCb_ = nullptr;
 /* -------------------------------------------------------------------------- */
 
 
+/* invokeSignalCb_
+Invokes the signal callback. This is done by pumping a FUNCTION event to the
+event dispatcher, rather than invoking the callback directly. This is done on
+purpose: the callback might (and surely will) contain blocking stuff from 
+model:: that the realtime thread cannot perform directly. */
+
+void invokeSignalCb_()
+{
+	eventDispatcher::pumpEvent({eventDispatcher::EventType::FUNCTION, 0, 0, [] ()
+	{
+		signalCb_();
+		signalCb_ = nullptr;
+	}});
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 bool isChannelAudible_(const channel::Data& c)
 {
     if (c.isInternal())
@@ -120,8 +139,7 @@ void processLineIn_(const model::Mixer& mixer, const AudioBuffer& inBuf)
 
 	if (signalCb_ != nullptr && u::math::linearToDB(peak) > conf::conf.recTriggerLevel) {
 G_DEBUG("Signal > threshold!");
-		signalCb_();
-		signalCb_ = nullptr;
+		invokeSignalCb_();
 	}
 
 	mixer.state->peakIn.store(peak);

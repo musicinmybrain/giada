@@ -592,18 +592,6 @@ void Channel_NEW::react(const eventDispatcher::Event& e)
 			m::mh::updateSoloCount(); 
 			break;
 
-        case eventDispatcher::EventType::CHANNEL_REC_STATUS:
-            recStatus = std::get<ChannelStatus>(e.data);
-            break;
-		
-		case eventDispatcher::EventType::CHANNEL_SET_ACTIONS:
-			hasActions = std::get<bool>(e.data);
-			break;
-		
-		case eventDispatcher::EventType::CHANNEL_FUNCTION:
-			std::get<std::function<void(Channel_NEW&)>>(e.data)(*this);
-			break;
-
 		default: break;
 	}
 }
@@ -726,13 +714,6 @@ bool Channel_NEW::isPlaying() const
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
-
-
-void pumpChannelFunction(ID channelId, std::function<void(Channel_NEW&)> f)
-{
-	eventDispatcher::pumpEvent({ eventDispatcher::EventType::CHANNEL_FUNCTION, 
-		0, channelId, f });
-}
 } // giada::m::
 
 
@@ -791,18 +772,6 @@ void react_(Data& d, const eventDispatcher::Event& e)
 		case eventDispatcher::EventType::CHANNEL_SOLO:
 			d.solo = !d.solo;
 			m::mh::updateSoloCount(); 
-			break;
-
-        case eventDispatcher::EventType::CHANNEL_REC_STATUS:
-            d.state->recStatus.store(std::get<ChannelStatus>(e.data));
-            break;
-		
-		case eventDispatcher::EventType::CHANNEL_SET_ACTIONS:
-			d.hasActions = std::get<bool>(e.data);
-			break;
-		
-		case eventDispatcher::EventType::CHANNEL_FUNCTION:
-			//TODO - std::get<std::function<void(Channel_NEW&)>>(e.data)(*this);
 			break;
 
 		default: break;

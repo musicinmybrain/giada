@@ -91,11 +91,11 @@ void process_()
 	if (eventBuffer_.size() == 0)
 		return;
 		
-#ifdef G_DEBUG_MODE
-	for (const Event& e : eventBuffer_)
-		G_DEBUG("Event type=" << (int) e.type << ", delta=" << e.delta <<
-		        ", globalFrame=" << clock::getCurrentFrame());
-#endif
+	for (const Event& e : eventBuffer_) {
+		if (e.type == EventType::FUNCTION)
+			std::get<std::function<void()>>(e.data)();
+G_DEBUG("Event type=" << (int) e.type << ", delta=" << e.delta << ", frame=" << clock::getCurrentFrame());
+	}
 
 	if (hasChannelEvents_())
 		processChannels_();

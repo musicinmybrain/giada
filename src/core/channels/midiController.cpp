@@ -175,11 +175,6 @@ void MidiController_NEW::react(const eventDispatcher::Event& e)
 
 void MidiController_NEW::advance(const sequencer::Event& e) const
 {
-	if (e.type == sequencer::EventType::FIRST_BEAT)
-		pumpChannelFunction(m_channel.id, [status = onFirstBeat()](Channel_NEW& c)
-		{
-			c.playStatus = status;
-		});
 }
 
 
@@ -325,13 +320,7 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 
 void advance(const channel::Data& ch, const sequencer::Event& e)
 {
-	if (e.type != sequencer::EventType::FIRST_BEAT)
-		return;
-	assert(false);
-	/*
-	pumpChannelFunction(ch.id, [status = onFirstBeat_(ch)](channel::Data& ch)
-	{
-		ch.playStatus = status;
-	});*/
+	if (e.type == sequencer::EventType::FIRST_BEAT)
+		ch.state->playStatus.store(onFirstBeat_(ch));
 }
 }

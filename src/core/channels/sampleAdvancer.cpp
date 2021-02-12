@@ -87,10 +87,6 @@ G_DEBUG("onFirstBeat ch=" << m_channel.id << ", localFrame=" << localFrame);
 			break;
 		
 		case ChannelStatus::WAIT:
-			pumpChannelFunction(m_channel.id, [] (Channel_NEW& ch)
-			{
-				ch.playStatus = ChannelStatus::PLAY;
-			});
 			break;
 
 		case ChannelStatus::ENDING:
@@ -119,10 +115,6 @@ void SampleAdvancer::onBar(Frame localFrame) const
 		rewind(localFrame);
 	else
 	if (playStatus == ChannelStatus::WAIT && mode == SamplePlayerMode::LOOP_ONCE_BAR) {
-		pumpChannelFunction(m_channel.id, [] (Channel_NEW& ch)
-		{
-			ch.playStatus = ChannelStatus::PLAY;
-		});
 	}
 }
 
@@ -184,10 +176,6 @@ void SampleAdvancer::onLastFrame() const
 	if (playStatus == ChannelStatus::ENDING)
 		playStatus = ChannelStatus::OFF;
 
-	pumpChannelFunction(m_channel.id, [playStatus] (Channel_NEW& ch)
-	{
-		ch.playStatus = playStatus;
-	});
 }
 
 
@@ -196,11 +184,7 @@ void SampleAdvancer::onLastFrame() const
 
 void SampleAdvancer::rewind(Frame localFrame) const
 {
-	pumpChannelFunction(m_channel.id, [localFrame] (Channel_NEW& ch)
-	{
-		ch.state->rewinding = true;
-		ch.state->offset    = localFrame;
-	});
+
 }
 
 
@@ -209,12 +193,13 @@ void SampleAdvancer::rewind(Frame localFrame) const
 
 void SampleAdvancer::stop(Frame localFrame) const
 {
+    /*
 	pumpChannelFunction(m_channel.id, [begin = m_samplePlayer.begin] (Channel_NEW& ch)
 	{
 		ch.playStatus = ChannelStatus::OFF;
 		ch.state->tracker.store(begin);
 		ch.samplePlayer->quantizing = false;
-	});
+	});*/
 
 	/*  Clear data in range [localFrame, (buffer.size)) if the event occurs in
 	the middle of the buffer. TODO - samplePlayer should be responsible for this*/
