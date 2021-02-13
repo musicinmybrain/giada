@@ -94,7 +94,7 @@ void optimize_(ActionMap& map)
 
 void removeIf_(std::function<bool(const Action&)> f)
 {
-    model::DataLock lock();
+    model::DataLock lock;
 
     ActionMap& map = model::getAll<model::Actions>();
 	for (auto& [frame, actions] : map)
@@ -140,7 +140,7 @@ void init()
 
 void clearAll()
 {
-    model::DataLock lock();
+    model::DataLock lock;
     model::getAll<model::Actions>().clear();
 }
 
@@ -203,7 +203,7 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 	updateMapPointers_(temp);
 
-    model::DataLock lock();
+    model::DataLock lock;
 	model::getAll<model::Actions>() = std::move(temp);
 }
 
@@ -213,7 +213,7 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 void updateEvent(ID id, MidiEvent e)
 {
-	model::DataLock lock();
+	model::DataLock lock;
 	findAction_(model::getAll<model::Actions>(), id)->event = e;
 }
 
@@ -223,7 +223,7 @@ void updateEvent(ID id, MidiEvent e)
 
 void updateSiblings(ID id, ID prevId, ID nextId)
 {
-    model::DataLock lock();
+    model::DataLock lock;
 
 	Action* pcurr = findAction_(model::getAll<model::Actions>(), id);
 	Action* pprev = findAction_(model::getAll<model::Actions>(), prevId);
@@ -292,7 +292,7 @@ Action rec(ID channelId, Frame frame, MidiEvent event)
 	/* If key frame doesn't exist yet, the [] operator in std::map is smart 
 	enough to insert a new item first. No plug-in data for now. */
 
-	model::DataLock lock();
+	model::DataLock lock;
 
     model::getAll<model::Actions>()[frame].push_back(a);
 	updateMapPointers_(model::getAll<model::Actions>());
@@ -309,7 +309,7 @@ void rec(std::vector<Action>& actions)
 	if (actions.size() == 0)
 		return;
 
-	model::DataLock lock();
+	model::DataLock lock;
 
 	ActionMap& map = model::getAll<model::Actions>();
 
@@ -325,7 +325,7 @@ void rec(std::vector<Action>& actions)
 
 void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 {
-    model::DataLock lock();
+    model::DataLock lock;
 
 	ActionMap& map = model::getAll<model::Actions>();
 

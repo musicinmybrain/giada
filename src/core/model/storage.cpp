@@ -118,13 +118,11 @@ void store(conf::Conf& conf)
 
 void load(const patch::Patch& patch)
 {
-    DataLock lock();
+    DataLock lock;
 
-	/* Clear and re-initialize channels and actions first. */
+	/* Clear and re-initialize channels first. */
 
-	get().channels    = {};
-	getAll<Actions>() = {};
-	swap(SwapType::NONE);
+	get().channels = {};
 
 	/* Load external data first: plug-ins and waves. */
 

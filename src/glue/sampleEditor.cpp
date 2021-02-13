@@ -212,7 +212,7 @@ void setBeginEnd(ID channelId, Frame b, Frame e)
 void cut(ID channelId, Frame a, Frame b)
 {
 	copy(channelId, a, b);
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::cut(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 	resetBeginEnd_(channelId);
 }
@@ -244,7 +244,7 @@ void paste(ID channelId, Frame a)
 	/* Temporary disable wave reading in channel. From now on, the audio thread
 	won't be reading any wave, so editing it is safe.  */
 
-	m::model::DataLock lock();
+	m::model::DataLock lock;
 
 	/* Paste copied data to destination wave. */
 
@@ -275,7 +275,7 @@ void paste(ID channelId, Frame a)
 
 void silence(ID channelId, int a, int b)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::silence(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 }
 
@@ -285,7 +285,7 @@ void silence(ID channelId, int a, int b)
 
 void fade(ID channelId, int a, int b, m::wfx::Fade type)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::fade(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b, type);
 }
 
@@ -295,7 +295,7 @@ void fade(ID channelId, int a, int b, m::wfx::Fade type)
 
 void smoothEdges(ID channelId, int a, int b)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::smooth(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 }
 
@@ -305,7 +305,7 @@ void smoothEdges(ID channelId, int a, int b)
 
 void reverse(ID channelId, Frame a, Frame b)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::reverse(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 }
 
@@ -315,7 +315,7 @@ void reverse(ID channelId, Frame a, Frame b)
 
 void normalize(ID channelId, int a, int b)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
     m::wfx::normalize(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 }
 
@@ -325,7 +325,7 @@ void normalize(ID channelId, int a, int b)
 
 void trim(ID channelId, int a, int b)
 {
-    m::model::DataLock();
+    m::model::DataLock lock;
 	m::wfx::trim(*m::model::get().getChannel(channelId).samplePlayer->getWave(), a, b);
 	resetBeginEnd_(channelId);
 }
