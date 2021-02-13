@@ -120,6 +120,12 @@ struct Layout
 
 	std::vector<channel::Data> channels;
 	recorder::ActionMap        actions;
+
+	/* locked
+	If locked, Mixer won't process channels. This is used to allow editing the 
+	data (e.g. Actions or Plugins) a channel points to without data races. */
+
+	bool locked = false;
 };
 
 /* Lock
@@ -146,16 +152,12 @@ class DataLock
 {
 public:
 
-	DataLock(const channel::Data& ch, SwapType t=SwapType::HARD);
-	DataLock(ID channelId, SwapType t=SwapType::HARD);
+	DataLock(SwapType t=SwapType::HARD);
 	~DataLock();
-
-	channel::Data channel;
 
 private:
 
-	std::size_t m_index;
-	SwapType    m_swapType;
+	SwapType m_swapType;
 };
 
 

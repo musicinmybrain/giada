@@ -168,11 +168,11 @@ void overdubChannel_(ID channelId)
 {
     Wave* wave = model::get().getChannel(channelId).samplePlayer->getWave();
 
-    model::DataLock lock(channelId);
+    model::DataLock lock();
     wave->addData(mixer::getRecBuffer());
     wave->setLogical(true);
 
-    setupChannelPostRecording_(lock.channel);
+    setupChannelPostRecording_(model::get().getChannel(channelId));
 }
 } // {anonymous}
 

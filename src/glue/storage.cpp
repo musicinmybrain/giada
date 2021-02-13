@@ -307,8 +307,7 @@ void saveSample(void* data)
 
 	/* Update logical and edited states in Wave. */
     
-	m::model::DataLock lock(channelId);
-
+	m::model::DataLock lock();
 	wave->setLogical(false);
 	wave->setEdited(false);
 

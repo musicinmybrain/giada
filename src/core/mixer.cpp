@@ -158,6 +158,12 @@ G_DEBUG("Signal > threshold!");
 
 void processChannels_(const model::Layout& layout, AudioBuffer& out, AudioBuffer& in)
 {
+	/* No channel processing if layout is locked: another thread is changing
+	data (e.g. Plugins or Waves). */
+	
+	if (layout.locked)
+		return;
+
 	for (const channel::Data& c : layout.channels)
 		if (!c.isInternal())
 			channel::render(c, &out, &in, isChannelAudible_(c));
@@ -171,12 +177,18 @@ void processSequencer_(const model::Layout& layout, AudioBuffer& in)
 {
 	lineInRec_(in);
 
-	if (!clock::isRunning()) 
+	if (!clock::isRunning())
 		return;
 
 	const sequencer::EventBuffer& events = sequencer::advance(in.countFrames());
-	
-	for (const channel::Data& c : layout.channels)
+
+    /* No channel processing if layout is locked: another thread is changing
+    data (e.g. Plugins or Waves). */
+
+    if (layout.locked)
+        return;
+
+    for (const channel::Data& c : layout.channels)
 		if (!c.isInternal())
 			channel::advance(c, events);
 }

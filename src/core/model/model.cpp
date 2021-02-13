@@ -80,25 +80,15 @@ Data            data;
 /* -------------------------------------------------------------------------- */
 
 
-DataLock::DataLock(const channel::Data& ch, SwapType t)
-: channel   (ch)
-, m_index   (u::vector::indexOf(get().channels, ch))
-, m_swapType(t)
+DataLock::DataLock(SwapType t) : m_swapType(t)
 {
-	u::vector::remove(get().channels, ch);
+	get().locked = true;
 	swap(SwapType::NONE);
 }
 
-
-DataLock::DataLock(ID channelId, SwapType t)
-: DataLock(model::get().getChannel(channelId), t)
-{
-}
-
-
 DataLock::~DataLock()
 {
-	get().channels.insert(get().channels.begin() + m_index, channel);
+	get().locked = false;
 	swap(m_swapType);
 }
 
