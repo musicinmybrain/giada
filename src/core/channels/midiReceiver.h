@@ -79,6 +79,7 @@ private:
 
     ChannelState* m_channelState;
 };
+}
 
 
 
@@ -101,55 +102,7 @@ private:
 
 
 
-
-
-
-
-
-
-class Plugin;
-class Channel_NEW;
-class MidiReceiver_NEW
-{
-public:
-
-    MidiReceiver_NEW(Channel_NEW&);
-
-    void react(const eventDispatcher::Event& e) const;
-    void advance(const sequencer::Event& e) const; 
-    void render(const std::vector<Plugin*>& plugins) const;
-
-private:
-
-    /* parseMidi
-    Takes a live message (e.g. from a MIDI keyboard), strips it and sends it
-    to plug-ins. */
-
-    void parseMidi(const MidiEvent& e) const;
-
-	/* sendToPlugins
-    Enqueues the MIDI event for plug-ins processing. This will be read later on 
-    by the PluginHost. */
-
-    void sendToPlugins(const MidiEvent& e, Frame localFrame) const;
-
-    Channel_NEW& m_channel;
-};
-} // giada::m::
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+namespace giada::m { class Plugin; }
 namespace giada::m::channel { struct Data; }
 namespace giada::m::midiReceiver
 {

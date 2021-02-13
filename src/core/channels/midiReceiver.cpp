@@ -126,106 +126,6 @@ void MidiReceiver::sendToPlugins(const MidiEvent& e, Frame localFrame) const
 		e.getVelocity());
 	state->midiBuffer.addEvent(message, localFrame);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-MidiReceiver_NEW::MidiReceiver_NEW(Channel_NEW& c)
-: m_channel(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiReceiver_NEW::react(const eventDispatcher::Event& e) const
-{
-	switch (e.type) {
-
-		case eventDispatcher::EventType::MIDI:
-			parseMidi(std::get<Action>(e.data).event); break;
-
-		case eventDispatcher::EventType::KEY_KILL:
-		case eventDispatcher::EventType::SEQUENCER_STOP:
-		case eventDispatcher::EventType::SEQUENCER_REWIND:
-			sendToPlugins(MidiEvent(G_MIDI_ALL_NOTES_OFF), 0); break;
-		
-		default: break;
-	}
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiReceiver_NEW::advance(const sequencer::Event& e) const
-{
-	if (e.type == sequencer::EventType::ACTIONS && m_channel.isPlaying())
-		for (const Action& action : *e.actions)
-			sendToPlugins(action.event, e.delta);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiReceiver_NEW::render(const std::vector<Plugin*>& plugins) const
-{
-	pluginHost::processStack(m_channel.data->audioBuffer, plugins, &m_channel.data->midiBuffer);
-	m_channel.data->midiBuffer.clear();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiReceiver_NEW::parseMidi(const MidiEvent& e) const
-{
-	/* Now all messages are turned into Channel-0 messages. Giada doesn't care 
-	about holding MIDI channel information. Moreover, having all internal 
-	messages on channel 0 is way easier. Then send it to plug-ins. */
-
-	MidiEvent flat(e);
-	flat.setChannel(0);
-	sendToPlugins(flat, /*delta=*/0); 
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiReceiver_NEW::sendToPlugins(const MidiEvent& e, Frame localFrame) const
-{
-	juce::MidiMessage message = juce::MidiMessage(
-		e.getStatus(), 
-		e.getNote(), 
-		e.getVelocity());
-	m_channel.data->midiBuffer.addEvent(message, localFrame);
-}
 } // giada::m::
 
 
@@ -307,8 +207,8 @@ void advance(const channel::Data& ch, const sequencer::Event& e)
 
 void render(const channel::Data& ch, const std::vector<Plugin*>& plugins)
 {
-	// TODO - pluginHost::processStack(m_channelState->buffer, pluginIds, &state->midiBuffer);
-	// TODO - state->midiBuffer.clear();
+	pluginHost::processStack(ch.buffer->audioBuffer, ch.plugins, &ch.buffer->midiBuffer);
+    ch.buffer->midiBuffer.clear();
 }
 }
 

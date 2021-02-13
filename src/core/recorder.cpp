@@ -204,7 +204,7 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 	updateMapPointers_(temp);
 
     model::DataLock lock();
-	model::getAll<model::Actions>() = temp;
+	model::getAll<model::Actions>() = std::move(temp);
 }
 
 

@@ -308,6 +308,15 @@ void debug()
 	for (const auto& w : data.waves)
 		printf("\t%d) %p - ID=%d name='%s'\n", i++, (void*) w.get(), w->id, w->getPath().c_str());
 
+	puts("model::data.actions");
+
+	for (const auto& [frame, actions] : getAll<Actions>()) {
+		printf("\tframe: %d\n", frame);
+		for (const Action& a : actions)
+			printf("\t\t(%p) - ID=%d, frame=%d, channel=%d, value=0x%X, prevId=%d, prev=%p, nextId=%d, next=%p\n", 
+				(void*) &a, a.id, a.frame, a.channelId, a.event.getRaw(), a.prevId, (void*) a.prev, a.nextId, (void*) a.next);	
+	}
+	
 #ifdef WITH_VST
 
 	puts("model::data.plugins");

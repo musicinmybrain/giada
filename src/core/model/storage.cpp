@@ -56,8 +56,7 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 
 void loadActions_(const std::vector<patch::Action>& pactions)
 {
-	recorder::ActionMap actions = recorderHandler::deserializeActions(pactions);
-	getAll<Actions>() = actions;
+	getAll<Actions>() = std::move(recorderHandler::deserializeActions(pactions));
 }
 } // 
 
