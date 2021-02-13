@@ -32,11 +32,6 @@
 #include "core/types.h"
 
 
-namespace giada::m 
-{
-class Channel;
-class Channel_NEW;
-}
 namespace giada::m::channel { struct Data; }
 namespace giada::m::model
 { 

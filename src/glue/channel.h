@@ -37,12 +37,7 @@
 #include "core/types.h"
 
 
-namespace giada::m
-{
-class Plugin;
-class Channel_NEW;
-class SamplePlayer_NEW;
-}
+namespace giada::m { class Plugin; }
 namespace giada::c::channel 
 {
 struct SampleData

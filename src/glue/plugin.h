@@ -38,16 +38,8 @@
 #include "core/types.h"
 
 
-namespace juce 
-{
-class AudioProcessorEditor;
-}
-namespace giada::m
-{
-class Plugin;
-class Channel;
-class Channel_NEW;
-}
+namespace juce { class AudioProcessorEditor; }
+namespace giada::m { class Plugin; }
 namespace giada::m::channel { struct Data; }
 namespace giada::c::plugin 
 {
