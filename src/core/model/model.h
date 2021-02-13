@@ -196,10 +196,19 @@ void onSwap(std::function<void(SwapType)> f);
 
 /* Model utilities */
 
+using WavePtr          = std::unique_ptr<Wave>;
+using PluginPtr        = std::unique_ptr<Plugin>;
+using ChannelBufferPtr = std::unique_ptr<channel::Buffer>;
+using ChannelStatePtr  = std::unique_ptr<channel::State>;
+
+using WavePtrs    = std::vector<WavePtr>;
+using PluginPtrs  = std::vector<PluginPtr>;
+using Actions     = recorder::ActionMap;
+
 // TODO - are ID-based objects still necessary?
 
 template <typename T> 
-std::vector<std::unique_ptr<T>>& getAll();
+T& getAll();
 
 /* find
 Finds something (Plugins or Waves) given an ID. Returns nullptr if the object is
@@ -209,10 +218,13 @@ template <typename T>
 T* find(ID id);
 
 template <typename T> 
-T& add(std::unique_ptr<T>);
+void add(T);
 
 template <typename T> 
 void remove(const T&);
+
+template <typename T> 
+T& back();
 
 template <typename T> 
 void clear();

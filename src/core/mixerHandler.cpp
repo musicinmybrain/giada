@@ -147,10 +147,10 @@ void recordChannel_(ID channelId)
 
 	/* Update channel with the new Wave. */
 
-	Wave& w = model::add<Wave>(std::move(wave));
+	model::add(std::move(wave));
 
-	channel::Data& ch = model::get().getChannel(channelId);
-	samplePlayer::loadWave(ch, &w);
+    channel::Data& ch = model::get().getChannel(channelId);
+	samplePlayer::loadWave(ch, &model::back<Wave>());
     setupChannelPostRecording_(ch);
 
 	model::swap(model::SwapType::HARD);
@@ -227,7 +227,9 @@ int loadChannel(ID channelId, const std::string& fname)
 	if (res.status != G_RES_OK) 
 		return res.status;
 
-	Wave& wave = model::add<Wave>(std::move(res.wave));
+    model::add(std::move(res.wave));
+
+	Wave& wave = model::back<Wave>();
 	Wave* old  = model::get().getChannel(channelId).samplePlayer->getWave();
 
 	samplePlayer::loadWave(model::get().getChannel(channelId), &wave);
@@ -257,7 +259,9 @@ int addAndLoadChannel(ID columnId, const std::string& fname)
 
 void addAndLoadChannel(ID columnId, std::unique_ptr<Wave>&& w)
 {
-    Wave&          wave    = model::add<Wave>(std::move(w));
+    model::add(std::move(w));
+
+    Wave&          wave    = model::back<Wave>();
     channel::Data& channel = addChannel_(ChannelType::SAMPLE, columnId);
 
 	samplePlayer::loadWave(channel, &wave);
@@ -282,7 +286,7 @@ void cloneChannel(ID channelId)
 	
 	if (newChannel.samplePlayer && newChannel.samplePlayer->hasWave()) {
 		Wave* wave = newChannel.samplePlayer->getWave();
-		model::add<Wave>(waveManager::createFromWave(*wave, 0, wave->getSize()));
+		model::add(waveManager::createFromWave(*wave, 0, wave->getSize()));
 	}
 
 	/* Then push the new channel in the channels vector. */
@@ -319,7 +323,7 @@ void freeAllChannels()
 	for (channel::Data& ch : model::get().channels)
 		if (ch.samplePlayer) samplePlayer::loadWave(ch, nullptr);
     model::swap(model::SwapType::HARD);
-	model::clear<Wave>();
+	model::clear<model::WavePtrs>();
 }
 
 

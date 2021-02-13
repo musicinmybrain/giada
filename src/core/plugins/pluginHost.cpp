@@ -93,7 +93,7 @@ void processPlugins_(const std::vector<Plugin*>& plugins, juce::MidiBuffer& even
 void close()
 {
 	messageManager_->deleteInstance();
-	model::clear<Plugin>();
+	model::clear<model::PluginPtrs>();
 }
 
 
@@ -138,7 +138,9 @@ void processStack(AudioBuffer& outBuf, const std::vector<Plugin*>& plugins,
 
 void addPlugin(std::unique_ptr<Plugin> p, ID channelId)
 {
-	const Plugin& pluginRef = model::add<Plugin>(std::move(p));
+    model::add(std::move(p));
+
+	const Plugin& pluginRef = model::back<Plugin>();
 
 	/* TODO - unfortunately JUCE wants mutable plugin objects due to the
 	presence of the non-const processBlock() method. Why not const_casting
@@ -187,8 +189,10 @@ void freePlugins(const std::vector<Plugin*>& plugins)
 std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
 {
 	std::vector<Plugin*> out;
-	for (const Plugin* p : plugins)
-		out.push_back(&model::add<Plugin>(pluginManager::makePlugin(*p)));
+	for (const Plugin* p : plugins) {
+        model::add(pluginManager::makePlugin(*p));
+        out.push_back(&model::back<Plugin>());
+    }
 	return out;
 }
 

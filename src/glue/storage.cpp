@@ -126,7 +126,7 @@ bool savePatch_(const std::string& path, const std::string& name)
 
 void saveWavesToProject_(const std::string& basePath)
 {
-	for (const std::unique_ptr<m::Wave>& w : m::model::getAll<m::Wave>()) {
+	for (const std::unique_ptr<m::Wave>& w : m::model::getAll<m::model::WavePtrs>()) {
 		w->setPath(makeUniqueWavePath_(basePath, *w));
 		m::waveManager::save(*w, w->getPath()); // TODO - error checking	
 	}

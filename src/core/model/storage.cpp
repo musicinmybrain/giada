@@ -79,13 +79,13 @@ void store(patch::Patch& patch)
 	patch.samplerate = conf::conf.samplerate;
 
 #ifdef WITH_VST
-	for (const auto& p : getAll<Plugin>()) 
+	for (const auto& p : getAll<PluginPtrs>())
 		patch.plugins.push_back(pluginManager::serializePlugin(*p));
 #endif
 
 	patch.actions = recorderHandler::serializeActions(layout.actions); 
 
-	for (const auto& w : getAll<Wave>())
+	for (const auto& w : getAll<WavePtrs>())
 		patch.waves.push_back(waveManager::serializeWave(*w));
 
 	for (const channel::Data& c : layout.channels)
@@ -128,17 +128,17 @@ void load(const patch::Patch& patch)
 	/* Load external data first: plug-ins and waves. */
 
 #ifdef WITH_VST
-	getAll<Plugin>().clear();
+	getAll<PluginPtrs>().clear();
     for (const patch::Plugin& pplugin : patch.plugins)
-        getAll<Plugin>().push_back(pluginManager::deserializePlugin(pplugin, patch.version));
+        getAll<PluginPtrs>().push_back(pluginManager::deserializePlugin(pplugin, patch.version));
 #endif
     
-	getAll<Wave>().clear();
+	getAll<WavePtrs>().clear();
 	for (const patch::Wave& pwave : patch.waves) {
 		std::unique_ptr<Wave> w = waveManager::deserializeWave(pwave, conf::conf.samplerate,
 			conf::conf.rsmpQuality);
 		if (w != nullptr)
-			getAll<Wave>().push_back(std::move(w));
+			getAll<WavePtrs>().push_back(std::move(w));
 	}
 
 	/* Then load up channels, actions and global properties. */

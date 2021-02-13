@@ -48,6 +48,7 @@ struct Data
 {
 	std::vector<std::unique_ptr<channel::Buffer>> channels;
 	std::vector<std::unique_ptr<Wave>>            waves;
+	recorder::ActionMap                           actions;
 #ifdef WITH_VST
 	std::vector<std::unique_ptr<Plugin>>          plugins;
 #endif	
@@ -61,6 +62,27 @@ template <typename T>
 auto getIter_(const std::vector<std::unique_ptr<T>>& source, ID id)
 {
 	return u::vector::findIf(source, [id](const std::unique_ptr<T>& p) { return p->id == id; });
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+template <typename S>
+auto* get_(S& source, ID id)
+{
+	auto it = getIter_(source, id);
+	return it == source.end() ? nullptr : it->get();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+template <typename D, typename T>
+void remove_(D& dest, T& ref)
+{
+	u::vector::removeIf(dest, [&ref] (const auto& other) { return other.get() == &ref; });
 }
 } // {anonymous}
 
@@ -156,16 +178,18 @@ void onSwap(std::function<void(SwapType)> f)
 
 
 template <typename T> 
-std::vector<std::unique_ptr<T>>& getAll()
+T& getAll()
 {
-	if constexpr (std::is_same_v<T, Plugin>) return data.plugins;
-    if constexpr (std::is_same_v<T, Wave>)   return data.waves;
+	if constexpr(std::is_same_v<T, PluginPtrs>) return data.plugins;
+    if constexpr(std::is_same_v<T, WavePtrs>)   return data.waves;
+    if constexpr(std::is_same_v<T, Actions>)    return data.actions;
 
 	assert(false);
 }
 
-template std::vector<std::unique_ptr<Plugin>>& getAll<Plugin>();
-template std::vector<std::unique_ptr<Wave>>&   getAll<Wave>();
+template PluginPtrs& getAll<PluginPtrs>();
+template WavePtrs&   getAll<WavePtrs>();
+template Actions&    getAll<Actions>();
 
 
 /* -------------------------------------------------------------------------- */
@@ -174,45 +198,32 @@ template std::vector<std::unique_ptr<Wave>>&   getAll<Wave>();
 template <typename T>
 T* find(ID id)
 {
-	std::vector<std::unique_ptr<T>>* source = nullptr;
+	if constexpr(std::is_same_v<T, Plugin>) return get_(data.plugins, id);
+    if constexpr(std::is_same_v<T, Wave>)   return get_(data.waves, id);
 
-	if constexpr (std::is_same_v<T, Plugin>)        source = &data.plugins;
-    if constexpr (std::is_same_v<T, Wave>)          source = &data.waves;
-
-    assert(source != nullptr);
-
-	auto it = getIter_(*source, id);
-	return it == source->end() ? nullptr : it->get();
+    assert(false);
 }
 
-template Plugin*        find<Plugin>       (ID id);
-template Wave*          find<Wave>         (ID id);
-template channel::Data* find<channel::Data>(ID id);
+template Plugin* find<Plugin>(ID id);
+template Wave*   find<Wave>  (ID id);
 
 
 /* -------------------------------------------------------------------------- */
 
 
 template <typename T> 
-T& add(std::unique_ptr<T> obj)
+void add(T obj)
 {
-	std::vector<std::unique_ptr<T>>* dest = nullptr;
-
-	if constexpr (std::is_same_v<T, Plugin>)          dest = &data.plugins;
-    if constexpr (std::is_same_v<T, Wave>)            dest = &data.waves;
-    if constexpr (std::is_same_v<T, channel::Buffer>) dest = &data.channels;
-    if constexpr (std::is_same_v<T, channel::State>)  dest = &state.channels;
-
-    assert(dest != nullptr);
-
-	dest->push_back(std::move(obj));
-	return *dest->back();
+	if constexpr(std::is_same_v<T, PluginPtr>)        data.plugins.push_back(std::move(obj));
+    if constexpr(std::is_same_v<T, WavePtr>)          data.waves.push_back(std::move(obj));
+    if constexpr(std::is_same_v<T, ChannelBufferPtr>) data.channels.push_back(std::move(obj));
+    if constexpr(std::is_same_v<T, ChannelStatePtr>)  state.channels.push_back(std::move(obj));
 }
 
-template Plugin&           add<Plugin>         (std::unique_ptr<Plugin> p);
-template Wave&             add<Wave>           (std::unique_ptr<Wave> p);
-template channel::Buffer&  add<channel::Buffer>(std::unique_ptr<channel::Buffer> p);
-template channel::State&   add<channel::State> (std::unique_ptr<channel::State> p);
+template void add<PluginPtr>       (PluginPtr p);
+template void add<WavePtr>         (WavePtr p);
+template void add<ChannelBufferPtr>(ChannelBufferPtr p);
+template void add<ChannelStatePtr> (ChannelStatePtr p);
 
 
 /* -------------------------------------------------------------------------- */
@@ -221,14 +232,8 @@ template channel::State&   add<channel::State> (std::unique_ptr<channel::State> 
 template <typename T> 
 void remove(const T& ref)
 {
-	std::vector<std::unique_ptr<T>>* dest = nullptr;
-
-	if constexpr (std::is_same_v<T, Plugin>) dest = &data.plugins;
-    if constexpr (std::is_same_v<T, Wave>)   dest = &data.waves;
-
-    assert(dest != nullptr);
-
-	u::vector::removeIf(*dest, [&ref] (const auto& other) { return other.get() == &ref; });
+	if constexpr(std::is_same_v<T, Plugin>) remove_(data.plugins, ref);
+    if constexpr(std::is_same_v<T, Wave>)   remove_(data.waves, ref);
 }
 
 template void remove<Plugin>(const Plugin& t);
@@ -239,20 +244,31 @@ template void remove<Wave>  (const Wave& t);
 
 
 template <typename T> 
-void clear()
+T& back()
 {
-	std::vector<std::unique_ptr<T>>* dest = nullptr;
-
-    if constexpr (std::is_same_v<T, Wave>)   dest = &data.waves;
-    if constexpr (std::is_same_v<T, Plugin>) dest = &data.plugins;
-
-    assert(dest != nullptr);
-
-	dest->clear();	
+    if constexpr(std::is_same_v<T, Plugin>)          return *data.plugins.back().get();
+    if constexpr(std::is_same_v<T, Wave>)            return *data.waves.back().get();
+    if constexpr(std::is_same_v<T, channel::State>)  return *state.channels.back().get();
+	if constexpr(std::is_same_v<T, channel::Buffer>) return *data.channels.back().get();
 }
 
-template void clear<Wave>();
-template void clear<Plugin>();
+template Plugin&          back<Plugin>();
+template Wave&            back<Wave>();
+template channel::State&  back<channel::State>();
+template channel::Buffer& back<channel::Buffer>();
+
+/* -------------------------------------------------------------------------- */
+
+
+template <typename T> 
+void clear()
+{
+    if constexpr(std::is_same_v<T, WavePtrs>)   data.waves.clear();
+    if constexpr(std::is_same_v<T, PluginPtrs>) data.plugins.clear();
+}
+
+template void clear<WavePtrs>();
+template void clear<PluginPtrs>();
 
 
 /* -------------------------------------------------------------------------- */

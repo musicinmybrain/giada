@@ -58,7 +58,8 @@ IdManager channelId_;
 
 channel::State& makeState_()
 {
-	return model::add<channel::State> (std::make_unique<channel::State>());
+	model::add(std::make_unique<channel::State>());
+	return model::back<channel::State>();
 }
 
 
@@ -67,7 +68,8 @@ channel::State& makeState_()
 
 channel::Buffer& makeBuffer_()
 {
-	return model::add<channel::Buffer>(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
+	model::add(std::make_unique<channel::Buffer>(kernelAudio::getRealBufSize()));
+    return model::back<channel::Buffer>();
 }
 } // {anonymous}
 
