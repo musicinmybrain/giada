@@ -35,9 +35,7 @@
 #include "core/recorder.h"
 
 
-namespace giada {
-namespace m {
-namespace recorder
+namespace giada::m::recorder
 {
 namespace
 {
@@ -96,14 +94,13 @@ void optimize_(ActionMap& map)
 
 void removeIf_(std::function<bool(const Action&)> f)
 {
-    ActionMap& map = model::get().actions;
+    model::DataLock lock();
 
+    ActionMap& map = model::getAll<model::Actions>();
 	for (auto& [frame, actions] : map)
 		actions.erase(std::remove_if(actions.begin(), actions.end(), f), actions.end());
 	optimize_(map);
 	updateMapPointers_(map);
-
-    model::swap(model::SwapType::HARD);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -121,7 +118,7 @@ bool exists_(ID channelId, Frame frame, const MidiEvent& event, const ActionMap&
 
 bool exists_(ID channelId, Frame frame, const MidiEvent& event)
 {
-	return exists_(channelId, frame, event, model::get().actions);
+	return exists_(channelId, frame, event, model::getAll<model::Actions>());
 }
 } // {anonymous}
 
@@ -143,8 +140,8 @@ void init()
 
 void clearAll()
 {
-    model::get().actions.clear();
-    model::swap(model::SwapType::HARD);
+    model::DataLock lock();
+    model::getAll<model::Actions>().clear();
 }
 
 
@@ -194,7 +191,7 @@ void updateKeyFrames(std::function<Frame(Frame old)> f)
 	/* Copy all existing actions in local map by cloning them, with just a
 	difference: they have a new frame value. */
 
-	for (const auto& [oldFrame, actions] : model::get().actions) {
+	for (const auto& [oldFrame, actions] : model::getAll<model::Actions>()) {
 		Frame newFrame = f(oldFrame);
 		for (const Action& a : actions) {
 			Action copy = a;
@@ -206,8 +203,8 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 	updateMapPointers_(temp);
 
-	model::get().actions = temp;
-    model::swap(model::SwapType::HARD);
+    model::DataLock lock();
+	model::getAll<model::Actions>() = temp;
 }
 
 
@@ -216,8 +213,8 @@ G_DEBUG(oldFrame << " -> " << newFrame);
 
 void updateEvent(ID id, MidiEvent e)
 {
-	findAction_(model::get().actions, id)->event = e;
-    model::swap(model::SwapType::HARD);
+	model::DataLock lock();
+	findAction_(model::getAll<model::Actions>(), id)->event = e;
 }
 
 
@@ -226,9 +223,11 @@ void updateEvent(ID id, MidiEvent e)
 
 void updateSiblings(ID id, ID prevId, ID nextId)
 {
-	Action* pcurr = findAction_(model::get().actions, id);
-	Action* pprev = findAction_(model::get().actions, prevId);
-	Action* pnext = findAction_(model::get().actions, nextId);
+    model::DataLock lock();
+
+	Action* pcurr = findAction_(model::getAll<model::Actions>(), id);
+	Action* pprev = findAction_(model::getAll<model::Actions>(), prevId);
+	Action* pnext = findAction_(model::getAll<model::Actions>(), nextId);
 
 	pcurr->prev   = pprev;
 	pcurr->prevId = pprev->id;
@@ -243,8 +242,6 @@ void updateSiblings(ID id, ID prevId, ID nextId)
 		pnext->prev   = pcurr;
 		pnext->prevId = pcurr->id;
 	}
-
-	model::swap(model::SwapType::HARD);
 }
 
 
@@ -253,7 +250,7 @@ void updateSiblings(ID id, ID prevId, ID nextId)
 
 bool hasActions(ID channelId, int type)
 {
-	for (const auto& [frame, actions] : model::get().actions)
+	for (const auto& [frame, actions] : model::getAll<model::Actions>())
 		for (const Action& a : actions)
 			if (a.channelId == channelId && (type == 0 || type == a.event.getStatus()))
 				return true;
@@ -295,10 +292,10 @@ Action rec(ID channelId, Frame frame, MidiEvent event)
 	/* If key frame doesn't exist yet, the [] operator in std::map is smart 
 	enough to insert a new item first. No plug-in data for now. */
 
-	model::get().actions[frame].push_back(a);
-	updateMapPointers_(model::get().actions);
-	
-	model::swap(model::SwapType::HARD);
+	model::DataLock lock();
+
+    model::getAll<model::Actions>()[frame].push_back(a);
+	updateMapPointers_(model::getAll<model::Actions>());
 
 	return a;
 }
@@ -312,12 +309,14 @@ void rec(std::vector<Action>& actions)
 	if (actions.size() == 0)
 		return;
 
-	for (const Action& a : actions)
-		if (!exists_(a.channelId, a.frame, a.event, model::get().actions))
-			model::get().actions[a.frame].push_back(a);
-	updateMapPointers_(model::get().actions);
+	model::DataLock lock();
 
-	model::swap(model::SwapType::HARD);
+	ActionMap& map = model::getAll<model::Actions>();
+
+	for (const Action& a : actions)
+		if (!exists_(a.channelId, a.frame, a.event, map))
+            map[a.frame].push_back(a);
+	updateMapPointers_(map);
 }
 
 
@@ -326,7 +325,9 @@ void rec(std::vector<Action>& actions)
 
 void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 {
-	ActionMap& map = model::get().actions;
+    model::DataLock lock();
+
+	ActionMap& map = model::getAll<model::Actions>();
 
 	map[f1].push_back(makeAction(0, channelId, f1, e1));
 	map[f2].push_back(makeAction(0, channelId, f2, e2));
@@ -337,8 +338,6 @@ void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 	a2->prevId = a1->id;
 
 	updateMapPointers_(map);
-	
-	model::swap(model::SwapType::HARD);
 }
 
 
@@ -347,9 +346,9 @@ void rec(ID channelId, Frame f1, Frame f2, MidiEvent e1, MidiEvent e2)
 
 const std::vector<Action>* getActionsOnFrame(Frame frame)
 {
-	if (model::get().actions.count(frame) == 0)
+	if (model::getAll<model::Actions>().count(frame) == 0)
 		return nullptr;
-	return &model::get().actions.at(frame);
+	return &model::getAll<model::Actions>().at(frame);
 }
 
 
@@ -390,7 +389,7 @@ std::vector<Action> getActionsOnChannel(ID channelId)
 
 void forEachAction(std::function<void(const Action&)> f)
 {
-	for (auto& [_, actions] : model::get().actions)
+	for (auto& [_, actions] : model::getAll<model::Actions>())
 		for (const Action& action : actions)
 			f(action);
 }
@@ -403,4 +402,4 @@ ID getNewActionId()
 {
 	return actionId_.generate();
 }
-}}} // giada::m::recorder::
+} // giada::m::recorder::

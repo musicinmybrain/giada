@@ -39,10 +39,7 @@
 #include "core/midiEvent.h"
 
 
-namespace giada {
-namespace m 
-{
-namespace recorder
+namespace giada::m::recorder
 {
 using ActionMap = std::map<Frame, std::vector<Action>>;
 
@@ -147,8 +144,7 @@ Action getClosestAction(ID channelId, Frame f, int type);
 Returns a new action ID, internally generated. */
 
 ID getNewActionId();
-
-}}} // giada::m::recorder::
+} // giada::m::recorder::
 
 
 #endif

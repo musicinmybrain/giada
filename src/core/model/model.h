@@ -119,7 +119,6 @@ struct Layout
 	MidiIn   midiIn;
 
 	std::vector<channel::Data> channels;
-	recorder::ActionMap        actions;
 
 	/* locked
 	If locked, Mixer won't process channels. This is used to allow editing the 

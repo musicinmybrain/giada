@@ -57,7 +57,7 @@ void loadChannels_(const std::vector<patch::Channel>& channels, int samplerate)
 void loadActions_(const std::vector<patch::Action>& pactions)
 {
 	recorder::ActionMap actions = recorderHandler::deserializeActions(pactions);
-	get().actions = actions;
+	getAll<Actions>() = actions;
 }
 } // 
 
@@ -83,7 +83,7 @@ void store(patch::Patch& patch)
 		patch.plugins.push_back(pluginManager::serializePlugin(*p));
 #endif
 
-	patch.actions = recorderHandler::serializeActions(layout.actions); 
+	patch.actions = recorderHandler::serializeActions(getAll<Actions>());
 
 	for (const auto& w : getAll<WavePtrs>())
 		patch.waves.push_back(waveManager::serializeWave(*w));
@@ -119,10 +119,12 @@ void store(conf::Conf& conf)
 
 void load(const patch::Patch& patch)
 {
+    DataLock lock();
+
 	/* Clear and re-initialize channels and actions first. */
 
-	get().channels = {};
-	get().actions  = {};
+	get().channels    = {};
+	getAll<Actions>() = {};
 	swap(SwapType::NONE);
 
 	/* Load external data first: plug-ins and waves. */
@@ -151,8 +153,6 @@ void load(const patch::Patch& patch)
 	get().clock.beats    = patch.beats;
 	get().clock.bpm      = patch.bpm;
 	get().clock.quantize = patch.quantize;
-
-	swap(SwapType::HARD);
 }
 
 
