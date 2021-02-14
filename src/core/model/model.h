@@ -200,9 +200,11 @@ using PluginPtr        = std::unique_ptr<Plugin>;
 using ChannelBufferPtr = std::unique_ptr<channel::Buffer>;
 using ChannelStatePtr  = std::unique_ptr<channel::State>;
 
-using WavePtrs    = std::vector<WavePtr>;
-using PluginPtrs  = std::vector<PluginPtr>;
-using Actions     = recorder::ActionMap;
+using WavePtrs          = std::vector<WavePtr>;
+using PluginPtrs        = std::vector<PluginPtr>;
+using Actions           = recorder::ActionMap;
+using ChannelBufferPtrs = std::vector<ChannelBufferPtr>;
+using ChannelStatePtrs  = std::vector<ChannelStatePtr>;
 
 // TODO - are ID-based objects still necessary?
 

@@ -115,6 +115,7 @@ channel::Data create(const channel::Data& o)
 
 channel::Data deserializeChannel(const patch::Channel& pch, float samplerateRatio)
 {
+	channelId_.set(pch.id);
 	return channel::Data(pch, makeState_(), makeBuffer_(), samplerateRatio);
 }
 

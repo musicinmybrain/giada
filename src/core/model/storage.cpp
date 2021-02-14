@@ -123,6 +123,8 @@ void load(const patch::Patch& patch)
 	/* Clear and re-initialize channels first. */
 
 	get().channels = {};
+	getAll<ChannelBufferPtrs>().clear();
+	getAll<ChannelStatePtrs>().clear();
 
 	/* Load external data first: plug-ins and waves. */
 

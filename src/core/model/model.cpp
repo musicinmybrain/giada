@@ -180,16 +180,20 @@ void onSwap(std::function<void(SwapType)> f)
 template <typename T> 
 T& getAll()
 {
-	if constexpr(std::is_same_v<T, PluginPtrs>) return data.plugins;
-    if constexpr(std::is_same_v<T, WavePtrs>)   return data.waves;
-    if constexpr(std::is_same_v<T, Actions>)    return data.actions;
+	if constexpr(std::is_same_v<T, PluginPtrs>)        return data.plugins;
+    if constexpr(std::is_same_v<T, WavePtrs>)          return data.waves;
+    if constexpr(std::is_same_v<T, Actions>)           return data.actions;
+    if constexpr(std::is_same_v<T, ChannelBufferPtrs>) return data.channels;
+    if constexpr(std::is_same_v<T, ChannelStatePtrs>)  return state.channels;
 
 	assert(false);
 }
 
-template PluginPtrs& getAll<PluginPtrs>();
-template WavePtrs&   getAll<WavePtrs>();
-template Actions&    getAll<Actions>();
+template PluginPtrs&        getAll<PluginPtrs>();
+template WavePtrs&          getAll<WavePtrs>();
+template Actions&           getAll<Actions>();
+template ChannelBufferPtrs& getAll<ChannelBufferPtrs>();
+template ChannelStatePtrs&  getAll<ChannelStatePtrs>();
 
 
 /* -------------------------------------------------------------------------- */
