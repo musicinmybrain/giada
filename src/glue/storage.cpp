@@ -75,13 +75,10 @@ std::string makeWavePath_(const std::string& base, const m::Wave& w, int k)
 
 bool isWavePathUnique_(const m::Wave& skip, const std::string& path)
 {
-    assert(false);/*
-	m::model::WavesLock l(m::model::waves);
-
-	for (const m::Wave* w : m::model::waves)
+	for (const auto& w : m::model::getAll<m::model::WavePtrs>())
 		if (w->id != skip.id && w->getPath() == path)
 			return false;
-	return true;*/
+	return true;
 }
 
 std::string makeUniqueWavePath_(const std::string& base, const m::Wave& w)
