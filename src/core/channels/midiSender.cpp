@@ -28,150 +28,7 @@
 #include "core/mixer.h"
 #include "core/kernelMidi.h"
 #include "core/channels/channel.h"
-#include "core/channels/state.h"
 #include "midiSender.h"
-
-
-namespace giada {
-namespace m 
-{
-MidiSender::MidiSender(ChannelState* c)
-: state(std::make_unique<MidiSenderState>())
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiSender::MidiSender(const patch::Channel& p, ChannelState* c)
-: state(std::make_unique<MidiSenderState>(p))
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiSender::MidiSender(const MidiSender& o, ChannelState* c)
-: state(std::make_unique<MidiSenderState>(*o.state))
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiSender::parse(const mixer::Event& e) const
-{
-	bool isPlaying = m_channelState->isPlaying();
-	bool isEnabled = state->enabled.load();
-
-	if (!isPlaying || !isEnabled)
-		return;
-
-	if (e.type == mixer::EventType::KEY_KILL || 
-	    e.type == mixer::EventType::SEQUENCER_STOP)
-		send(MidiEvent(G_MIDI_ALL_NOTES_OFF));
-	else
-	if (e.type == mixer::EventType::ACTION)
-		send(e.action.event);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiSender::send(MidiEvent e) const
-{
-	e.setChannel(state->filter.load());
-	kernelMidi::send(e.getRaw());
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-MidiSender_NEW::MidiSender_NEW(Channel_NEW& c)
-: m_channel(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiSender_NEW::MidiSender_NEW(const patch::Channel& p, Channel_NEW& c)
-: enabled  (p.midiOut)
-, filter   (p.midiOutChan)
-, m_channel(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiSender_NEW::MidiSender_NEW(const MidiSender_NEW& o, Channel_NEW* c)
-: enabled  (o.enabled)
-, filter   (o.filter)
-, m_channel(*c)
-{
-	assert(c != nullptr);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiSender_NEW::react(const eventDispatcher::Event& e) const
-{
-	if (!m_channel.isPlaying() || !enabled)
-		return;
-
-	if (e.type == eventDispatcher::EventType::KEY_KILL || 
-	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
-		send(MidiEvent(G_MIDI_ALL_NOTES_OFF));
-	//else
-	//if (e.type == eventDispatcher::EventType::ACTION)
-	//	send(e.action.event);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void MidiSender_NEW::send(MidiEvent e) const
-{
-	e.setChannel(filter);
-	kernelMidi::send(e.getRaw());
-}
-}} // giada::m::
-
-
-
-
-
-
-
-
-
-
-
 
 
 namespace giada::m::midiSender
@@ -209,8 +66,8 @@ void react(const channel::Data& ch, const eventDispatcher::Event& e)
 	if (e.type == eventDispatcher::EventType::KEY_KILL || 
 	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
 		send_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF));
-	//else
+	//else - TODO need advance() method
 	//if (e.type == eventDispatcher::EventType::ACTION)
-	//	send(e.action.event);
+	//	send_(ch, e.action.event);
 }
-}
+} // giada::m::midiSender::

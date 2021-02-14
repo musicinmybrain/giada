@@ -29,69 +29,6 @@
 #define G_CHANNEL_MIDI_CONTROLLER_H
 
 
-#include "core/types.h"
-#include "core/mixer.h"  // TODO - forward declare
-
-
-namespace giada::m
-{
-/* MidiController
-Manages events for a MIDI Channel. */
-
-class MidiController
-{
-public:
-
-    MidiController(ChannelState*);
-    MidiController(const MidiController&, ChannelState* c=nullptr);
-
-    void parse(const mixer::Event& e) const;
-
-private:
-
-    void press() const;
-    void kill() const;
-    void onFirstBeat() const;
-    
-    ChannelState* m_channelState;
-};
-
-
-
-
-
-
-
-class Channel_NEW;
-class MidiController_NEW
-{
-public:
-
-    MidiController_NEW(Channel_NEW&);
-
-    void react(const eventDispatcher::Event& e);
-    void advance(const sequencer::Event& e) const;
-
-private:
-
-    ChannelStatus onFirstBeat() const;
-    void press();
-    void kill();
-    
-    Channel_NEW& m_channel;
-};
-} // giada::m::
-
-
-
-
-
-
-
-
-
-
-
 namespace giada::m::channel { struct Data; }
 namespace giada::m::midiController
 {

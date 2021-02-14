@@ -78,11 +78,9 @@ Clones all the plug-ins in the 'plugins' vector. */
 
 std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins);
 
-void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value);
-
-void setPluginProgram(ID pluginId, ID channelId, int programIndex);
-
-void toggleBypass(ID pluginId, ID channelId);
+void setPluginParameter(ID pluginId, int paramIndex, float value);
+void setPluginProgram(ID pluginId, int programIndex);
+void toggleBypass(ID pluginId);
 
 /* runDispatchLoop
 Wakes up plugins' GUI manager for N milliseconds. */

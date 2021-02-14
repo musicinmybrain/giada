@@ -33,42 +33,6 @@
 #include "core/quantizer.h"
 
 
-namespace giada::m
-{
-class Channel_NEW;
-class SamplePlayer_NEW;
-class SampleReactor
-{
-public:
-
-    SampleReactor(Channel_NEW&, SamplePlayer_NEW&);
-
-    void react(const eventDispatcher::Event& e);
-
-private:
-
-    void press(int velocity);
-    void release();
-    void kill();
-    void onStopBySeq();
-    void toggleReadActions();
-
-    ChannelStatus pressWhileOff(int velocity, bool isLoop);
-    ChannelStatus pressWhilePlay(SamplePlayerMode mode, bool isLoop);
-    void rewind(Frame localFrame=0);
-
-    Channel_NEW&      m_channel;
-    SamplePlayer_NEW& m_samplePlayer;
-    Quantizer         m_quantizer;
-};
-} // giada::m::
-
-
-
-
-
-
-
 namespace giada::m::channel { struct Data; }
 namespace giada::m::sampleReactor
 {

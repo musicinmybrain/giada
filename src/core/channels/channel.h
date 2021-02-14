@@ -30,11 +30,12 @@
 
 
 #include <optional>
+#include "deps/juce-config.h"
 #include "core/const.h"
 #include "core/mixer.h"
+#include "core/audioBuffer.h"
 #include "core/eventDispatcher.h"
 #include "core/sequencer.h"
-#include "core/channels/state.h"
 #include "core/channels/samplePlayer.h"
 #include "core/channels/audioReceiver.h"
 #ifdef WITH_VST
@@ -48,211 +49,7 @@
 #include "core/channels/midiActionRecorder.h"
 
 
-namespace giada::m
-{
-namespace conf
-{
-struct Conf;
-}
-class Channel final
-{
-public:
-
-    Channel(ChannelType t, ID id, ID columnId, Frame bufferSize, const conf::Conf& c);
-    Channel(const Channel&);
-    Channel(const patch::Channel& p, Frame bufferSize);
-    Channel(Channel&&)                 = default;
-    Channel& operator=(const Channel&) = delete;
-    Channel& operator=(Channel&&)      = delete;
-    ~Channel()                         = default;
-
-    /* parse
-    Parses live events. */
-
-    void parse(const mixer::EventBuffer& e, bool audible) const;
-
-    /* advance
-    Processes static events (e.g. actions) in the current block. */
-
-    void advance(Frame bufferSize) const;
-
-    /* render
-    Renders audio data to I/O buffers. */
-     
-    void render(AudioBuffer* out, AudioBuffer* in, bool audible) const;
-
-    bool isInternal() const;
-    bool isMuted() const;
-    bool canInputRec() const;
-    bool canActionRec() const;
-    bool hasWave() const;
-    ID getColumnId() const;
-    ChannelType getType() const;
-    
-    ID id;
-
-#ifdef WITH_VST
-    std::vector<ID> pluginIds;
-#endif
-
-    /* state
-    Pointer to mutable Channel state. */
-
-    std::unique_ptr<ChannelState> state;
-
-    MidiLearner midiLearner;
-    MidiLighter midiLighter;
-
-    std::optional<SamplePlayer>         samplePlayer;
-    std::optional<AudioReceiver>        audioReceiver;
-    std::optional<MidiController>       midiController;
-#ifdef WITH_VST
-    std::optional<MidiReceiver>         midiReceiver;
-#endif
-    std::optional<MidiSender>           midiSender;
-    std::optional<SampleActionRecorder> sampleActionRecorder;
-    std::optional<MidiActionRecorder>   midiActionRecorder;
-
-private:
-
-    void parse(const mixer::Event& e) const;
-
-    void renderMasterOut(AudioBuffer& out) const;
-    void renderMasterIn(AudioBuffer& in) const;
-    void renderChannel(AudioBuffer& out, AudioBuffer& in, bool audible) const;
-
-    AudioBuffer::Pan calcPanning() const;
-
-    ChannelType m_type;
-    ID m_columnId;
-};
-
-
-
-
-
-
-
-
-
-
-class Plugin;
-class Channel_NEW final
-{
-public:
-
-    struct State
-    {
-        WeakAtomic<Frame> tracker{0};
-        bool              rewinding;
-        Frame             offset;
-    };
-
-    struct Data // TODO Buffer
-    {
-        Data(Frame bufferSize);
-        
-        AudioBuffer      audioBuffer;
-#ifdef WITH_VST
-        juce::MidiBuffer midiBuffer;
-#endif
-    };
-
-    Channel_NEW(ChannelType t, ID id, ID columnId, State& state, Data& data);
-    Channel_NEW(const patch::Channel& p, State& state, Data& data, float samplerateRatio);
-    Channel_NEW(const Channel_NEW& o);
-    //Channel_NEW(Channel_NEW&& o)               = delete;
-    //Channel_NEW& operator=(const Channel_NEW&) = delete;
-    //Channel_NEW& operator=(Channel_NEW&&)      = delete;
-
-    /* advance
-    Advances internal state by processing static events (e.g. pre-recorded 
-    actions or sequencer events) in the current block. */
-
-    void advance(const sequencer::EventBuffer& e) const;
-
-    /* react
-    Reacts to live events coming from the EventDispatcher (human events) and
-    updates itself accordingly. */
-
-    void react(const eventDispatcher::EventBuffer& e, bool audible);
-
-    /* render
-    Renders audio data to I/O buffers. */
-     
-    void render(AudioBuffer* out, AudioBuffer* in, bool audible) const;
-
-    bool isPlaying() const;
-    bool isInternal() const;
-    bool isMuted() const;
-    bool canInputRec() const;
-    bool canActionRec() const;
-    bool hasWave() const;    
-
-    State* state;
-    Data*  data;
-
-    ID            id;
-    ChannelType   type;
-    ID            columnId;
-    float         volume;
-    float         volume_i;    // Internal volume used for velocity-drives-volume mode on Sample Channels
-    float         pan;
-    bool          mute;
-    bool          solo;
-    bool          armed;
-    int           key;
-    bool          readActions;
-    bool          hasActions;
-    std::string   name;
-    Pixel         height;
-    ChannelStatus playStatus = ChannelStatus::OFF;
-    ChannelStatus recStatus  = ChannelStatus::OFF;
-#ifdef WITH_VST
-    std::vector<Plugin*> plugins;
-#endif
-
-    midiLearner::Data midiLearner;
-    midiLighter::Data midiLighter;
-
-    std::optional<samplePlayer::Data>         samplePlayer;
-    std::optional<audioReceiver::Data>        audioReceiver;
-    std::optional<midiController::Data>       midiController;
-#ifdef WITH_VST
-    std::optional<midiReceiver::Data>         midiReceiver;
-#endif
-    std::optional<midiSender::Data>           midiSender;
-    std::optional<sampleActionRecorder::Data> sampleActionRecorder;
-    std::optional<midiActionRecorder::Data>   midiActionRecorder;
-    
-private:
-
-    void react(const eventDispatcher::Event& e);
-
-    void renderMasterOut(AudioBuffer& out) const;
-    void renderMasterIn(AudioBuffer& in) const;
-    void renderChannel(AudioBuffer& out, AudioBuffer& in, bool audible) const;
-
-    AudioBuffer::Pan calcPanning() const;
-};
-
-
-void pumpChannelFunction(ID channelId, std::function<void(Channel_NEW&)> f);
-} // giada::m::
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+namespace giada::m { class Plugin; }
 namespace giada::m::channel
 {
 struct State
@@ -342,6 +139,7 @@ void react(Data& d, const eventDispatcher::EventBuffer& e, bool audible);
 Renders audio data to I/O buffers. */
     
 void render(const Data& d, AudioBuffer* out, AudioBuffer* in, bool audible);
-}
+} // giada::m::channel::
+
 
 #endif

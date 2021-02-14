@@ -29,86 +29,6 @@
 #define G_CHANNEL_AUDIO_RECEIVER_H
 
 
-#include <memory>
-
-
-namespace giada {
-namespace m
-{
-namespace conf
-{
-struct Conf;
-}
-namespace patch
-{
-struct Channel; 
-}
-class  AudioBuffer;
-struct ChannelState;
-struct AudioReceiverState;
-
-/* AudioReceiver 
-Operates on input audio streams for audio recording and input monitor. */
-
-class AudioReceiver
-{
-public:
-
-    AudioReceiver(ChannelState*, const conf::Conf&);
-    AudioReceiver(const patch::Channel&, ChannelState*);
-    AudioReceiver(const AudioReceiver&, ChannelState* c=nullptr);
-
-    void render(const AudioBuffer& in) const;
-
-    /* state
-    Pointer to mutable AudioReceiverState state. */
-
-    std::unique_ptr<AudioReceiverState> state;
-
-private:
-
-    ChannelState* m_channelState;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-class Channel_NEW;
-class AudioReceiver_NEW
-{
-public:
-
-    AudioReceiver_NEW(Channel_NEW&);
-    AudioReceiver_NEW(const patch::Channel&, Channel_NEW&);
-    AudioReceiver_NEW(const AudioReceiver_NEW& o, Channel_NEW* c=nullptr);
-
-    void render(const AudioBuffer& in) const;
-
-    bool inputMonitor;
-    bool overdubProtection;
-
-private:
-
-    Channel_NEW& m_channel;
-};
-}} // giada::m::
-
-
-
-
-
-
-
-
-
 namespace giada::m::channel { struct Data; }
 namespace giada::m::audioReceiver
 {
@@ -123,6 +43,6 @@ struct Data
 };
 
 void render(const channel::Data& ch, const AudioBuffer& in);
-}
+} // giada::m::audioReceiver::
 
 #endif

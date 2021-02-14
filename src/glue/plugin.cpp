@@ -208,9 +208,9 @@ void freePlugin(const m::Plugin& plugin, ID channelId)
 /* -------------------------------------------------------------------------- */
 
 
-void setProgram(ID pluginId, ID channelId, int programIndex)
+void setProgram(ID pluginId, int programIndex)
 {
-	m::pluginHost::setPluginProgram(pluginId, channelId, programIndex);
+	m::pluginHost::setPluginProgram(pluginId, programIndex);
 	updateWindow(pluginId, /*gui=*/true); 
 }
 
@@ -218,9 +218,9 @@ void setProgram(ID pluginId, ID channelId, int programIndex)
 /* -------------------------------------------------------------------------- */
 
 
-void toggleBypass(ID pluginId, ID channelId)
+void toggleBypass(ID pluginId)
 {
-	m::pluginHost::toggleBypass(pluginId, channelId);
+	m::pluginHost::toggleBypass(pluginId);
 }
 
 

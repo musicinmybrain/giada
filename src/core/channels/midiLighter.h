@@ -29,85 +29,6 @@
 #define G_CHANNEL_MIDI_LIGHTER_H
 
 
-#include <memory>
-
-
-namespace giada::m
-{
-namespace mixer
-{
-struct Event;
-}
-struct MidiLighterState;
-
-/* MidiLighter
-Learns and emits MIDI lightning messages to physical hardware on events. */
-
-class MidiLighter
-{
-public:
-
-    MidiLighter(ChannelState*);
-    MidiLighter(const patch::Channel&, ChannelState*);
-    MidiLighter(const MidiLighter&, ChannelState* c=nullptr);
-
-    void parse(const mixer::Event& e, bool audible) const;
-
-    /* state
-    Pointer to mutable MidiLighterState state. */
-
-    std::unique_ptr<MidiLighterState> state;
-
-private:
-
-    void sendMute(uint32_t l_mute) const;
-    void sendSolo(uint32_t l_solo) const;
-    void sendStatus(uint32_t l_playing, bool audible) const;
-
-    ChannelState* m_channelState;
-};
-
-
-
-
-
-
-
-
-class Channel_NEW;
-class MidiLighter_NEW
-{
-public:
-
-    MidiLighter_NEW(const Channel_NEW&);
-    MidiLighter_NEW(const MidiLighter_NEW&, const Channel_NEW* c=nullptr);
-
-    void react(const eventDispatcher::Event& e, bool audible) const;
-
-    /* enabled
-    Tells whether MIDI ligthing is enabled or not. */
-    
-	bool enabled;
-
-    /* MIDI learning fields for MIDI ligthing. */
-
-	MidiLearnParam playing;
-	MidiLearnParam mute;
-	MidiLearnParam solo;
-
-private:
-
-    void sendMute(uint32_t l_mute) const;
-    void sendSolo(uint32_t l_solo) const;
-    void sendStatus(uint32_t l_playing, bool audible) const;
-
-    const Channel_NEW* m_channel;
-};
-} // giada::m::
-
-
-
-
 namespace giada::m::channel { struct Data; }
 namespace giada::m::midiLighter
 {
@@ -129,9 +50,8 @@ struct Data
 	MidiLearnParam solo;
 };
 
-
 void react(channel::Data& ch, const eventDispatcher::Event& e, bool audible);
-}
+} // giada::m::midiLighter::
 
 
 #endif

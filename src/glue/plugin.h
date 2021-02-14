@@ -114,8 +114,8 @@ void updateWindow(ID pluginId, bool gui);
 void addPlugin(int pluginListIndex, ID channelId);
 void swapPlugins(const m::Plugin& p1, const m::Plugin& p2, ID channelId);
 void freePlugin(const m::Plugin& plugin, ID channelId);
-void setProgram(ID pluginId, ID channelId, int programIndex);
-void toggleBypass(ID pluginId, ID channelId);
+void setProgram(ID pluginId, int programIndex);
+void toggleBypass(ID pluginId);
 
 /* setPluginPathCb
 Callback attached to the DirBrowser for adding new Plug-in search paths in the

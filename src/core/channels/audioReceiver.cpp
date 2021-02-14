@@ -25,130 +25,8 @@
  * -------------------------------------------------------------------------- */
 
 
-#include "core/channels/state.h"
 #include "core/channels/channel.h"
 #include "audioReceiver.h"
-
-
-namespace giada {
-namespace m 
-{
-AudioReceiver::AudioReceiver(ChannelState* c, const conf::Conf& conf)
-: state         (std::make_unique<AudioReceiverState>(conf))
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-AudioReceiver::AudioReceiver(const patch::Channel& p, ChannelState* c)
-: state         (std::make_unique<AudioReceiverState>(p))
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-AudioReceiver::AudioReceiver(const AudioReceiver& o, ChannelState* c)
-: state         (std::make_unique<AudioReceiverState>(*o.state))
-, m_channelState(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void AudioReceiver::render(const AudioBuffer& in) const
-{
-	/* If armed and input monitor is on, copy input buffer to channel buffer: 
-	this enables the input monitoring. The channel buffer will be overwritten 
-	later on by pluginHost::processStack, so that you would record "clean" audio 
-	(i.e. not plugin-processed). */
-
-	bool armed        = m_channelState->armed.load();
-	bool inputMonitor = state->inputMonitor.load();
-
-	if (armed && inputMonitor)
-		m_channelState->buffer.addData(in);  // add, don't overwrite
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AudioReceiver_NEW::AudioReceiver_NEW(Channel_NEW& c)
-: m_channel(c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-AudioReceiver_NEW::AudioReceiver_NEW(const patch::Channel& p, Channel_NEW& c)
-: inputMonitor     (p.inputMonitor)
-, overdubProtection(p.overdubProtection)
-, m_channel        (c)
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-AudioReceiver_NEW::AudioReceiver_NEW(const AudioReceiver_NEW& o, Channel_NEW* c)
-: inputMonitor     (o.inputMonitor)
-, overdubProtection(o.overdubProtection)
-, m_channel        (*c)
-{
-	assert(c != nullptr);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void AudioReceiver_NEW::render(const AudioBuffer& in) const
-{
-	/* If armed and input monitor is on, copy input buffer to channel buffer: 
-	this enables the input monitoring. The channel buffer will be overwritten 
-	later on by pluginHost::processStack, so that you would record "clean" audio 
-	(i.e. not plugin-processed). */
-
-	if (m_channel.armed && inputMonitor)
-		m_channel.data->audioBuffer.addData(in);  // add, don't overwrite
-}
-}} // giada::m::
-
-
-
-
-
-
-
 
 
 namespace giada::m::audioReceiver
@@ -173,4 +51,4 @@ void render(const channel::Data& ch, const AudioBuffer& in)
 	if (ch.armed && ch.audioReceiver->inputMonitor)
 		ch.buffer->audioBuffer.addData(in);  // add, don't overwrite
 }
-}
+} // giada::m::audioReceiver::

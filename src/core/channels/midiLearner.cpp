@@ -25,77 +25,8 @@
  * -------------------------------------------------------------------------- */
 
 
-#include "core/channels/state.h"
 #include "core/patch.h"
 #include "midiLearner.h"
-
-
-namespace giada {
-namespace m 
-{
-MidiLearner::MidiLearner()
-: state(std::make_unique<MidiLearnerState>())
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiLearner::MidiLearner(const patch::Channel& p)
-: state(std::make_unique<MidiLearnerState>(p))
-{
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-MidiLearner::MidiLearner(const MidiLearner& o)
-: state(std::make_unique<MidiLearnerState>(*o.state))
-{
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-MidiLearner_NEW::MidiLearner_NEW(const patch::Channel& p)
-: enabled      (p.midiIn)
-, filter       (p.midiInFilter)
-, keyPress     (p.midiInKeyPress)
-, keyRelease   (p.midiInKeyRel)
-, kill         (p.midiInKill)
-, arm          (p.midiInArm)
-, volume       (p.midiInVolume)
-, mute         (p.midiInMute)
-, solo         (p.midiInSolo)
-, readActions  (p.midiInReadActions)
-, pitch        (p.midiInPitch)
-{
-}
-}} // giada::m::
-
-
-
-
-
-
-
-
-
 
 
 namespace giada::m::midiLearner
@@ -114,4 +45,4 @@ Data::Data(const patch::Channel& p)
 , pitch      (p.midiInPitch)
 {
 }
-}
+} // giada::m::midiLearner::

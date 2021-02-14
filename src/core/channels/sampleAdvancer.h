@@ -32,36 +32,6 @@
 #include "core/sequencer.h"
 
 
-namespace giada::m
-{
-class Channel_NEW;
-class SamplePlayer_NEW;
-class SampleAdvancer
-{
-public:
-
-    SampleAdvancer(Channel_NEW&, SamplePlayer_NEW&);
-
-    void onLastFrame() const;
-    void advance(const sequencer::Event& e) const;
-
-private:
-
-    void onFirstBeat(Frame localFrame) const;
-    void onBar(Frame localFrame) const;
-    void parseActions(const std::vector<Action>& as, Frame localFrame) const;
-    void rewind(Frame localFrame) const;
-    void stop(Frame localFrame) const;
-    
-    const Channel_NEW&      m_channel;
-    const SamplePlayer_NEW& m_samplePlayer;
-};
-} // giada::m::
-
-
-
-
-
 namespace giada::m::channel { struct Data; }
 namespace giada::m::sampleAdvancer
 {

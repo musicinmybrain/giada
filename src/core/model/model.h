@@ -32,7 +32,6 @@
 #include <algorithm>
 #include "core/model/traits.h"
 #include "core/channels/channel.h"
-#include "core/channels/state.h"
 #include "core/const.h"
 #include "core/wave.h"
 #include "core/plugins/plugin.h"

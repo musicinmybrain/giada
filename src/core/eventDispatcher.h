@@ -44,7 +44,6 @@
 Takes events from the two queues (MIDI and UI) filled by c::events and turns 
 them into actual changes in the data model. */
 
-namespace giada::m { class Channel_NEW; }
 namespace giada::m::eventDispatcher
 {
 enum class EventType 

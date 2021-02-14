@@ -61,12 +61,10 @@ list(APPEND SOURCES
 	src/core/plugins/pluginManager.cpp
 	src/core/plugins/plugin.cpp
 	src/core/plugins/pluginState.cpp
-	src/core/channels/state.cpp
 	src/core/channels/sampleActionRecorder.cpp
 	src/core/channels/midiActionRecorder.cpp
 	src/core/channels/waveReader.cpp
 	src/core/channels/midiController.cpp
-	src/core/channels/sampleController.cpp
 	src/core/channels/sampleReactor.cpp
 	src/core/channels/sampleAdvancer.cpp
 	src/core/channels/samplePlayer.cpp

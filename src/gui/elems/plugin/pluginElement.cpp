@@ -196,7 +196,7 @@ void gePluginElement::cb_openPluginWindow()
 
 void gePluginElement::cb_setBypass()
 {
-	c::plugin::toggleBypass(m_plugin.id, m_plugin.channelId);
+	c::plugin::toggleBypass(m_plugin.id);
 }
 
 
@@ -205,7 +205,7 @@ void gePluginElement::cb_setBypass()
 
 void gePluginElement::cb_setProgram()
 {
-	c::plugin::setProgram(m_plugin.id, m_plugin.channelId, program.value());
+	c::plugin::setProgram(m_plugin.id, program.value());
 }
 }} // giada::v::
 

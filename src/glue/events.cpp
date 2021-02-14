@@ -293,9 +293,9 @@ void toggleInputRecording()
 
 
 #ifdef WITH_VST
-void setPluginParameter(ID pluginId, ID channelId, int paramIndex, float value, bool gui)
+void setPluginParameter(ID pluginId, int paramIndex, float value, bool gui)
 {
-	m::pluginHost::setPluginParameter(pluginId, channelId, paramIndex, value);
+	m::pluginHost::setPluginParameter(pluginId, paramIndex, value);
 	c::plugin::updateWindow(pluginId, gui);
 }
 #endif

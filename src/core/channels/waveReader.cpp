@@ -36,21 +36,22 @@
 #include "waveReader.h"
 
 
-namespace giada::m 
+namespace giada::m
 {
 WaveReader::WaveReader()
-: wave      (nullptr),
-  m_srcState(nullptr)
+: wave      (nullptr)
+, m_srcState(nullptr)
 {
 	allocateSrc();
 }
+
 
 /* -------------------------------------------------------------------------- */
 
 
 WaveReader::WaveReader(const WaveReader& o)
-: wave      (o.wave),
-  m_srcState(nullptr)
+: wave      (o.wave)
+, m_srcState(nullptr)
 {
 	allocateSrc();
 }
@@ -60,15 +61,14 @@ WaveReader::WaveReader(const WaveReader& o)
 
 
 WaveReader::WaveReader(WaveReader&& o)
-: wave      (o.wave),
-  m_srcState(nullptr)
+: wave      (o.wave)
+, m_srcState(nullptr)
 {
 	moveSrc(&o.m_srcState);
 }
-
+    
 
 /* -------------------------------------------------------------------------- */
-
 
 WaveReader& WaveReader::operator=(const WaveReader& o)
 {
@@ -162,159 +162,7 @@ void WaveReader::allocateSrc()
 
 /* -------------------------------------------------------------------------- */
 
-
 void WaveReader::moveSrc(SRC_STATE** other)
-{
-	if (m_srcState != nullptr)
-		src_delete(m_srcState);
-	m_srcState = *other;
-	*other = nullptr;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-WaveReader_NEW::WaveReader_NEW()
-: wave      (nullptr)
-, m_srcState(nullptr)
-{
-	allocateSrc();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-WaveReader_NEW::WaveReader_NEW(const WaveReader_NEW& o)
-: wave      (o.wave)
-, m_srcState(nullptr)
-{
-	allocateSrc();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-WaveReader_NEW::WaveReader_NEW(WaveReader_NEW&& o)
-: wave      (o.wave)
-, m_srcState(nullptr)
-{
-	moveSrc(&o.m_srcState);
-}
-    
-
-/* -------------------------------------------------------------------------- */
-
-WaveReader_NEW& WaveReader_NEW::operator=(const WaveReader_NEW& o)
-{
-	if (this == &o) return *this;
-	wave = o.wave;
-	allocateSrc();
-	return *this;
-}
-
-
-WaveReader_NEW& WaveReader_NEW::operator=(WaveReader_NEW&& o)
-{
-	if (this == &o) return *this;
-	wave = o.wave;
-	moveSrc(&o.m_srcState);
-	return *this;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-WaveReader_NEW::~WaveReader_NEW()
-{
-	if (m_srcState != nullptr)
-		src_delete(m_srcState);    
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-Frame WaveReader_NEW::fill(AudioBuffer& out, Frame start, Frame offset, float pitch) const
-{
-	assert(wave != nullptr);
-	assert(start >= 0);
-	assert(offset < out.countFrames());
-
-	if (pitch == 1.0) return fillCopy(out, start, offset);
-	else              return fillResampled(out, start, offset, pitch);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-Frame WaveReader_NEW::fillResampled(AudioBuffer& dest, Frame start, Frame offset, float pitch) const
-{
-    SRC_DATA srcData;
-	
-	srcData.data_in       = wave->getFrame(start);        // Source data
-	srcData.input_frames  = wave->getSize() - start;      // How many readable frames
-	srcData.data_out      = dest[offset];                 // Destination (processed data)
-	srcData.output_frames = dest.countFrames() - offset;  // How many frames to process
-	srcData.end_of_input  = false;
-	srcData.src_ratio     = 1 / pitch;
-
-	src_process(m_srcState, &srcData);
-
-	return srcData.input_frames_used;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-Frame WaveReader_NEW::fillCopy(AudioBuffer& dest, Frame start, Frame offset) const
-{
-	Frame used = dest.countFrames() - offset;
-	if (used > wave->getSize() - start)
-		used = wave->getSize() - start;
-
-	dest.copyData(wave->getFrame(start), used, G_MAX_IO_CHANS, offset);
-
-	return used;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
-void WaveReader_NEW::allocateSrc()
-{
-	m_srcState = src_new(SRC_LINEAR, G_MAX_IO_CHANS, nullptr);
-	if (m_srcState == nullptr) {
-		u::log::print("[WaveReader] unable to allocate memory for SRC_STATE!\n");
-		throw std::bad_alloc();
-	}
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void WaveReader_NEW::moveSrc(SRC_STATE** other)
 {
 	if (m_srcState != nullptr)
 		src_delete(m_srcState);
