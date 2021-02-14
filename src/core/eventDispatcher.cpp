@@ -127,6 +127,8 @@ void init()
 
 void pumpEvent(Event e)
 {
-	UIevents.push(e); // The actual queue doesn't matter
+	/* TODO - two threads push events here: mixer/rt-threa and main thread, so
+	this breaks the 1-producer 1-consumer rule! */
+	UIevents.push(e); 
 }
 } // giada::m

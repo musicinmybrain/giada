@@ -198,7 +198,8 @@ void advance(const channel::Data& ch, const sequencer::Event& e)
 {
 	if (e.type == sequencer::EventType::ACTIONS && ch.isPlaying())
 		for (const Action& action : *e.actions)
-			sendToPlugins_(ch, action.event, e.delta);
+		    if (action.channelId == ch.id)
+			    sendToPlugins_(ch, action.event, e.delta);
 }
 
 

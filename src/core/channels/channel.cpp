@@ -1004,6 +1004,7 @@ bool Data::isPlaying() const
 void advance(const Data& d, const sequencer::EventBuffer& events)
 {
 	for (const sequencer::Event& e : events) {
+
 		if (d.midiController) midiController::advance(d, e);
 	#ifdef WITH_VST
 		if (d.midiReceiver)   midiReceiver::advance(d, e);

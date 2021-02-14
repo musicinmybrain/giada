@@ -305,29 +305,67 @@ void onBar_(const channel::Data& ch, Frame localFrame)
 /* -------------------------------------------------------------------------- */
 
 
+void onNoteOn_(const channel::Data& ch, Frame localFrame)
+{
+	ChannelStatus playStatus = ch.state->playStatus.load();
+
+	if (playStatus == ChannelStatus::OFF) {
+		playStatus = ChannelStatus::PLAY;
+	}
+	else
+	if (playStatus == ChannelStatus::PLAY) {
+		if (ch.samplePlayer->mode == SamplePlayerMode::SINGLE_RETRIG)
+			ch.state->tracker.store(ch.samplePlayer->begin);
+		else
+			playStatus = ChannelStatus::OFF;
+	}
+
+	ch.state->playStatus.store(playStatus);
+	ch.state->offset = localFrame;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void onNoteOff_(const channel::Data& ch, Frame localFrame)
+{
+    ch.state->playStatus.store(ChannelStatus::OFF);
+    ch.state->tracker.store(ch.samplePlayer->begin);
+
+    /*  Clear data in range [localFrame, (buffer.size)) if the kill event occurs
+    in the middle of the buffer. */
+
+    if (localFrame != 0)
+        ch.buffer->audioBuffer.clear(localFrame);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 void parseActions_(const channel::Data& ch, const std::vector<Action>& as, Frame localFrame)
 {
-	bool isLoop = ch.samplePlayer->isAnyLoopMode();
+	if (ch.samplePlayer->isAnyLoopMode())
+		return;
 
 	for (const Action& a : as) {
 
+	    if (a.channelId != ch.id)
+	        continue;
+	    
 		switch (a.event.getStatus()) {
 			
 			case MidiEvent::NOTE_ON:
-				//if (!isLoop)
-				//	press(localFrame, /*velocity=*/G_MAX_VELOCITY, /*manual=*/false);
-				break;
+				onNoteOn_(ch, localFrame); break;
+
 			case MidiEvent::NOTE_OFF:
-				//if (!isLoop)
-				//	release(localFrame);
-				break;
+				onNoteOff_(ch, localFrame); break;
+				
 			case MidiEvent::NOTE_KILL:
-				//if (!isLoop)
-				//	stop(localFrame);
-				break;
-			case MidiEvent::ENVELOPE:
-				//calcVolumeEnv_(ch, a); TODO
-				break;
+				onNoteOff_(ch, localFrame); break;
+
+			default: break;
 		}
 	}
 }
