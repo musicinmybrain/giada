@@ -294,7 +294,7 @@ void debug()
 		if (c.plugins.size() > 0) {
 			puts("\t\tplugins:");
 			for (const auto& p : c.plugins)
-				printf("\t\t\tID=%d\n", p->id);
+				printf("\t\t\t%p - ID=%d\n", (void*) p, p->id);
 		}
 #endif
 	}

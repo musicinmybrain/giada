@@ -112,7 +112,7 @@ struct Data
 
 void react  (const channel::Data& ch, const eventDispatcher::Event& e);
 void advance(const channel::Data& ch, const sequencer::Event& e); 
-void render (const channel::Data& ch, const std::vector<Plugin*>& plugins);
+void render (const channel::Data& ch);
 }
 
 #endif // WITH_VST

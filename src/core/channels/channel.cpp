@@ -822,7 +822,7 @@ void renderChannel_(const Data& d, AudioBuffer& out, AudioBuffer& in, bool audib
 
 #ifdef WITH_VST
 	if (d.midiReceiver)  
-		midiReceiver::render(d, d.plugins);
+		midiReceiver::render(d);
 	else 
 	if (d.plugins.size() > 0)
 		pluginHost::processStack(d.buffer->audioBuffer, d.plugins, nullptr);
@@ -901,7 +901,7 @@ Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplera
 , type          (p.type)
 , columnId      (p.columnId)
 , volume        (p.volume)
-, volume_i      (0.0f)
+, volume_i      (G_DEFAULT_VOL)
 , pan           (p.pan)
 , mute          (p.mute)
 , solo          (p.solo)
