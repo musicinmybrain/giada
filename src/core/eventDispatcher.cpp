@@ -50,15 +50,6 @@ EventBuffer eventBuffer_;
 /* -------------------------------------------------------------------------- */
 
 
-bool hasChannelEvents_()
-{
-	return u::vector::has(eventBuffer_, [] (const Event& e) { return e.channelId != 0; });
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
 void processChannels_()
 {
 	for (channel::Data& ch : model::get().channels)
@@ -97,8 +88,7 @@ void process_()
 G_DEBUG("Event type=" << (int) e.type << ", delta=" << e.delta << ", frame=" << clock::getCurrentFrame());
 	}
 
-	if (hasChannelEvents_())
-		processChannels_();
+	processChannels_();
 	processSequencer_();
 }
 } // {anonymous}

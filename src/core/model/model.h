@@ -30,7 +30,6 @@
 
 
 #include <algorithm>
-#include "core/model/traits.h"
 #include "core/channels/channel.h"
 #include "core/const.h"
 #include "core/wave.h"

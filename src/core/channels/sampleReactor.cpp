@@ -129,11 +129,8 @@ void onStopBySeq_(channel::Data& ch)
 			break;
 
 		case ChannelStatus::PLAY:
-			/* Kill samples if a) chansStopOnSeqHalt == true (run the sample to
-            end otherwise); b) a channel is reading (and playing) actions. */
-			if (conf::conf.chansStopOnSeqHalt)
-				if (isLoop || isReadingActions)
-					kill_(ch);
+			if (conf::conf.chansStopOnSeqHalt && (isLoop || isReadingActions))
+				kill_(ch);
 			break;
 
 		default: break;

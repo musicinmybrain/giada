@@ -104,8 +104,6 @@ void advance(const channel::Data& ch, const sequencer::Event& e)
 
 void render(const channel::Data& ch)
 {
-    if (!ch.isPlaying())
-        return;
 	pluginHost::processStack(ch.buffer->audioBuffer, ch.plugins, &ch.buffer->midiBuffer);
     ch.buffer->midiBuffer.clear();
 }
