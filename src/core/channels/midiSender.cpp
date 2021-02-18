@@ -60,8 +60,8 @@ void parseActions_(const channel::Data& ch, const std::vector<Action>& as)
 
 
 Data::Data(const patch::Channel& p)
-: enabled  (p.midiOut)
-, filter   (p.midiOutChan)
+: enabled(p.midiOut)
+, filter (p.midiOutChan)
 {
 }
 

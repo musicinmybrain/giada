@@ -93,20 +93,6 @@ void invokeSignalCb_()
 
 /* -------------------------------------------------------------------------- */
 
-
-bool isChannelAudible_(const channel::Data& c)
-{
-    if (c.isInternal())
-        return true;
-    if (c.mute)
-        return false;
-    bool hasSolos = model::get().mixer.hasSolos;
-    return !hasSolos || (hasSolos && c.solo);
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /* lineInRec
 Records from line in. */
 
@@ -166,7 +152,7 @@ void processChannels_(const model::Layout& layout, AudioBuffer& out, AudioBuffer
 
 	for (const channel::Data& c : layout.channels)
 		if (!c.isInternal())
-			channel::render(c, &out, &in, isChannelAudible_(c));
+			channel::render(c, &out, &in, isChannelAudible(c));
 }
 
 
@@ -259,13 +245,6 @@ void finalizeOutput_(const model::Mixer& mixer, AudioBuffer& outBuf)
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-
-Queue<Event, G_MAX_DISPATCHER_EVENTS> UIevents;
-Queue<Event, G_MAX_DISPATCHER_EVENTS> MidiEvents;
-
-
 /* -------------------------------------------------------------------------- */
 
 
@@ -409,6 +388,19 @@ void setSignalCallback(std::function<void()> f)
 	signalCb_ = f;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+
+bool isChannelAudible(const channel::Data& c)
+{
+    if (c.isInternal())
+        return true;
+    if (c.mute)
+        return false;
+    bool hasSolos = model::get().mixer.hasSolos;
+    return !hasSolos || (hasSolos && c.solo);
+}
 
 /* -------------------------------------------------------------------------- */
 

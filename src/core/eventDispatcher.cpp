@@ -50,10 +50,23 @@ EventBuffer eventBuffer_;
 /* -------------------------------------------------------------------------- */
 
 
+void processFuntions_()
+{
+	for (const Event& e : eventBuffer_) {
+		if (e.type == EventType::FUNCTION)
+			std::get<std::function<void()>>(e.data)();
+G_DEBUG("Event type=" << (int) e.type << ", delta=" << e.delta << ", frame=" << clock::getCurrentFrame());
+	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
 void processChannels_()
 {
 	for (channel::Data& ch : model::get().channels)
-		channel::react(ch, eventBuffer_, true); // TODO audible
+		channel::react(ch, eventBuffer_, mixer::isChannelAudible(ch));
 	
 	model::swap(model::SwapType::SOFT);
 }
@@ -82,12 +95,7 @@ void process_()
 	if (eventBuffer_.size() == 0)
 		return;
 		
-	for (const Event& e : eventBuffer_) {
-		if (e.type == EventType::FUNCTION)
-			std::get<std::function<void()>>(e.data)();
-G_DEBUG("Event type=" << (int) e.type << ", delta=" << e.delta << ", frame=" << clock::getCurrentFrame());
-	}
-
+	processFuntions_();
 	processChannels_();
 	processSequencer_();
 }
@@ -117,7 +125,7 @@ void init()
 
 void pumpEvent(Event e)
 {
-	/* TODO - two threads push events here: mixer/rt-threa and main thread, so
+	/* TODO - two threads push events here: mixer/rt-thread and main thread, so
 	this breaks the 1-producer 1-consumer rule! */
 	UIevents.push(e); 
 }
