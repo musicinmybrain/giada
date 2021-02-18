@@ -31,12 +31,10 @@
 
 #include <vector>
 #include "core/eventDispatcher.h"
+#include "core/quantizer.h"
 
 
-namespace giada::m 
-{
-class AudioBuffer;
-}
+namespace giada::m { class AudioBuffer; }
 namespace giada::m::sequencer
 {
 enum class EventType 
@@ -57,6 +55,11 @@ struct Event
 };
 
 using EventBuffer = RingBuffer<Event, G_MAX_SEQUENCER_EVENTS>;
+
+/* quantizer
+Used by the sequencer itself and each sample channel. */
+
+extern Quantizer quantizer;
 
 void init();
 

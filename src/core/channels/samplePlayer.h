@@ -62,8 +62,7 @@ struct Data
     Frame            begin;
     Frame            end;
 	bool             velocityAsVol; // Velocity drives volume
-    bool             quantizing; // TODO move to sampleReactor
-    WaveReader   waveReader;
+    WaveReader       waveReader;
 };
 
 

@@ -219,7 +219,7 @@ void setStatus(ClockStatus s)
 /* -------------------------------------------------------------------------- */
 
 
-void incrCurrentFrame(Frame amount) 
+void advance(Frame amount)
 {
     const model::Clock& c = model::get().clock;
 

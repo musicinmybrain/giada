@@ -113,6 +113,7 @@ struct Data
     midiLighter::Data midiLighter;
 
     std::optional<samplePlayer::Data>         samplePlayer;
+    std::optional<sampleReactor::Data>        sampleReactor;
     std::optional<audioReceiver::Data>        audioReceiver;
     std::optional<midiController::Data>       midiController;
 #ifdef WITH_VST

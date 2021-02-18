@@ -153,8 +153,6 @@ void react(channel::Data& ch, const eventDispatcher::Event& e)
 {
     if (e.type == eventDispatcher::EventType::CHANNEL_PITCH)
         ch.samplePlayer->pitch = std::get<float>(e.data);
-    if (ch.samplePlayer->hasWave())
-        sampleReactor::react(ch, e);
 }
 
 

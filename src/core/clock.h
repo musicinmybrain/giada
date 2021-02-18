@@ -68,10 +68,10 @@ int getQuantizerValue();
 int getQuantizerStep();
 ClockStatus getStatus();
 
-/* incrCurrentFrame
+/* advance
 Increases current frame by a specific amount. */
 
-void incrCurrentFrame(Frame amount);
+void advance(Frame amount);
 
 /* quantoHasPassed
 Tells whether a quantizer unit has passed yet. */

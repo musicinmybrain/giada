@@ -127,7 +127,7 @@ constexpr int    G_MAX_MIDI_CHANS        = 16;
 constexpr int    G_MAX_POLYPHONY         = 32;
 constexpr int    G_MAX_DISPATCHER_EVENTS = 32;
 constexpr int    G_MAX_SEQUENCER_EVENTS  = 128;  // Per block
-constexpr int    G_MAX_QUANTIZER_SIZE    = 8;
+constexpr int    G_MAX_QUANTIZER_SIZE    = 32;
 
 
 

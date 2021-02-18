@@ -26,6 +26,7 @@
 
 
 #include <cassert>
+#include "src/core/model/model.h"
 #include "core/channels/channel.h"
 #include "core/conf.h"
 #include "core/clock.h"
@@ -37,6 +38,9 @@ namespace giada::m::sampleReactor
 {
 namespace
 {
+constexpr int Q_ACTION_PLAY   = 0;
+constexpr int Q_ACTION_REWIND = 1;
+
 void          press_            (channel::Data& ch,int velocity);
 void          release_          (channel::Data& ch);
 void          kill_             (channel::Data& ch);
@@ -92,9 +96,9 @@ void release_(channel::Data& ch)
 
 	if (ch.state->playStatus.load() == ChannelStatus::PLAY)
 		kill_(ch);
-	//else
-    // TODO if (m_quantizer.isTriggered())
-    // TODO     m_quantizer.clear();
+	else
+    if (sequencer::quantizer.hasBeenTriggered())
+    	sequencer::quantizer.clear();
 }
 
 
@@ -105,7 +109,6 @@ void kill_(channel::Data& ch)
 {
     ch.state->playStatus.store(ChannelStatus::OFF);
     ch.state->tracker.store(ch.samplePlayer->begin);
-    // TODO m_samplePlayer.quantizing = false; 
 }
 
 
@@ -150,7 +153,7 @@ ChannelStatus pressWhileOff_(channel::Data& ch, int velocity, bool isLoop)
 		ch.volume_i = u::math::map(velocity, G_MAX_VELOCITY, G_MAX_VOLUME);
 
 	if (clock::canQuantize()) {
-		// TODO - m_quantizer.trigger(Q_ACTION_PLAY);
+		sequencer::quantizer.trigger(Q_ACTION_PLAY + ch.id);
 		return ChannelStatus::OFF;
 	}
 	else
@@ -164,9 +167,8 @@ ChannelStatus pressWhileOff_(channel::Data& ch, int velocity, bool isLoop)
 ChannelStatus pressWhilePlay_(channel::Data& ch, SamplePlayerMode mode, bool isLoop)
 {
 	if (mode == SamplePlayerMode::SINGLE_RETRIG) {
-		if (clock::canQuantize()) {
-			// TODO m_quantizer.trigger(Q_ACTION_REWIND);
-		}
+		if (clock::canQuantize())
+			sequencer::quantizer.trigger(Q_ACTION_REWIND + ch.id);
 		else
 			rewind_(ch);
 		return ChannelStatus::PLAY;
@@ -199,10 +201,6 @@ void toggleReadActions_(channel::Data& ch)
 
 void rewind_(channel::Data& ch, Frame localFrame)
 {
-	/* Quantization stops on rewind. */
-
-	// TODO - m_samplePlayer.quantizer.clear(); 
-
 	if (ch.isPlaying()) { 
 		ch.state->rewinding = true;
 		ch.state->offset    = localFrame;
@@ -218,8 +216,32 @@ void rewind_(channel::Data& ch, Frame localFrame)
 /* -------------------------------------------------------------------------- */
 
 
+Data::Data(ID channelId)
+{
+	sequencer::quantizer.schedule(Q_ACTION_PLAY + channelId, [channelId] (Frame delta)
+	{
+        channel::Data& ch = model::get().getChannel(channelId);
+		ch.state->offset = delta;
+		ch.state->playStatus.store(ChannelStatus::PLAY);
+	});
+
+	sequencer::quantizer.schedule(Q_ACTION_REWIND + channelId, [channelId] (Frame delta)
+	{
+        channel::Data& ch = model::get().getChannel(channelId);
+		rewind_(ch, delta);
+	});
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+
 void react(channel::Data& ch, const eventDispatcher::Event& e)
 {
+	if (!ch.hasWave())
+		return;
+
 	switch (e.type) {
 
 		case eventDispatcher::EventType::KEY_PRESS:

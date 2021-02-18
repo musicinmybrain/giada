@@ -38,10 +38,14 @@ namespace giada::m::sampleReactor
 {
 struct Data
 {
-    Quantizer quantizer;
+    Data(ID channelId);
+    Data(const Data&)            = default;
+    Data(Data&&)                 = default;
+    Data& operator=(const Data&) = default;
+    Data& operator=(Data&&)      = default;
 };
 
-void react(channel::Data& c, const eventDispatcher::Event& e);
+void react(channel::Data& ch, const eventDispatcher::Event& e);
 }
 
 #endif

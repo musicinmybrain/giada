@@ -167,6 +167,7 @@ Data::Data(ChannelType type, ID id, ID columnId, State& state, Buffer& buffer)
 
 		case ChannelType::SAMPLE:
 			samplePlayer.emplace();
+			sampleReactor.emplace(id);
 			audioReceiver.emplace();
 			sampleActionRecorder.emplace();
 			break;
@@ -218,6 +219,7 @@ Data::Data(const patch::Channel& p, State& state, Buffer& buffer, float samplera
 
 		case ChannelType::SAMPLE:
 			samplePlayer.emplace(p, samplerateRatio);
+			sampleReactor.emplace(id);
 			audioReceiver.emplace(p);
 			sampleActionRecorder.emplace();
 			break;
@@ -286,7 +288,7 @@ bool Data::canActionRec() const
 
 bool Data::hasWave() const
 {
-	return type == ChannelType::SAMPLE && samplePlayer->hasWave();
+	return samplePlayer && samplePlayer->hasWave();
 }
 
 bool Data::isPlaying() const
@@ -304,10 +306,10 @@ void advance(const Data& d, const sequencer::EventBuffer& events)
 	for (const sequencer::Event& e : events) {
 
 		if (d.midiController) midiController::advance(d, e);
+		if (d.samplePlayer)   samplePlayer::advance(d, e);
 	#ifdef WITH_VST
 		if (d.midiReceiver)   midiReceiver::advance(d, e);
 	#endif
-		if (d.samplePlayer)   samplePlayer::advance(d, e);
 	}
 }
 
@@ -332,8 +334,8 @@ void react(Data& d, const eventDispatcher::EventBuffer& events, bool audible)
 		if (d.midiSender)           midiSender::react(d, e);
 		if (d.samplePlayer)         samplePlayer::react(d, e);
 		if (d.midiActionRecorder)   midiActionRecorder::react(d, e);
-		if (d.sampleActionRecorder && d.samplePlayer && d.samplePlayer->hasWave()) 
-			sampleActionRecorder::react(d, e);
+		if (d.sampleActionRecorder) sampleActionRecorder::react(d, e);
+		if (d.sampleReactor)        sampleReactor::react(d, e);
 	}
 }
 

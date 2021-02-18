@@ -160,12 +160,6 @@ void rewind_()
 #endif
 	rewind();	
 }
-
-
-/* -------------------------------------------------------------------------- */
-
-
-Quantizer quantizer_;
 } // {anonymous}
 
 
@@ -174,9 +168,15 @@ Quantizer quantizer_;
 /* -------------------------------------------------------------------------- */
 
 
+Quantizer quantizer;
+
+
+/* -------------------------------------------------------------------------- */
+
+
 void init()
 {
-	quantizer_.schedule(Q_ACTION_REWIND, rewindQ_);
+	quantizer.schedule(Q_ACTION_REWIND, rewindQ_);
 	clock::rewind();
 }
 
@@ -227,8 +227,9 @@ const EventBuffer& advance(Frame bufferSize)
 		    eventBuffer_.push_back({ EventType::ACTIONS, global, local, as });
 	}
 
-	/* Advance clock of 'bufferSize' frames after the event parsing. */
-	clock::incrCurrentFrame(bufferSize);
+	/* Advance clock and quantizer after the event parsing. */
+    clock::advance(bufferSize);
+	quantizer.advance(Range<Frame>(start, end), clock::getQuantizerStep());
 
 	return eventBuffer_;
 }
@@ -277,7 +278,7 @@ void stop()
 void rewind()
 {
 	if (clock::canQuantize())
-		quantizer_.trigger(Q_ACTION_REWIND);
+		quantizer.trigger(Q_ACTION_REWIND);
 	else
 		rewindQ_(/*delta=*/0);
 }

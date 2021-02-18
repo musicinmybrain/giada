@@ -179,6 +179,9 @@ void killReadActions_(channel::Data& ch)
 
 void react(channel::Data& ch, const eventDispatcher::Event& e)
 {
+	if (!ch.hasWave())
+		return;
+		
 	switch (e.type) {
 
 		case eventDispatcher::EventType::KEY_PRESS:
