@@ -307,6 +307,7 @@ void advance(const Data& d, const sequencer::EventBuffer& events)
 
 		if (d.midiController) midiController::advance(d, e);
 		if (d.samplePlayer)   samplePlayer::advance(d, e);
+		if (d.midiSender)     midiSender::advance(d, e);
 	#ifdef WITH_VST
 		if (d.midiReceiver)   midiReceiver::advance(d, e);
 	#endif

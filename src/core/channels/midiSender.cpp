@@ -40,6 +40,17 @@ void send_(const channel::Data& ch, MidiEvent e)
 	e.setChannel(ch.midiSender->filter);
 	kernelMidi::send(e.getRaw());	
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void parseActions_(const channel::Data& ch, const std::vector<Action>& as)
+{
+    for (const Action& a : as)
+        if (a.channelId == ch.id)
+            send_(ch, a.event);
+}
 } // {anonymous}
 
 
@@ -66,8 +77,17 @@ void react(const channel::Data& ch, const eventDispatcher::Event& e)
 	if (e.type == eventDispatcher::EventType::KEY_KILL || 
 	    e.type == eventDispatcher::EventType::SEQUENCER_STOP)
 		send_(ch, MidiEvent(G_MIDI_ALL_NOTES_OFF));
-	//else - TODO need advance() method
-	//if (e.type == eventDispatcher::EventType::ACTION)
-	//	send_(ch, e.action.event);
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+void advance(const channel::Data& ch, const sequencer::Event& e)
+{
+	if (!ch.midiSender->enabled)
+		return;
+	if (e.type == sequencer::EventType::ACTIONS)
+		parseActions_(ch, *e.actions);
 }
 } // giada::m::midiSender::
