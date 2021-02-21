@@ -202,7 +202,6 @@ std::vector<Plugin*> clonePlugins(const std::vector<Plugin*>& plugins)
 
 void setPluginParameter(ID pluginId, int paramIndex, float value)
 {
-	model::DataLock lock(model::SwapType::SOFT);
     model::find<Plugin>(pluginId)->setParameter(paramIndex, value);
 }
 
@@ -212,7 +211,6 @@ void setPluginParameter(ID pluginId, int paramIndex, float value)
 
 void setPluginProgram(ID pluginId, int programIndex)
 {
-	model::DataLock lock(model::SwapType::SOFT);
     model::find<Plugin>(pluginId)->setCurrentProgram(programIndex);
 }
 
@@ -222,8 +220,6 @@ void setPluginProgram(ID pluginId, int programIndex)
 
 void toggleBypass(ID pluginId)
 {
-	model::DataLock lock(model::SwapType::SOFT);
-
 	Plugin& plugin = *model::find<Plugin>(pluginId);
 	plugin.setBypass(!plugin.isBypassed());
 }

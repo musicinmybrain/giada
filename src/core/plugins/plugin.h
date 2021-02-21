@@ -39,8 +39,7 @@
 #include "core/const.h"
 
 
-namespace giada {
-namespace m 
+namespace giada::m 
 {
 class Plugin : private juce::ComponentListener
 {
@@ -137,8 +136,14 @@ private:
 	The original UID, used for missing plugins. */
 
 	std::string m_UID;
+
+	/* m_hasEditor
+	Cached boolean value that tells if the plug-in has editor. Some plug-ins
+	take ages to query it, better fetch the property during construction. */
+	
+	bool m_hasEditor;
 };
-}} // giada::m::
+} // giada::m::
 
 #endif
 
