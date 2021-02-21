@@ -40,6 +40,11 @@ struct Data
     Data(const patch::Channel&);
     Data(const Data&) = default;
 
+    /* isAllowed
+    Tells whether the MIDI channel 'c' is enabled to receive MIDI data. */
+
+    bool isAllowed(int c) const;
+
     /* enabled
     Tells whether MIDI learning is enabled for the current channel. */
     

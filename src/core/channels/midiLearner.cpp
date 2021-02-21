@@ -45,4 +45,13 @@ Data::Data(const patch::Channel& p)
 , pitch      (p.midiInPitch)
 {
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+
+bool Data::isAllowed(int c) const
+{
+    return enabled && (filter == -1 || filter == c);
+}
 } // giada::m::midiLearner::
